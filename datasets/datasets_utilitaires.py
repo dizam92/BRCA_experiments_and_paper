@@ -15,8 +15,8 @@ from copy import deepcopy
 project_path_on_is2 = '/is2/projects/JC_Cancers/TCGA_raw/'
 ids_pattern = re.compile(r'(TCGA-\w+-\w+)', re.U | re.M | re.I)
 
-label_file_triple_all = "/home/maoss2/PycharmProjects/breast_cancer/datasets/labels_for_triple_negatives_all.tsv"
-new_label_file = '/home/maoss2/PycharmProjects/breast_cancer/datasets/clinical_views_labels_and_proba_copie.csv'
+label_file_triple_all = "/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/labels_for_triple_negatives_all.tsv"
+new_label_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/clinical_views_labels_and_proba_copie.csv'
 
 methyl_450_file = "/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/methylome_450.tsv"
 methyl_27_file = "/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/methylome_27.tsv"
