@@ -214,9 +214,9 @@ class BuildBrcaDatasets(BuildOmicsDatasets):
 def build_brca_dataset_for_graalpy(dataset='',
                                    name='',
                                    output_path='./',
-                                   methyl_example_file='/home/maoss2/PycharmProjects/breast_cancer/datasets/files_to_build_datasets/jhu-usc.edu_BRCA.HumanMethylation27.4.lvl-3.TCGA-E2-A15M-11A-22D-A12E-05.txt',
-                                   genes_example_file='/home/maoss2/PycharmProjects/breast_cancer/datasets/files_to_build_datasets/unc.edu.ffd6c7c5-d4c4-4ead-9e55-de8f6aa62182.2248604.rsem.genes.results',
-                                   snp_data_file='/home/maoss2/PycharmProjects/breast_cancer/datasets/files_to_build_datasets/genome.wustl.edu__IlluminaGA_curated_DNA_sequencing_level2.maf'):
+                                   methyl_example_file='/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/files_to_build_datasets/jhu-usc.edu_BRCA.HumanMethylation27.4.lvl-3.TCGA-E2-A15M-11A-22D-A12E-05.txt',
+                                   genes_example_file='/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/files_to_build_datasets/unc.edu.ffd6c7c5-d4c4-4ead-9e55-de8f6aa62182.2248604.rsem.genes.results',
+                                   snp_data_file='/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/files_to_build_datasets/genome.wustl.edu__IlluminaGA_curated_DNA_sequencing_level2.maf'):
     """ Transform the raw dataset to the view we explicitly want to be loaded. Get the dataset loader ready
     Args:
         dataset, str, path to raw dataset, .h5

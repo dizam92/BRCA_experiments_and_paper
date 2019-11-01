@@ -17,3 +17,5 @@ __pycache__
 *.maf
 *.out
 *.pck
+# Repertory
+datasets/datasets_repository/files_to_build_datasets/*
