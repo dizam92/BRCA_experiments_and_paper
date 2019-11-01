@@ -24,8 +24,8 @@ rnaseq_genes_file = "/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/dat
 rnaseq_isoforms_file = "/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/rnaseq_isoforms.tsv"
 snp_file = "/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/snp.tsv"
 mirna_file = "/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/mirna.tsv"
-new_clinical_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/new_clinical_view.tsv',
-old_clinical_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/clinical_view.tsv',
+new_clinical_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/new_clinical_view.tsv'
+old_clinical_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/clinical_view.tsv'
 # **********************************************************************************************************************
 
 
