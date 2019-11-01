@@ -179,10 +179,10 @@ class BuildBrcaDatasets(BuildOmicsDatasets):
         assert np.all(labels.index.values == clinical_data.index.values)
 
         # Write the data to hdf5
-        methylation_450.to_hdf(name, "methylation_450")
-        methylation_27.to_hdf(name, "methylation_27")
-        methylation_fusion_27.to_hdf(name, "methylation_fusion_27")
-        methylation_fusion_450.to_hdf(name, "methylation_fusion_450")
+        # methylation_450.to_hdf(name, "methylation_450")
+        # methylation_27.to_hdf(name, "methylation_27")
+        # methylation_fusion_27.to_hdf(name, "methylation_fusion_27")
+        # methylation_fusion_450.to_hdf(name, "methylation_fusion_450")
         methylation_fusion.to_hdf(name, "methylation_fusion")
         rnaseq_genes.to_hdf(name, "rnaseq_genes")
         rnaseq_isoforms.to_hdf(name, "rnaseq_isoforms")
