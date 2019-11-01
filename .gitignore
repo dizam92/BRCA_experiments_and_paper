@@ -1,0 +1,19 @@
+__pycache__
+.idea/workspace.xml
+.idea/*
+*.pyc
+*.h5
+*.tsv
+*.mat
+*.txt
+*.aux
+*.log
+*.synctex.gz
+*.toc
+# Jupyter Notebook
+.ipynb_checkpoints
+*.xlsx
+*.csv
+*.maf
+*.out
+*.pck
