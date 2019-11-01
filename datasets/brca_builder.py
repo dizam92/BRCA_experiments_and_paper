@@ -130,7 +130,6 @@ class BuildBrcaDatasets(BuildOmicsDatasets):
         rnaseq_genes = pd.read_csv(rnaseq_genes_file, sep="\t")
         indexes = np.array(list(map(str, np.array(rnaseq_genes["Unnamed: 0"]))))
         rnaseq_genes.set_index(indexes, inplace=True)
-        rnaseq_genes.drop(['Unnamed: 0', 'bcr_patient_barcode'], axis=1, inplace=True)
         rnaseq_genes = rnaseq_genes.T.loc[labels.index.values]
         rnaseq_genes = rnaseq_genes.loc[:, rnaseq_genes.count() > 0]
         if filling_type is not None:
@@ -140,7 +139,6 @@ class BuildBrcaDatasets(BuildOmicsDatasets):
         rnaseq_isoforms = pd.read_csv(rnaseq_isoforms_file, sep="\t")
         indexes = np.array(list(map(str, np.array(rnaseq_isoforms["Unnamed: 0"]))))
         rnaseq_isoforms.set_index(indexes, inplace=True)
-        rnaseq_isoforms.drop(['Unnamed: 0', 'bcr_patient_barcode'], axis=1, inplace=True)
         rnaseq_isoforms = rnaseq_isoforms.T.loc[labels.index.values]
         rnaseq_isoforms = rnaseq_isoforms.loc[:, rnaseq_isoforms.count() > 0]
         if filling_type is not None:
@@ -150,7 +148,6 @@ class BuildBrcaDatasets(BuildOmicsDatasets):
         snps = pd.read_csv(snp_file, sep="\t")
         indexes = np.array(list(map(str, np.array(snps["Unnamed: 0"]))))
         snps.set_index(indexes, inplace=True)
-        snps.drop(['Unnamed: 0', 'bcr_patient_barcode'], axis=1, inplace=True)
         snps = snps.T.loc[labels.index.values]
         snps = snps.loc[:, snps.count() > 0]
         snps = snps.apply(pd.to_numeric, errors='coerce')
@@ -159,7 +156,6 @@ class BuildBrcaDatasets(BuildOmicsDatasets):
         mirnas = pd.read_csv(mirna_file, sep="\t")
         indexes = np.array(list(map(str, np.array(mirnas["Unnamed: 0"]))))
         mirnas.set_index(indexes, inplace=True)
-        mirnas.drop(['Unnamed: 0', 'bcr_patient_barcode'], axis=1, inplace=True)
         mirnas = mirnas.T.loc[labels.index.values]
         mirnas = mirnas.loc[:, mirnas.count() > 0]
         if filling_type is not None:
