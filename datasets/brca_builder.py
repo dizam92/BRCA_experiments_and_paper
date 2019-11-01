@@ -225,8 +225,8 @@ def build_brca_dataset_for_graalpy(dataset='',
             New dataset loader ready  with keys, data, target, features_names, patients_ids
     """
     data = h5py.File(dataset, 'r')
-    x_methyl_fusion = data['methylation_fusion/block0_values'].value
-    features_names_methyl_fusion = data['methylation_fusion/block0_items'].value
+    x_methyl_fusion = data['methylation_fusion/block0_values'][()]
+    features_names_methyl_fusion = data['methylation_fusion/block0_items'][()]
     features_names_methyl_fusion = np.asarray([el.decode('utf8') for el in features_names_methyl_fusion])
     # linked the methyl_name to the genes_name
     d = pd.read_table(methyl_example_file, skiprows=[0], header='infer')
@@ -236,15 +236,15 @@ def build_brca_dataset_for_graalpy(dataset='',
                                            for i in range(d.shape[0]) if d['Composite Element REF'].values[i] in
                                            features_names_methyl_fusion]
     features_names_methyl_fusion_linked = np.asarray(features_names_methyl_fusion_linked)
-    x_mirna = data['mirna/block0_values'].value
-    features_names_mirna = data['mirna/block0_items'].value
+    x_mirna = data['mirna/block0_values'][()]
+    features_names_mirna = data['mirna/block0_items'][()]
     features_names_mirna = np.asarray([el.decode('utf8') for el in features_names_mirna])
-    x_rna_isoforms = data['rnaseq_isoforms/block0_values'].value
-    features_names_rna_isoforms = data['rnaseq_isoforms/block0_items'].value
+    x_rna_isoforms = data['rnaseq_isoforms/block0_values'][()]
+    features_names_rna_isoforms = data['rnaseq_isoforms/block0_items'][()]
     features_names_rna_isoforms = np.asarray([el.decode('utf8') for el in features_names_rna_isoforms])
 
-    x_rna = data['rnaseq_genes/block0_values'].value
-    features_names_rna = data['rnaseq_genes/block0_items'].value
+    x_rna = data['rnaseq_genes/block0_values'][()]
+    features_names_rna = data['rnaseq_genes/block0_items'][()]
     features_names_rna = np.asarray([el.decode('utf8') for el in features_names_rna])
 
     # linked the rna isoforms name to the genes names
@@ -274,8 +274,8 @@ def build_brca_dataset_for_graalpy(dataset='',
             features_names_rna_isoforms_linked[i] = temp_features_names_rna_isoforms_linked[
                 index_el]  # remplacer par le nouveau nom
 
-    x_snps = data['snp/block0_values'].value
-    features_names_snps = data['snp/block0_items'].value
+    x_snps = data['snp/block0_values'][()]
+    features_names_snps = data['snp/block0_items'][()]
     features_names_snps = np.asarray([el.decode('utf8') for el in features_names_snps])
     snp_data = pd.read_table(snp_data_file, sep="\t", index_col="Tumor_Sample_Barcode")
     drop_columns = ["Center", "Ncbi_Build", "Archive_Name", "Strand", "Dbsnp_Rs", "Dbsnp_Val_Status",
@@ -302,14 +302,14 @@ def build_brca_dataset_for_graalpy(dataset='',
             if zip_el[1] == el:
                 features_names_snps_linked[i] = '{}_{}'.format(el, zip_el[0])
 
-    x_clinical = np.hstack((data['clinical_view/block0_values'].value, data['clinical_view/block1_values'].value))
-    features_names_clinical = np.hstack((data['clinical_view/block0_items'].value,
-                                         data['clinical_view/block1_items'].value))
+    x_clinical = np.hstack((data['clinical_view/block0_values'][()], data['clinical_view/block1_values'][()]))
+    features_names_clinical = np.hstack((data['clinical_view/block0_items'][()],
+                                         data['clinical_view/block1_items'][()]))
     features_names_clinical = np.asarray([el.decode('utf8') for el in features_names_clinical])
     try:
-        y = data['labels/block0_values'].value
+        y = data['labels/block0_values'][()]
     except KeyError:
-        y = data['labels/values'].value
+        y = data['labels/values'][()]
     y = y.reshape(-1)
     x = np.hstack((x_methyl_fusion, x_rna_isoforms, x_mirna, x_snps, x_clinical, x_rna))
     features_names_methyl_fusion_linked = np.asarray(features_names_methyl_fusion_linked, dtype='str')
@@ -322,7 +322,7 @@ def build_brca_dataset_for_graalpy(dataset='',
     data.close()
     # New add section: Lire la matrice avec pandas :) et extraire les patients ids car je veux tester pour
     # voir sur qui on se trompe
-    df_temp = pd.read_hdf(dataset, key='methylation_27')
+    df_temp = pd.read_hdf(dataset, key='methylation_fusion')
     patients_ids = np.asarray(df_temp.index.values, dtype='str')
     patients_ids = [str(x).encode('utf-8') for x in patients_ids]
     f = h5py.File(os.path.join(output_path, '{}.h5'.format(name)), 'w')
