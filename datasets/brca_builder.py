@@ -374,10 +374,10 @@ def main_brca_dataset_builder():
                                                  filling_type=filling)
                     if balanced:
                         dataset_name = 'BRCA_triple_neg_old_labels_balanced_{}.h5'.format(filling)
-                        final_dataset_name = 'triple_neg_old_labels_balanced_mean_{}'.format(filling)
+                        final_dataset_name = 'triple_neg_old_labels_balanced_{}'.format(filling)
                     else:
                         dataset_name = 'BRCA_triple_neg_old_labels_unbalanced_{}.h5'.format(filling)
-                        final_dataset_name = 'triple_neg_old_labels_unbalanced_mean_{}'.format(filling)
+                        final_dataset_name = 'triple_neg_old_labels_unbalanced_{}'.format(filling)
                     build_brca_dataset_for_graalpy(dataset=dataset_name, name=final_dataset_name)
 # def main_brca_dataset_builder():
 #     brca_builder = BuildBrcaDatasets(cancer_name='BRCA',
