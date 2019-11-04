@@ -296,7 +296,7 @@ def build_brca_dataset_for_graalpy(dataset='',
                                                     snp_data.Tumor_Seq_Allele2)
     snp_data = snp_data.loc[snp_data['snp_id'].isin(features_names_snps)]
     zipping_name = list(zip(snp_data['Hugo_Symbol'], snp_data['snp_id']))
-    features_names_snps_linked = np.zeros((features_names_snps.shape[0]), dtype='O')
+    features_names_snps_linked = np.asarray([None] * features_names_snps.shape[0])
     for i, el in enumerate(features_names_snps):
         for zip_el in zipping_name:
             if zip_el[1] == el:
@@ -321,7 +321,7 @@ def build_brca_dataset_for_graalpy(dataset='',
     features_names = [str(x).encode('utf-8') for x in features_names]
     data.close()
     # New add section: Lire la matrice avec pandas :) et extraire les patients ids car je veux tester pour
-    # voir sur qui on se trompe
+    #     # voir sur qui on se trompe
     df_temp = pd.read_hdf(dataset, key='methylation_fusion')
     patients_ids = np.asarray(df_temp.index.values, dtype='str')
     patients_ids = [str(x).encode('utf-8') for x in patients_ids]
@@ -344,16 +344,16 @@ def main_brca_dataset_builder():
                                                  snps_path=project_path_on_is2 + "BRCA/brca_exome/Somatic_Mutations/WUSM__IlluminaGA_DNASeq_curated/Level_2/genome.wustl.edu__IlluminaGA_curated_DNA_sequencing_level2.maf",
                                                  mirna_file=project_path_on_is2 + "BRCA/brca_mirna/miRNASeq/BCGSC__IlluminaHiSeq_miRNASeq/Level_3")
                 if label_file == new_label_file:
-                    brca_builder.combine_dataset(file_name='BRCA_triple_neg_new_labels',
-                                                 methyl_450_file=methyl_450_file,
-                                                 methyl_27_file=methyl_27_file,
-                                                 rnaseq_genes_file=rnaseq_genes_file,
-                                                 rnaseq_isoforms_file=rnaseq_isoforms_file,
-                                                 snp_file=snp_file,
-                                                 mirna_file=mirna_file,
-                                                 clinical_file=new_clinical_file,
-                                                 balanced_dataset=balanced,
-                                                 filling_type=filling)
+                    # brca_builder.combine_dataset(file_name='BRCA_triple_neg_new_labels',
+                    #                              methyl_450_file=methyl_450_file,
+                    #                              methyl_27_file=methyl_27_file,
+                    #                              rnaseq_genes_file=rnaseq_genes_file,
+                    #                              rnaseq_isoforms_file=rnaseq_isoforms_file,
+                    #                              snp_file=snp_file,
+                    #                              mirna_file=mirna_file,
+                    #                              clinical_file=new_clinical_file,
+                    #                              balanced_dataset=balanced,
+                    #                              filling_type=filling)
                     if balanced:
                         dataset_name = 'BRCA_triple_neg_new_labels_balanced_{}.h5'.format(filling)
                         final_dataset_name = 'triple_neg_new_labels_balanced_{}'.format(filling)
@@ -362,16 +362,16 @@ def main_brca_dataset_builder():
                         final_dataset_name = 'triple_neg_new_labels_unbalanced_{}'.format(filling)
                     build_brca_dataset_for_graalpy(dataset=dataset_name, name=final_dataset_name)
                 else:
-                    brca_builder.combine_dataset(file_name='BRCA_triple_neg_old_labels',
-                                                 methyl_450_file=methyl_450_file,
-                                                 methyl_27_file=methyl_27_file,
-                                                 rnaseq_genes_file=rnaseq_genes_file,
-                                                 rnaseq_isoforms_file=rnaseq_isoforms_file,
-                                                 snp_file=snp_file,
-                                                 mirna_file=mirna_file,
-                                                 clinical_file=new_clinical_file,
-                                                 balanced_dataset=balanced,
-                                                 filling_type=filling)
+                    # brca_builder.combine_dataset(file_name='BRCA_triple_neg_old_labels',
+                    #                              methyl_450_file=methyl_450_file,
+                    #                              methyl_27_file=methyl_27_file,
+                    #                              rnaseq_genes_file=rnaseq_genes_file,
+                    #                              rnaseq_isoforms_file=rnaseq_isoforms_file,
+                    #                              snp_file=snp_file,
+                    #                              mirna_file=mirna_file,
+                    #                              clinical_file=new_clinical_file,
+                    #                              balanced_dataset=balanced,
+                    #                              filling_type=filling)
                     if balanced:
                         dataset_name = 'BRCA_triple_neg_old_labels_balanced_{}.h5'.format(filling)
                         final_dataset_name = 'triple_neg_old_labels_balanced_{}'.format(filling)
@@ -379,88 +379,6 @@ def main_brca_dataset_builder():
                         dataset_name = 'BRCA_triple_neg_old_labels_unbalanced_{}.h5'.format(filling)
                         final_dataset_name = 'triple_neg_old_labels_unbalanced_{}'.format(filling)
                     build_brca_dataset_for_graalpy(dataset=dataset_name, name=final_dataset_name)
-# def main_brca_dataset_builder():
-#     brca_builder = BuildBrcaDatasets(cancer_name='BRCA',
-#                                      label_file=new_label_file,
-#                                      methyl_path_450=project_path_on_is2 + "BRCA/brca_methylome/DNA_Methylation/JHU_USC__HumanMethylation450/Level_3",
-#                                      methyl_path_27=project_path_on_is2 + "BRCA/brca_methylome/DNA_Methylation/JHU_USC__HumanMethylation27/Level_3",
-#                                      rnaseq_path=project_path_on_is2 + "BRCA/brca_rnaseq/RNASeqV2/UNC__IlluminaHiSeq_RNASeqV2/Level_3",
-#                                      snps_path=project_path_on_is2 + "BRCA/brca_exome/Somatic_Mutations/WUSM__IlluminaGA_DNASeq_curated/Level_2/genome.wustl.edu__IlluminaGA_curated_DNA_sequencing_level2.maf",
-#                                      mirna_file=project_path_on_is2 + "BRCA/brca_mirna/miRNASeq/BCGSC__IlluminaHiSeq_miRNASeq/Level_3")
-#     brca_builder.combine_dataset(file_name='BRCA_triple_neg_new_labels',
-#                                  methyl_450_file=methyl_450_file,
-#                                  methyl_27_file=methyl_27_file,
-#                                  rnaseq_genes_file=rnaseq_genes_file,
-#                                  rnaseq_isoforms_file=rnaseq_isoforms_file,
-#                                  snp_file=snp_file,
-#                                  mirna_file=mirna_file,
-#                                  clinical_file=new_clinical_file,
-#                                  filling_type='mean')
-#     brca_builder.combine_dataset(file_name='BRCA_triple_neg_new_labels',
-#                                  methyl_450_file=methyl_450_file,
-#                                  methyl_27_file=methyl_27_file,
-#                                  rnaseq_genes_file=rnaseq_genes_file,
-#                                  rnaseq_isoforms_file=rnaseq_isoforms_file,
-#                                  snp_file=snp_file,
-#                                  mirna_file=mirna_file,
-#                                  clinical_file=new_clinical_file,
-#                                  filling_type='median')
-#     brca_builder.combine_dataset(file_name='BRCA_triple_neg_new_labels',
-#                                  methyl_450_file=methyl_450_file,
-#                                  methyl_27_file=methyl_27_file,
-#                                  rnaseq_genes_file=rnaseq_genes_file,
-#                                  rnaseq_isoforms_file=rnaseq_isoforms_file,
-#                                  snp_file=snp_file,
-#                                  mirna_file=mirna_file,
-#                                  clinical_file=new_clinical_file,
-#                                  filling_type='zero')
-#     build_brca_dataset_for_graalpy(dataset='BRCA_triple_neg_new_labels_unbalanced_mean.h5',
-#                                    name='triple_neg_new_labels_unbalanced_mean.h5')
-#     build_brca_dataset_for_graalpy(dataset='BRCA_triple_neg_new_labels_unbalanced_median.h5',
-#                                    name='triple_neg_new_labels_unbalanced_median.h5')
-#     build_brca_dataset_for_graalpy(dataset='BRCA_triple_neg_new_labels_unbalanced_zero.h5',
-#                                    name='triple_neg_new_labels_unbalanced_zero.h5')
-#
-#     brca_builder = BuildBrcaDatasets(cancer_name='BRCA',
-#                                      label_file=label_file_triple_all,
-#                                      methyl_path_450=project_path_on_is2 + "BRCA/brca_methylome/DNA_Methylation/JHU_USC__HumanMethylation450/Level_3",
-#                                      methyl_path_27=project_path_on_is2 + "BRCA/brca_methylome/DNA_Methylation/JHU_USC__HumanMethylation27/Level_3",
-#                                      rnaseq_path=project_path_on_is2 + "BRCA/brca_rnaseq/RNASeqV2/UNC__IlluminaHiSeq_RNASeqV2/Level_3",
-#                                      snps_path=project_path_on_is2 + "BRCA/brca_exome/Somatic_Mutations/WUSM__IlluminaGA_DNASeq_curated/Level_2/genome.wustl.edu__IlluminaGA_curated_DNA_sequencing_level2.maf",
-#                                      mirna_file=project_path_on_is2 + "BRCA/brca_mirna/miRNASeq/BCGSC__IlluminaHiSeq_miRNASeq/Level_3")
-#     brca_builder.combine_dataset(file_name='BRCA_triple_neg_old_labels',
-#                                  methyl_450_file=methyl_450_file,
-#                                  methyl_27_file=methyl_27_file,
-#                                  rnaseq_genes_file=rnaseq_genes_file,
-#                                  rnaseq_isoforms_file=rnaseq_isoforms_file,
-#                                  snp_file=snp_file,
-#                                  mirna_file=mirna_file,
-#                                  clinical_file=new_clinical_file,
-#                                  filling_type='mean')
-#     brca_builder.combine_dataset(file_name='BRCA_triple_neg_old_labels',
-#                                  methyl_450_file=methyl_450_file,
-#                                  methyl_27_file=methyl_27_file,
-#                                  rnaseq_genes_file=rnaseq_genes_file,
-#                                  rnaseq_isoforms_file=rnaseq_isoforms_file,
-#                                  snp_file=snp_file,
-#                                  mirna_file=mirna_file,
-#                                  clinical_file=new_clinical_file,
-#                                  filling_type='median')
-#     brca_builder.combine_dataset(file_name='BRCA_triple_neg_old_labels',
-#                                  methyl_450_file=methyl_450_file,
-#                                  methyl_27_file=methyl_27_file,
-#                                  rnaseq_genes_file=rnaseq_genes_file,
-#                                  rnaseq_isoforms_file=rnaseq_isoforms_file,
-#                                  snp_file=snp_file,
-#                                  mirna_file=mirna_file,
-#                                  clinical_file=new_clinical_file,
-#                                  filling_type='zero')
-#     build_brca_dataset_for_graalpy(dataset='BRCA_triple_neg_old_labels_unbalanced_mean.h5',
-#                                    name='triple_neg_nold_labels_unbalanced_mean.h5')
-#     build_brca_dataset_for_graalpy(dataset='BRCA_triple_neg_old_labels_unbalanced_median.h5',
-#                                    name='triple_neg_old_labels_unbalanced_median.h5')
-#     build_brca_dataset_for_graalpy(dataset='BRCA_triple_neg_old_labels_unbalanced_zero.h5',
-#                                    name='triple_neg_old_labels_unbalanced_zero.h5')
 
 
 if __name__ == '__main__':
