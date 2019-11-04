@@ -2,14 +2,14 @@
 __author__ = 'maoss2'
 """ Fichier d'analyses de la dispersion des données. """
 from datasets.datasets_utilitaires import *
-
-methyl_450_file = "./methylome_450.tsv"
-methyl_27_file = "./methylome_27.tsv"
-rnaseq_genes_file = "./rnaseq_genes.tsv"
-rnaseq_isoforms_file = "./rnaseq_genes.tsv"
-snp_file = "./snp.tsv"
-mirna_file = "./mirna.tsv"
-label_file_triple_neg = "./labels_for_triple_negatives.tsv"
+# TODO: Legacy code: didn't even test it here so beware
+methyl_450_file = "/datasets_repository/methylome_450.tsv"
+methyl_27_file = "/datasets_repository/methylome_27.tsv"
+rnaseq_genes_file = "/datasets_repository/rnaseq_genes.tsv"
+rnaseq_isoforms_file = "/datasets_repository/rnaseq_genes.tsv"
+snp_file = "/datasets_repository/snp.tsv"
+mirna_file = "/datasets_repository/mirna.tsv"
+label_file_triple_neg = "/datasets_repository/labels_for_triple_negatives.tsv"
 
 
 def load_data(fichier, label_file):
