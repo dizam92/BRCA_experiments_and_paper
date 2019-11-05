@@ -62,7 +62,7 @@ cv_fold = KFold(n_splits=5, random_state=42)
 
 
 class LearnTN(object):
-    def __init__(self, parameters, learner, saving_dict, balanced_weights, saving_file="", rs=42, nb_jobs=nb_jobs,
+    def __init__(self, parameters, learner, saving_dict, balanced_weights, saving_file="", rs=random_seeds_list[state], nb_jobs=nb_jobs,
                  cv=cv_fold, data_path=data_tn_new_label_unbalanced_mean, return_views='all'):
         """
         Learning Class to learn experiment on TN dataset
@@ -104,10 +104,10 @@ class LearnTN(object):
                     print("%d. feature %d (%f) %s" % (f + 1, indices[f], importances[indices[f]],
                                                       features_names[indices[f]]))
 
-            dictionary['importances'].append([importances])
+            dictionary['importances'].append(importances)
             listes_resultats = [(f + 1, indices[f], importances[indices[f]], features_names[indices[f]]) for f in
                                 range(100) if importances[indices[f]] > 0]
-            dictionary['rules_str'].append([listes_resultats])
+            dictionary['rules_str'].append(listes_resultats)
 
     def fit(self, x, y):
         self.gs_clf.fit(x, y)
@@ -376,7 +376,7 @@ def run_experiment(data, experiment_name, return_views, nb_repetitions, saving_r
                           saving_dict=saving_dict_dt,
                           balanced_weights=balanced_weights,
                           saving_file=experiment_name,
-                          rs=42,
+                          rs=random_seeds_list[state],
                           nb_jobs=nb_jobs,
                           cv=cv_fold,
                           data_path=data,
@@ -394,7 +394,7 @@ def run_experiment(data, experiment_name, return_views, nb_repetitions, saving_r
                           saving_dict=saving_dict_dt,
                           balanced_weights=balanced_weights,
                           saving_file=experiment_name,
-                          rs=42,
+                          rs=random_seeds_list[state],
                           nb_jobs=nb_jobs,
                           cv=cv_fold,
                           data_path=data,
@@ -415,7 +415,7 @@ def run_experiment(data, experiment_name, return_views, nb_repetitions, saving_r
                           saving_dict=saving_dict_scm,
                           balanced_weights=balanced_weights,
                           saving_file=experiment_name,
-                          rs=42,
+                          rs=random_seeds_list[state],
                           nb_jobs=nb_jobs,
                           cv=cv_fold,
                           data_path=data,
@@ -433,7 +433,7 @@ def run_experiment(data, experiment_name, return_views, nb_repetitions, saving_r
                           saving_dict=saving_dict_scm,
                           balanced_weights=balanced_weights,
                           saving_file=experiment_name,
-                          rs=42,
+                          rs=random_seeds_list[state],
                           nb_jobs=nb_jobs,
                           cv=cv_fold,
                           data_path=data,
@@ -454,7 +454,7 @@ def run_experiment(data, experiment_name, return_views, nb_repetitions, saving_r
                           saving_dict=saving_dict_rf,
                           balanced_weights=balanced_weights,
                           saving_file=experiment_name,
-                          rs=42,
+                          rs=random_seeds_list[state],
                           nb_jobs=nb_jobs,
                           cv=cv_fold,
                           data_path=data,
@@ -472,7 +472,7 @@ def run_experiment(data, experiment_name, return_views, nb_repetitions, saving_r
                           saving_dict=saving_dict_rf,
                           balanced_weights=balanced_weights,
                           saving_file=experiment_name,
-                          rs=42,
+                          rs=random_seeds_list[state],
                           nb_jobs=nb_jobs,
                           cv=cv_fold,
                           data_path=data,
@@ -534,7 +534,7 @@ def run_experiment_majority_vote(data, experiment_name, return_views, nb_repetit
                           saving_dict=saving_dict_dt,
                           balanced_weights=balanced_weights,
                           saving_file=experiment_name,
-                          rs=42,
+                          rs=random_seeds_list[state],
                           nb_jobs=nb_jobs,
                           cv=cv_fold,
                           data_path=data,
@@ -644,7 +644,7 @@ def run_experiment_majority_vote(data, experiment_name, return_views, nb_repetit
                           saving_dict=saving_dict_dt,
                           balanced_weights=balanced_weights,
                           saving_file=experiment_name,
-                          rs=42,
+                          rs=random_seeds_list[state],
                           nb_jobs=nb_jobs,
                           cv=cv_fold,
                           data_path=data,
@@ -757,7 +757,7 @@ def run_experiment_majority_vote(data, experiment_name, return_views, nb_repetit
                           saving_dict=saving_dict_scm,
                           balanced_weights=balanced_weights,
                           saving_file=experiment_name,
-                          rs=42,
+                          rs=random_seeds_list[state],
                           nb_jobs=nb_jobs,
                           cv=cv_fold,
                           data_path=data,
@@ -867,7 +867,7 @@ def run_experiment_majority_vote(data, experiment_name, return_views, nb_repetit
                           saving_dict=saving_dict_scm,
                           balanced_weights=balanced_weights,
                           saving_file=experiment_name,
-                          rs=42,
+                          rs=random_seeds_list[state],
                           nb_jobs=nb_jobs,
                           cv=cv_fold,
                           data_path=data,
@@ -980,7 +980,7 @@ def run_experiment_majority_vote(data, experiment_name, return_views, nb_repetit
                           saving_dict=saving_dict_rf,
                           balanced_weights=balanced_weights,
                           saving_file=experiment_name,
-                          rs=42,
+                          rs=random_seeds_list[state],
                           nb_jobs=nb_jobs,
                           cv=cv_fold,
                           data_path=data,
@@ -1090,7 +1090,7 @@ def run_experiment_majority_vote(data, experiment_name, return_views, nb_repetit
                           saving_dict=saving_dict_dt,
                           balanced_weights=balanced_weights,
                           saving_file=experiment_name,
-                          rs=42,
+                          rs=random_seeds_list[state],
                           nb_jobs=nb_jobs,
                           cv=cv_fold,
                           data_path=data,
