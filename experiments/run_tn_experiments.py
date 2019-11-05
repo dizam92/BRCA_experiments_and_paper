@@ -62,7 +62,7 @@ cv_fold = KFold(n_splits=5, random_state=42)
 
 
 class LearnTN(object):
-    def __init__(self, parameters, learner, saving_dict, balanced_weights, saving_file="", rs=random_seeds_list[state], nb_jobs=nb_jobs,
+    def __init__(self, parameters, learner, saving_dict, balanced_weights, saving_file="", rs=42, nb_jobs=nb_jobs,
                  cv=cv_fold, data_path=data_tn_new_label_unbalanced_mean, return_views='all'):
         """
         Learning Class to learn experiment on TN dataset
