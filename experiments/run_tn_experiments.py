@@ -93,14 +93,9 @@ class LearnTN(object):
     @staticmethod
     def save_features_selected(classifier, parameters, features_names, dictionary):
         if 'SCM__p' in parameters:
-            if 'rules_str' in dictionary.keys():
-                dictionary['rules'].append(classifier.best_estimator_.named_steps['SCM'].get_stats())
-                dictionary['rules_str'].append([(el.__str__(), features_names[el.feature_idx]) for el in
-                                                dictionary['rules']['Binary_attributes']])
-            else:
-                dictionary['rules'] = [classifier.best_estimator_.named_steps['SCM'].get_stats()]
-                dictionary['rules_str'].append([(el.__str__(), features_names[el.feature_idx]) for el in
-                                                dictionary['rules']['Binary_attributes']])
+            dictionary['rules'].append([classifier.best_estimator_.named_steps['SCM'].get_stats()])
+            dictionary['rules_str'].append([(el.__str__(), features_names[el.feature_idx]) for el in
+                                            dictionary['rules'][-1]['Binary_attributes']])
         else:
             importances = classifier.best_estimator_.feature_importances_
             indices = np.argsort(importances)[::-1]
@@ -108,10 +103,11 @@ class LearnTN(object):
                 if importances[indices[f]] > 0:
                     print("%d. feature %d (%f) %s" % (f + 1, indices[f], importances[indices[f]],
                                                       features_names[indices[f]]))
-            dictionary['importances'].append(importances)
+
+            dictionary['importances'].append([importances])
             listes_resultats = [(f + 1, indices[f], importances[indices[f]], features_names[indices[f]]) for f in
                                 range(100) if importances[indices[f]] > 0]
-            dictionary['rules_str'].append(listes_resultats)
+            dictionary['rules_str'].append([listes_resultats])
 
     def fit(self, x, y):
         self.gs_clf.fit(x, y)
@@ -143,6 +139,8 @@ class LearnTN(object):
         patients_test = [el.decode("utf-8") for el in patients_test]
         self.saving_dict['patients_train'] = patients_train
         self.saving_dict['patients_test'] = patients_test
+        self.saving_dict['importances'] = []
+        self.saving_dict['rules_str'] = []
         self.save_features_selected(classifier=self.gs_clf, parameters=self.parameters,
                                     features_names=features_names, dictionary=self.saving_dict)
         self.saving_file = self.saving_file + '_{}_{}.pck'.format(self.return_views, str(self.rs))
