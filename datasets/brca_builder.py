@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 __author__ = 'maoss2'
-from datasets.datasets_utilitaires import *
+from datasets.datasets_utilities import *
 
 
 class BuildBrcaDatasets(BuildOmicsDatasets):
@@ -344,16 +344,16 @@ def main_brca_dataset_builder():
                                                  snps_path=project_path_on_is2 + "BRCA/brca_exome/Somatic_Mutations/WUSM__IlluminaGA_DNASeq_curated/Level_2/genome.wustl.edu__IlluminaGA_curated_DNA_sequencing_level2.maf",
                                                  mirna_file=project_path_on_is2 + "BRCA/brca_mirna/miRNASeq/BCGSC__IlluminaHiSeq_miRNASeq/Level_3")
                 if label_file == new_label_file:
-                    # brca_builder.combine_dataset(file_name='BRCA_triple_neg_new_labels',
-                    #                              methyl_450_file=methyl_450_file,
-                    #                              methyl_27_file=methyl_27_file,
-                    #                              rnaseq_genes_file=rnaseq_genes_file,
-                    #                              rnaseq_isoforms_file=rnaseq_isoforms_file,
-                    #                              snp_file=snp_file,
-                    #                              mirna_file=mirna_file,
-                    #                              clinical_file=new_clinical_file,
-                    #                              balanced_dataset=balanced,
-                    #                              filling_type=filling)
+                    brca_builder.combine_dataset(file_name='BRCA_triple_neg_new_labels',
+                                                 methyl_450_file=methyl_450_file,
+                                                 methyl_27_file=methyl_27_file,
+                                                 rnaseq_genes_file=rnaseq_genes_file,
+                                                 rnaseq_isoforms_file=rnaseq_isoforms_file,
+                                                 snp_file=snp_file,
+                                                 mirna_file=mirna_file,
+                                                 clinical_file=new_clinical_file,
+                                                 balanced_dataset=balanced,
+                                                 filling_type=filling)
                     if balanced:
                         dataset_name = 'BRCA_triple_neg_new_labels_balanced_{}.h5'.format(filling)
                         final_dataset_name = 'triple_neg_new_labels_balanced_{}'.format(filling)
@@ -362,16 +362,16 @@ def main_brca_dataset_builder():
                         final_dataset_name = 'triple_neg_new_labels_unbalanced_{}'.format(filling)
                     build_brca_dataset_for_graalpy(dataset=dataset_name, name=final_dataset_name)
                 else:
-                    # brca_builder.combine_dataset(file_name='BRCA_triple_neg_old_labels',
-                    #                              methyl_450_file=methyl_450_file,
-                    #                              methyl_27_file=methyl_27_file,
-                    #                              rnaseq_genes_file=rnaseq_genes_file,
-                    #                              rnaseq_isoforms_file=rnaseq_isoforms_file,
-                    #                              snp_file=snp_file,
-                    #                              mirna_file=mirna_file,
-                    #                              clinical_file=new_clinical_file,
-                    #                              balanced_dataset=balanced,
-                    #                              filling_type=filling)
+                    brca_builder.combine_dataset(file_name='BRCA_triple_neg_old_labels',
+                                                 methyl_450_file=methyl_450_file,
+                                                 methyl_27_file=methyl_27_file,
+                                                 rnaseq_genes_file=rnaseq_genes_file,
+                                                 rnaseq_isoforms_file=rnaseq_isoforms_file,
+                                                 snp_file=snp_file,
+                                                 mirna_file=mirna_file,
+                                                 clinical_file=new_clinical_file,
+                                                 balanced_dataset=balanced,
+                                                 filling_type=filling)
                     if balanced:
                         dataset_name = 'BRCA_triple_neg_old_labels_balanced_{}.h5'.format(filling)
                         final_dataset_name = 'triple_neg_old_labels_balanced_{}'.format(filling)
