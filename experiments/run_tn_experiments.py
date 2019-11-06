@@ -141,6 +141,7 @@ class LearnTN(object):
         self.saving_dict['patients_test'] = patients_test
         self.saving_dict['importances'] = []
         self.saving_dict['rules_str'] = []
+        self.saving_dict['rules'] = []
         self.save_features_selected(classifier=self.gs_clf, parameters=self.parameters,
                                     features_names=features_names, dictionary=self.saving_dict)
         self.saving_file = self.saving_file + '_{}_{}.pck'.format(self.return_views, str(self.rs))
@@ -162,6 +163,7 @@ class LearnTN(object):
         # initialize to an empty list
         self.saving_dict['importances'] = []
         self.saving_dict['rules_str'] = []
+        self.saving_dict['rules'] = []
         train_pred = []
         pred = []
         # Train on methyl
