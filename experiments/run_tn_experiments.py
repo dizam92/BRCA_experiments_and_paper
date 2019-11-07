@@ -95,7 +95,7 @@ class LearnTN(object):
         if 'SCM__p' in parameters:
             dictionary['rules'].append([classifier.best_estimator_.named_steps['SCM'].get_stats()])
             dictionary['rules_str'].append([(el.__str__(), features_names[el.feature_idx]) for el in
-                                            dictionary['rules'][-1]['Binary_attributes']])
+                                            dictionary['rules']['Binary_attributes']])
         else:
             importances = classifier.best_estimator_.feature_importances_
             indices = np.argsort(importances)[::-1]
