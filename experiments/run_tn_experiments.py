@@ -92,7 +92,7 @@ class LearnTN(object):
     @staticmethod
     def save_features_selected(classifier, parameters, features_names, dictionary):
         if 'SCM__p' in parameters:
-            dictionary['rules'].append([classifier.best_estimator_.named_steps['SCM'].get_stats()])
+            dictionary['rules'].append(classifier.best_estimator_.named_steps['SCM'].get_stats())
             print(dictionary['rules'])
             print(type(dictionary['rules']))
             dictionary['rules_str'].append([(el.__str__(), features_names[el.feature_idx]) for el in
