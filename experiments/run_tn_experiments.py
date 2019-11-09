@@ -2,11 +2,10 @@
 __author__ = 'maoss2'
 from experiments.utilities import *
 from collections import defaultdict
-from copy import deepcopy
 from learners.decisionStumpSCM_learner import DecisionStumpSCMNew
-from sklearn.tree import DecisionTreeClassifier, export_graphviz
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split, GridSearchCV, KFold, ParameterGrid
+from sklearn.model_selection import train_test_split, GridSearchCV, KFold
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import confusion_matrix
 
@@ -94,8 +93,10 @@ class LearnTN(object):
     def save_features_selected(classifier, parameters, features_names, dictionary):
         if 'SCM__p' in parameters:
             dictionary['rules'].append([classifier.best_estimator_.named_steps['SCM'].get_stats()])
+            print(dictionary['rules'])
+            print(type(dictionary['rules']))
             dictionary['rules_str'].append([(el.__str__(), features_names[el.feature_idx]) for el in
-                                            dictionary['rules']['Binary_attributes']])
+                                            dictionary['rules'][-1]['Binary_attributes']])
         else:
             importances = classifier.best_estimator_.feature_importances_
             indices = np.argsort(importances)[::-1]
@@ -369,44 +370,44 @@ def run_experiment(data, experiment_name, return_views, nb_repetitions, saving_r
     balanced_weights = {1: balanced_weights.max() * x.shape[0], -1: balanced_weights.min() * x.shape[0]}
     random.seed(42)
     random_seeds_list = [random.randint(1, 2000) for _ in range(nb_repetitions)]
-    try:
-        os.mkdir('{}/dt_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
-        os.chdir('{}/dt_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
-        for state in range(nb_repetitions):
-            clf = LearnTN(parameters=parameters_dt,
-                          learner=DecisionTreeClassifier(random_state=42, class_weight=balanced_weights),
-                          saving_dict=saving_dict_dt,
-                          balanced_weights=balanced_weights,
-                          saving_file=experiment_name,
-                          rs=random_seeds_list[state],
-                          nb_jobs=nb_jobs,
-                          cv=cv_fold,
-                          data_path=data,
-                          return_views=return_views)
-            x_train, x_test, y_train, y_test, patients_train, patients_test = \
-                train_test_split(x, y, patients_names, train_size=0.8, random_state=random_seeds_list[state])
-            clf.learning(features_names=features_names, x_train=x_train, x_test=x_test,
-                         y_train=y_train, y_test=y_test, patients_train=patients_train,
-                         patients_test=patients_test)
-    except OSError:
-        os.chdir('{}/dt_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
-        for state in range(nb_repetitions):
-            clf = LearnTN(parameters=parameters_dt,
-                          learner=DecisionTreeClassifier(random_state=42, class_weight=balanced_weights),
-                          saving_dict=saving_dict_dt,
-                          balanced_weights=balanced_weights,
-                          saving_file=experiment_name,
-                          rs=random_seeds_list[state],
-                          nb_jobs=nb_jobs,
-                          cv=cv_fold,
-                          data_path=data,
-                          return_views=return_views)
-            x_train, x_test, y_train, y_test, patients_train, patients_test = \
-                train_test_split(x, y, patients_names, train_size=0.8, random_state=random_seeds_list[state])
-            clf.learning(features_names=features_names, x_train=x_train, x_test=x_test,
-                         y_train=y_train, y_test=y_test, patients_train=patients_train,
-                         patients_test=patients_test)
-    os.chdir('/home/maoss2/')
+    # try:
+    #     os.mkdir('{}/dt_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
+    #     os.chdir('{}/dt_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
+    #     for state in range(nb_repetitions):
+    #         clf = LearnTN(parameters=parameters_dt,
+    #                       learner=DecisionTreeClassifier(random_state=42, class_weight=balanced_weights),
+    #                       saving_dict=saving_dict_dt,
+    #                       balanced_weights=balanced_weights,
+    #                       saving_file=experiment_name,
+    #                       rs=random_seeds_list[state],
+    #                       nb_jobs=nb_jobs,
+    #                       cv=cv_fold,
+    #                       data_path=data,
+    #                       return_views=return_views)
+    #         x_train, x_test, y_train, y_test, patients_train, patients_test = \
+    #             train_test_split(x, y, patients_names, train_size=0.8, random_state=random_seeds_list[state])
+    #         clf.learning(features_names=features_names, x_train=x_train, x_test=x_test,
+    #                      y_train=y_train, y_test=y_test, patients_train=patients_train,
+    #                      patients_test=patients_test)
+    # except OSError:
+    #     os.chdir('{}/dt_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
+    #     for state in range(nb_repetitions):
+    #         clf = LearnTN(parameters=parameters_dt,
+    #                       learner=DecisionTreeClassifier(random_state=42, class_weight=balanced_weights),
+    #                       saving_dict=saving_dict_dt,
+    #                       balanced_weights=balanced_weights,
+    #                       saving_file=experiment_name,
+    #                       rs=random_seeds_list[state],
+    #                       nb_jobs=nb_jobs,
+    #                       cv=cv_fold,
+    #                       data_path=data,
+    #                       return_views=return_views)
+    #         x_train, x_test, y_train, y_test, patients_train, patients_test = \
+    #             train_test_split(x, y, patients_names, train_size=0.8, random_state=random_seeds_list[state])
+    #         clf.learning(features_names=features_names, x_train=x_train, x_test=x_test,
+    #                      y_train=y_train, y_test=y_test, patients_train=patients_train,
+    #                      patients_test=patients_test)
+    # os.chdir('/home/maoss2/')
 
     try:
         os.mkdir('{}/scm_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))

@@ -4,7 +4,7 @@ __author__ = 'maoss2'
 from pyscm.scm import SetCoveringMachineClassifier as scm
 
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.externals.six import iteritems
+from six import iteritems
 
 
 class DecisionStumpSCMNew(BaseEstimator, ClassifierMixin):
@@ -38,4 +38,3 @@ class DecisionStumpSCMNew(BaseEstimator, ClassifierMixin):
 
     def get_stats(self):
         return {"Binary_attributes": self.clf.model_.rules}
-
