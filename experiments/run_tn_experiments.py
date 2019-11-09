@@ -370,44 +370,44 @@ def run_experiment(data, experiment_name, return_views, nb_repetitions, saving_r
     balanced_weights = {1: balanced_weights.max() * x.shape[0], -1: balanced_weights.min() * x.shape[0]}
     random.seed(42)
     random_seeds_list = [random.randint(1, 2000) for _ in range(nb_repetitions)]
-    # try:
-    #     os.mkdir('{}/dt_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
-    #     os.chdir('{}/dt_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
-    #     for state in range(nb_repetitions):
-    #         clf = LearnTN(parameters=parameters_dt,
-    #                       learner=DecisionTreeClassifier(random_state=42, class_weight=balanced_weights),
-    #                       saving_dict=saving_dict_dt,
-    #                       balanced_weights=balanced_weights,
-    #                       saving_file=experiment_name,
-    #                       rs=random_seeds_list[state],
-    #                       nb_jobs=nb_jobs,
-    #                       cv=cv_fold,
-    #                       data_path=data,
-    #                       return_views=return_views)
-    #         x_train, x_test, y_train, y_test, patients_train, patients_test = \
-    #             train_test_split(x, y, patients_names, train_size=0.8, random_state=random_seeds_list[state])
-    #         clf.learning(features_names=features_names, x_train=x_train, x_test=x_test,
-    #                      y_train=y_train, y_test=y_test, patients_train=patients_train,
-    #                      patients_test=patients_test)
-    # except OSError:
-    #     os.chdir('{}/dt_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
-    #     for state in range(nb_repetitions):
-    #         clf = LearnTN(parameters=parameters_dt,
-    #                       learner=DecisionTreeClassifier(random_state=42, class_weight=balanced_weights),
-    #                       saving_dict=saving_dict_dt,
-    #                       balanced_weights=balanced_weights,
-    #                       saving_file=experiment_name,
-    #                       rs=random_seeds_list[state],
-    #                       nb_jobs=nb_jobs,
-    #                       cv=cv_fold,
-    #                       data_path=data,
-    #                       return_views=return_views)
-    #         x_train, x_test, y_train, y_test, patients_train, patients_test = \
-    #             train_test_split(x, y, patients_names, train_size=0.8, random_state=random_seeds_list[state])
-    #         clf.learning(features_names=features_names, x_train=x_train, x_test=x_test,
-    #                      y_train=y_train, y_test=y_test, patients_train=patients_train,
-    #                      patients_test=patients_test)
-    # os.chdir('/home/maoss2/')
+    try:
+        os.mkdir('{}/dt_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
+        os.chdir('{}/dt_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
+        for state in range(nb_repetitions):
+            clf = LearnTN(parameters=parameters_dt,
+                          learner=DecisionTreeClassifier(random_state=42, class_weight=balanced_weights),
+                          saving_dict=saving_dict_dt,
+                          balanced_weights=balanced_weights,
+                          saving_file=experiment_name,
+                          rs=random_seeds_list[state],
+                          nb_jobs=nb_jobs,
+                          cv=cv_fold,
+                          data_path=data,
+                          return_views=return_views)
+            x_train, x_test, y_train, y_test, patients_train, patients_test = \
+                train_test_split(x, y, patients_names, train_size=0.8, random_state=random_seeds_list[state])
+            clf.learning(features_names=features_names, x_train=x_train, x_test=x_test,
+                         y_train=y_train, y_test=y_test, patients_train=patients_train,
+                         patients_test=patients_test)
+    except OSError:
+        os.chdir('{}/dt_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
+        for state in range(nb_repetitions):
+            clf = LearnTN(parameters=parameters_dt,
+                          learner=DecisionTreeClassifier(random_state=42, class_weight=balanced_weights),
+                          saving_dict=saving_dict_dt,
+                          balanced_weights=balanced_weights,
+                          saving_file=experiment_name,
+                          rs=random_seeds_list[state],
+                          nb_jobs=nb_jobs,
+                          cv=cv_fold,
+                          data_path=data,
+                          return_views=return_views)
+            x_train, x_test, y_train, y_test, patients_train, patients_test = \
+                train_test_split(x, y, patients_names, train_size=0.8, random_state=random_seeds_list[state])
+            clf.learning(features_names=features_names, x_train=x_train, x_test=x_test,
+                         y_train=y_train, y_test=y_test, patients_train=patients_train,
+                         patients_test=patients_test)
+    os.chdir('/home/maoss2/')
 
     try:
         os.mkdir('{}/scm_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
