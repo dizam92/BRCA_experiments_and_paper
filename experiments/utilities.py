@@ -5,14 +5,29 @@ import os
 import h5py
 import time
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
-import scipy
+import networkx as nx
+import re
 import pickle
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from itertools import combinations
+from copy import deepcopy
+from collections import defaultdict
 from glob import glob
 from collections import Counter
+goa_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/goa_human_isoform_valid.gaf'
+biogrid_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/BIOGRID-ORGANISM-Homo_sapiens-3.5.178.tab.txt'
+genesID_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/Results_genes.txt'
+c1_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/c1.all.v6.1.symbols.gmt'
+c2_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/c2.all.v6.1.symbols.gmt'
+c3_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/c3.all.v6.1.symbols.gmt'
+c4_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/c4.all.v6.1.symbols.gmt'
+c5_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/c5.all.v6.1.symbols.gmt'
+c6_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/c6.all.v6.1.symbols.gmt'
+c7_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/c7.all.v6.1.symbols.gmt'
+hall_mark_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/h.all.v6.1.symbols.gmt'
 
 
 def load_data(data, return_views='all'):
@@ -342,51 +357,275 @@ def get_metrics_balanced(y_test, predictions_binary, weights):
     return metrics
 
 
-# TODO: To be modified and adapted to the new outing: COme back here soon
-def gen_histogram_results(pattern_to_search='*_unbalanced_*.pck', metric='accuracy', directory='results_analysis',
-                          results_path='/home/maoss2/PycharmProjects/breast_cancer/experimentations/Results'):
-    os.chdir('{}'.format(results_path))
-    assert metric in ['accuracy', 'f1_score', 'precision', 'recall'], 'metric {} is not implemented yet'.format(metric)
-    noms_fichiers = []
-    metric_train = []
-    metric_test = []
+def zero_one_loss(y_target, y_estimate):
+    if len(y_target) == 0:
+        return 0.0
+    return np.mean(y_target != y_estimate)
 
-    for fichier in glob('{}'.format(pattern_to_search)):
-        noms_fichiers.append(fichier)
-        f = open(fichier, 'r')
-        d = pickle.load(f)
-        if metric == 'accuracy':
-            metric_train.append(d['train_metrics']['accuracy'])
-            metric_test.append(d['metrics']['accuracy'])
-        if metric == 'precision':
-            metric_train.append(d['train_metrics']['precision'])
-            metric_test.append(d['metrics']['precision'])
-        if metric == 'recall':
-            metric_train.append(d['train_metrics']['recall'])
-            metric_test.append(d['metrics']['recall'])
-        if metric == 'f1_score':
-            metric_train.append(d['train_metrics']['f1_score'])
-            metric_test.append(d['metrics']['f1_score'])
-    noms_fichiers = np.asarray(noms_fichiers)
-    metric_test = np.asarray(metric_test)
-    metric_train = np.asarray(metric_train)
-    nbResults = len(metric_train)
-    figKW = {"figsize": (nbResults, 3.0 / 4 * nbResults + 2.0)}
-    f, ax = plt.subplots(nrows=1, ncols=1, **figKW)
-    barWidth = 0.35
-    sorted_indices = np.argsort(metric_test)
-    testScores = metric_test[sorted_indices]
-    trainScores = metric_train[sorted_indices]
-    names = noms_fichiers[sorted_indices]
-    ax.set_title(''.format(metric))
-    rects = ax.bar(range(nbResults), testScores, barWidth, color="r", )
-    rect2 = ax.bar(np.arange(nbResults) + barWidth, trainScores, barWidth, color="0.7", )
-    autolabel(rects, ax)
-    autolabel(rect2, ax)
-    ax.legend((rects[0], rect2[0]), ('Test', 'Train'))
-    ax.set_ylim(-0.1, 1.1)
-    ax.set_xticks(np.arange(nbResults) + barWidth)
-    ax.set_xticklabels(names, rotation="vertical")
-    plt.tight_layout()
-    f.savefig(directory + time.strftime("%Y%m%d-%H%M%S") + '_unbalanced_metric_analysis_{}'.format(metric) + ".png")
-    plt.close()
+
+def zero_one_loss_imbalanced(y_target, y_estimate, sample_weight):
+    """ Zero one loss for imbalanced dataset"""
+    if len(y_target) == 0:
+        return 0.0
+    assert len(sample_weight) == len(y_target) == len(y_estimate), 'Sample weight and y_target must have the same shape'
+    return np.mean(np.dot((y_target != y_estimate).astype(np.int), sample_weight))
+
+
+class ExtractGroupsToPickle:
+    def __init__(self, fichier, saving_file):
+        """
+        Extract file to pickle
+        Args:
+            fichier: str, pathway files
+            saving_file: str, name of the saving file
+        """
+        self.fichier = fichier
+        self.saving_file = saving_file
+
+    def extract(self):
+        saving_dict = defaultdict(dict)
+        # load the genes from TCGA
+        temp = pd.read_table(genesID_file)
+        tcga_genes_ids = temp.values  # shape (20501, 1)
+        tcga_genes_ids = np.asarray([el[0] for el in tcga_genes_ids])
+        # load the group
+        with open(self.fichier, 'r') as f:
+            lignes = f.readlines()
+            for l in lignes:
+                # split the lines
+                splitting_results = re.split('\t', l[:-1])
+                pathway_name = splitting_results[0]
+                # pathway_website = splitting_results[1]
+                genes = splitting_results[2:]
+                genes = [el for el in genes if el in tcga_genes_ids]
+                saving_dict[pathway_name] = genes
+
+        with open(self.saving_file, 'w') as f:
+            pickle.dump(saving_dict, f)
+
+
+def construction_pathway_gene_groups_tcga(data_path, return_views='all', output_file_name='pathway_file_genes_tcga.txt'):
+    _, _, features_names = load_data(data=data_path, return_views=return_views)
+    groups_dict = {}
+    for el in features_names:
+        cles = [el.split('_')[-1]]
+        if cles[0].find(';') != -1:
+            cles = cles[0].split(';')
+        for cle in cles:
+            if cle not in groups_dict.keys():
+                groups_dict[cle] = [el]
+            else:
+                groups_dict[cle].append(el)
+    with open(output_file_name, 'w') as f:
+        f.write('G\tIDS\n')
+        for item in groups_dict.items():
+            for gene in item[1]:
+                f.write('{}\t{}\n'.format(item[0], gene))
+
+
+def construction_pathway_clusters_groups(data_path, model_loaded=False, return_views='all',
+                                         output_file_name='pathway_file_clusters_genes.txt',
+                                         model_agglomeration_file_name='feature_agglomeration_model.pck'):
+    from sklearn.cluster import FeatureAgglomeration
+    agglo = FeatureAgglomeration(n_clusters=1000)
+    x, y, features_names = load_data(data=data_path, return_views=return_views)
+    if model_loaded:
+        assert model_agglomeration_file_name != '', 'You should give the model agglomeration name file'
+        f = open(model_agglomeration_file_name, 'rb')
+        agglo = pickle.load(f)
+        groups_and_features = list(zip(features_names, agglo.labels_))
+        with open(output_file_name, 'w') as f:
+            f.write('G\tIDS\n')
+            for zip_el in groups_and_features:
+                f.write('{}\t{}\n'.format(zip_el[1], zip_el[0]))
+    else:
+        f = open(model_agglomeration_file_name, 'wb')
+        agglo.fit(x)
+        pickle.dump(agglo, f)
+
+
+def construction_pathway_random_groups(data_path, nbre_de_groupe=1000, return_views='all',
+                                       output_file_name='pathway_file_random_groups.txt'):
+    _, _, features_names = load_data(data=data_path, return_views=return_views)
+    features_names_copy = deepcopy(features_names)
+    random.seed(42)
+    np.random.seed(42)
+    nbr_element_per_groups = np.arange(2, 2000)  # un groupe peut contenir jusqua 1000 éléments
+    elements_choisis = []
+    with open(output_file_name, 'w') as f:
+        f.write('G\tIDS\n')
+        for i in range(nbre_de_groupe):
+            taille_groupe = np.random.choice(nbr_element_per_groups)
+            group = random.sample(list(features_names), taille_groupe)
+            elements_choisis.extend(group)
+            for el in group:
+                f.write('group_{}\t{}\n'.format(i, el))
+            print('The group_{} is done and length is {}'.format(i, taille_groupe))
+        elements_restant = np.delete(features_names,
+                                     np.where(np.isin(features_names_copy, elements_choisis) == True)[0])
+        for el in elements_restant:
+            f.write('group_{}\t{}\n'.format(nbre_de_groupe, el))
+        print('The group_{} is done and length is {}'.format(nbre_de_groupe, len(elements_restant)))
+
+
+def construction_pathway_views_groups(data_path, return_views='all', output_file_name='pathway_file_views_groups.txt'):
+    _, _, features_names = load_data(data=data_path, return_views=return_views)
+    with open(output_file_name, 'w') as f:
+        f.write('G\tIDS\n')
+        for el in features_names:
+            if el.startswith('cg'):
+                f.write('group_1\t{}\n'.format(el))
+            if el.startswith('uc'):
+                f.write('group_2\t{}\n'.format(el))
+            if el.startswith('hsa'):
+                f.write('group_3\t{}\n'.format(el))
+
+
+def construction_pathway_file(data_path, return_views, dictionnaire, fichier_pathway_name):
+    x, y, features_names = load_data(data=data_path, return_views=return_views)
+    features_names = list(features_names)
+    features_names_copy = deepcopy(features_names)
+    f = open(dictionnaire, 'r')
+    dict_file = pickle.load(f)
+    with open(fichier_pathway_name, 'w') as f:
+        f.write('G\tIDS\n')
+        for group in dict_file.items():
+            for raw_genes_name in np.asarray(group[1]):
+                for feature in features_names:
+                    feature_splits = feature.split('_')
+                    if len(feature_splits) == 2:
+                        if feature_splits[1] == raw_genes_name:
+                            f.write('{}\t{}\n'.format(group[0], feature))
+                            try:
+                                features_names_copy.remove(feature)  # supprimer de la liste
+                            except ValueError:  # si l'élément a déja été supprimer dans la liste
+                                pass
+        for feature_restant in features_names_copy:
+            f.write('{}\t{}\n'.format('unknown_group', feature_restant))
+
+
+def main_extraction_building():
+    extractor = ExtractGroupsToPickle(fichier=c1_file, saving_file='c1_positional_genes.pck')
+    extractor.extract()
+    extractor = ExtractGroupsToPickle(fichier=c2_file, saving_file='c2_curated_genes.pck')
+    extractor.extract()
+    extractor = ExtractGroupsToPickle(fichier=c3_file, saving_file='c3_motif_genes.pck')
+    extractor.extract()
+    extractor = ExtractGroupsToPickle(fichier=c4_file, saving_file='c4_computational_genes.pck')
+    extractor.extract()
+    extractor = ExtractGroupsToPickle(fichier=c5_file, saving_file='c5_gene_ontology_genes.pck')
+    extractor.extract()
+    extractor = ExtractGroupsToPickle(fichier=c6_file, saving_file='c6_oncogenetic_genes.pck')
+    extractor.extract()
+    extractor = ExtractGroupsToPickle(fichier=c7_file, saving_file='c7_immunologic_signatures_genes.pck')
+    extractor.extract()
+    extractor = ExtractGroupsToPickle(fichier=hall_mark_file, saving_file='hall_mark_genes.pck')
+    extractor.extract()
+
+
+# TODO: SHOULD I REBUILD THIS ONE? OR USE THE NEW ONES? With the correct label!
+#  But i might find a new way of doing groups
+def main_pathway_file_building():
+    construction_pathway_file(data_path='', dictionnaire='c1_positional_genes.pck',
+                              fichier_pathway_name='pathway_file_c1_positional_genes.txt', return_views='all')
+    construction_pathway_file(dictionnaire='c2_curated_genes.pck',
+                              fichier_pathway_name='pathway_file_c2_curated_genes.txt')
+    construction_pathway_gene_groups_tcga(data_path='')
+    construction_pathway_clusters_groups(data_path='', model_loaded=True)
+    construction_pathway_file(dictionnaire='c3_motif_genes.pck',
+                              fichier_pathway_name='pathway_file_c3_motif_genes.txt')
+    construction_pathway_file(dictionnaire='c4_computational_genes.pck',
+                              fichier_pathway_name='pathway_file_c4_computational_genes.txt')
+    construction_pathway_file(dictionnaire='c5_gene_ontology_genes.pck',
+                              fichier_pathway_name='pathway_file_c5_gene_ontology_genes.txt')
+    construction_pathway_file(dictionnaire='c6_oncogenetic_genes.pck',
+                              fichier_pathway_name='pathway_file_c6_oncogenetic_genes.txt')
+    construction_pathway_file(dictionnaire='c7_immunologic_signatures_genes.pck',
+                              fichier_pathway_name='pathway_file_c7_immunologic_signatures_genes.txt')
+    construction_pathway_file(dictionnaire='hall_mark_genes.pck',
+                              fichier_pathway_name='pathway_file_hall_mark_genes.txt')
+
+
+def load_go_idmapping():
+    res = defaultdict(set)
+    with open(goa_file, 'r') as fin:
+        for line in fin:
+            if line.startswith("UniProtKB"):
+                content = line.split("\t")
+                geneid = content[2].lower()
+                goid = content[4]
+                # go_refid = content[5]
+                res[geneid].add(goid)  # go_refid
+    nb_go_terms = sum([len(r) for i, r in res.items()])
+    nb_genes = len(res)
+    print("GO: {} genes and {} GO terms".format(nb_genes, nb_go_terms))
+    return res
+
+
+def load_biogrid_network():
+    go_terms = load_go_idmapping()
+    G = nx.Graph()
+    edges = set()
+    with open(biogrid_file, 'r') as fin:
+        fin.readline()
+        for line in fin:
+            content = line.split("\t")
+            if len(content) > 1:
+                gene_a, gene_b = content[2].strip(" "), content[3].strip(" ")
+                if len(gene_a) > 0 and len(gene_b) > 0:
+                    edges.add((gene_a.lower(), gene_b.lower()))
+        G.add_edges_from(list(edges))
+    for node in G.nodes:
+        G.nodes[node]["go_terms"] = go_terms[node]
+    print("BioGRID: {} genes and {} interactions".format(G.number_of_nodes(), G.number_of_edges()))
+    return G, edges
+
+
+# # TODO: To be modified and adapted to the new outing: COme back here soon
+# def gen_histogram_results(pattern_to_search='*_unbalanced_*.pck', metric='accuracy', directory='results_analysis',
+#                           results_path='/home/maoss2/PycharmProjects/breast_cancer/experimentations/Results'):
+#     os.chdir('{}'.format(results_path))
+#     assert metric in ['accuracy', 'f1_score', 'precision', 'recall'], 'metric {} is not implemented yet'.format(metric)
+#     noms_fichiers = []
+#     metric_train = []
+#     metric_test = []
+#
+#     for fichier in glob('{}'.format(pattern_to_search)):
+#         noms_fichiers.append(fichier)
+#         f = open(fichier, 'r')
+#         d = pickle.load(f)
+#         if metric == 'accuracy':
+#             metric_train.append(d['train_metrics']['accuracy'])
+#             metric_test.append(d['metrics']['accuracy'])
+#         if metric == 'precision':
+#             metric_train.append(d['train_metrics']['precision'])
+#             metric_test.append(d['metrics']['precision'])
+#         if metric == 'recall':
+#             metric_train.append(d['train_metrics']['recall'])
+#             metric_test.append(d['metrics']['recall'])
+#         if metric == 'f1_score':
+#             metric_train.append(d['train_metrics']['f1_score'])
+#             metric_test.append(d['metrics']['f1_score'])
+#     noms_fichiers = np.asarray(noms_fichiers)
+#     metric_test = np.asarray(metric_test)
+#     metric_train = np.asarray(metric_train)
+#     nbResults = len(metric_train)
+#     figKW = {"figsize": (nbResults, 3.0 / 4 * nbResults + 2.0)}
+#     f, ax = plt.subplots(nrows=1, ncols=1, **figKW)
+#     barWidth = 0.35
+#     sorted_indices = np.argsort(metric_test)
+#     testScores = metric_test[sorted_indices]
+#     trainScores = metric_train[sorted_indices]
+#     names = noms_fichiers[sorted_indices]
+#     ax.set_title(''.format(metric))
+#     rects = ax.bar(range(nbResults), testScores, barWidth, color="r", )
+#     rect2 = ax.bar(np.arange(nbResults) + barWidth, trainScores, barWidth, color="0.7", )
+#     autolabel(rects, ax)
+#     autolabel(rect2, ax)
+#     ax.legend((rects[0], rect2[0]), ('Test', 'Train'))
+#     ax.set_ylim(-0.1, 1.1)
+#     ax.set_xticks(np.arange(nbResults) + barWidth)
+#     ax.set_xticklabels(names, rotation="vertical")
+#     plt.tight_layout()
+#     f.savefig(directory + time.strftime("%Y%m%d-%H%M%S") + '_unbalanced_metric_analysis_{}'.format(metric) + ".png")
+#     plt.close()
