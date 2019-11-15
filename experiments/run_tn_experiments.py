@@ -8,54 +8,6 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split, GridSearchCV, KFold
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import confusion_matrix
-
-saving_repository = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/saving_repository'
-data_repository = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/{}'
-data_tn_new_label_balanced_mean = data_repository.format('triple_neg_new_labels_balanced_mean.h5')
-data_tn_new_label_balanced_median = data_repository.format('triple_neg_new_labels_balanced_median.h5')
-data_tn_new_label_balanced_zero = data_repository.format('triple_neg_new_labels_balanced_zero.h5')
-
-data_tn_new_label_unbalanced_mean = data_repository.format('triple_neg_new_labels_unbalanced_mean.h5')
-data_tn_new_label_unbalanced_median = data_repository.format('triple_neg_new_labels_unbalanced_median.h5')
-data_tn_new_label_unbalanced_zero = data_repository.format('triple_neg_new_labels_unbalanced_zero.h5')
-
-data_tn_old_label_balanced_mean = data_repository.format('triple_neg_old_labels_balanced_mean.h5')
-data_tn_old_label_balanced_median = data_repository.format('triple_neg_old_labels_balanced_median.h5')
-data_tn_old_label_balanced_zero = data_repository.format('triple_neg_old_labels_balanced_zero.h5')
-
-data_tn_old_label_unbalanced_mean = data_repository.format('triple_neg_old_labels_unbalanced_mean.h5')
-data_tn_old_label_unbalanced_median = data_repository.format('triple_neg_old_labels_unbalanced_median.h5')
-data_tn_old_label_unbalanced_zero = data_repository.format('triple_neg_old_labels_unbalanced_zero.h5')
-
-return_views = ['methyl_rna_iso_mirna', 'methyl_rna_iso_mirna_snp_clinical',
-                'methyl_rna_mirna', 'methyl_rna_mirna_snp_clinical', 'all']
-datasets_new_labels = [data_tn_new_label_unbalanced_mean, data_tn_new_label_unbalanced_median,
-                       data_tn_new_label_unbalanced_zero, data_tn_new_label_balanced_mean,
-                       data_tn_new_label_balanced_median, data_tn_new_label_balanced_zero]
-
-datasets_old_labels = [data_tn_old_label_unbalanced_mean, data_tn_old_label_unbalanced_median,
-                       data_tn_old_label_unbalanced_zero, data_tn_old_label_balanced_mean,
-                       data_tn_old_label_balanced_median, data_tn_old_label_balanced_zero]
-
-parameters_dt = {'max_depth': np.arange(1, 7),
-                 'min_samples_split': np.arange(2, 9),
-                 'criterion': ['gini', 'entropy']
-                 }
-parameters_rf = {'max_depth': np.arange(1, 7),
-                 'min_samples_split': np.arange(2, 9),
-                 'criterion': ['gini', 'entropy'],
-                 'n_estimators': [100, 200, 500, 1000]
-                 }
-param_model_type = ['conjunction', 'disjunction']
-# param_p = [0.001, 0.1, 0.178, 0.316, 0.562, 1.0, 1.778, 3.162, 5.623, 10.0, 999999.0]
-# param_p = [0.001, 0.05, 0.1, 0.178, 0.25, 0.316, 0.45, 0.562, 0.85, 1.0, 1.5, 1.778, 2, 2.5, 3.162, 4.39, 5.623,
-#            6.62, 7.623, 8.386, 9.15, 10.0, 11.0]
-param_p = [0.001, 0.1, 0.178, 0.316, 0.45, 0.562, 0.85, 1.0, 1.778, 2.5, 3.162, 4.39, 5.623, 7.623, 10.0, 999999.0]
-param_max_attributes = np.arange(1, 11, 1)
-parameters_scm = {'SCM__model_type': param_model_type,
-                  'SCM__p': param_p,
-                  'SCM__max_rules': param_max_attributes
-                  }
 nb_jobs = 40
 cv_fold = KFold(n_splits=5, random_state=42)
 

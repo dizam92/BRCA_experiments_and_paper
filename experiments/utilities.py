@@ -20,6 +20,7 @@ from collections import Counter
 goa_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/goa_human_isoform_valid.gaf'
 biogrid_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/BIOGRID-ORGANISM-Homo_sapiens-3.5.178.tab.txt'
 genesID_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/Results_genes.txt'
+
 c1_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/c1.all.v6.1.symbols.gmt'
 c2_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/c2.all.v6.1.symbols.gmt'
 c3_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/c3.all.v6.1.symbols.gmt'
@@ -28,6 +29,74 @@ c5_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/data
 c6_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/c6.all.v6.1.symbols.gmt'
 c7_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/c7.all.v6.1.symbols.gmt'
 hall_mark_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/h.all.v6.1.symbols.gmt'
+
+c2_pickle_dictionary = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/c2_curated_genes.pck'
+c5_pickle_dictionary = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/c5_curated_genes.pck'
+list_dict = [c2_pickle_dictionary, c5_pickle_dictionary]
+
+saving_repository = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/saving_repository'
+data_repository = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/{}'
+data_tn_new_label_balanced_mean = data_repository.format('triple_neg_new_labels_balanced_mean.h5')
+data_tn_new_label_balanced_median = data_repository.format('triple_neg_new_labels_balanced_median.h5')
+data_tn_new_label_balanced_zero = data_repository.format('triple_neg_new_labels_balanced_zero.h5')
+
+data_tn_new_label_unbalanced_mean = data_repository.format('triple_neg_new_labels_unbalanced_mean.h5')
+data_tn_new_label_unbalanced_median = data_repository.format('triple_neg_new_labels_unbalanced_median.h5')
+data_tn_new_label_unbalanced_zero = data_repository.format('triple_neg_new_labels_unbalanced_zero.h5')
+
+data_tn_old_label_balanced_mean = data_repository.format('triple_neg_old_labels_balanced_mean.h5')
+data_tn_old_label_balanced_median = data_repository.format('triple_neg_old_labels_balanced_median.h5')
+data_tn_old_label_balanced_zero = data_repository.format('triple_neg_old_labels_balanced_zero.h5')
+
+data_tn_old_label_unbalanced_mean = data_repository.format('triple_neg_old_labels_unbalanced_mean.h5')
+data_tn_old_label_unbalanced_median = data_repository.format('triple_neg_old_labels_unbalanced_median.h5')
+data_tn_old_label_unbalanced_zero = data_repository.format('triple_neg_old_labels_unbalanced_zero.h5')
+
+return_views = ['methyl_rna_iso_mirna', 'methyl_rna_iso_mirna_snp_clinical',
+                'methyl_rna_mirna', 'methyl_rna_mirna_snp_clinical', 'all']
+datasets_new_labels = [data_tn_new_label_unbalanced_mean, data_tn_new_label_unbalanced_median,
+                       data_tn_new_label_unbalanced_zero, data_tn_new_label_balanced_mean,
+                       data_tn_new_label_balanced_median, data_tn_new_label_balanced_zero]
+
+datasets_old_labels = [data_tn_old_label_unbalanced_mean, data_tn_old_label_unbalanced_median,
+                       data_tn_old_label_unbalanced_zero, data_tn_old_label_balanced_mean,
+                       data_tn_old_label_balanced_median, data_tn_old_label_balanced_zero]
+
+parameters_dt = {'max_depth': np.arange(1, 7),
+                 'min_samples_split': np.arange(2, 9),
+                 'criterion': ['gini', 'entropy']
+                 }
+parameters_rf = {'max_depth': np.arange(1, 7),
+                 'min_samples_split': np.arange(2, 9),
+                 'criterion': ['gini', 'entropy'],
+                 'n_estimators': [100, 200, 500, 1000]
+                 }
+param_model_type = ['conjunction', 'disjunction']
+# param_p = [0.001, 0.1, 0.178, 0.316, 0.562, 1.0, 1.778, 3.162, 5.623, 10.0, 999999.0]
+# param_p = [0.001, 0.05, 0.1, 0.178, 0.25, 0.316, 0.45, 0.562, 0.85, 1.0, 1.5, 1.778, 2, 2.5, 3.162, 4.39, 5.623,
+#            6.62, 7.623, 8.386, 9.15, 10.0, 11.0]
+param_p = [0.001, 0.1, 0.178, 0.316, 0.45, 0.562, 0.85, 1.0, 1.778, 2.5, 3.162, 4.39, 5.623, 7.623, 10.0, 999999.0]
+param_max_attributes = np.arange(1, 11, 1)
+parameters_scm = {'SCM__model_type': param_model_type,
+                  'SCM__p': param_p,
+                  'SCM__max_rules': param_max_attributes
+                  }
+
+
+#                                              Parameters for Run Group Experiment                                     #
+
+pathway_file_c1_curated_groups = '/home/maoss2/PycharmProjects/breast_cancer/improvisations/group_scm_experimentation/group_types/pathway_file_c1_positional_genes.tsv'
+pathway_file_c2_curated_groups = '/home/maoss2/PycharmProjects/breast_cancer/improvisations/group_scm_experimentation/group_types/pathway_file_c2_curated_genes.tsv'
+pathway_file_c3_curated_groups = '/home/maoss2/PycharmProjects/breast_cancer/improvisations/group_scm_experimentation/group_types/pathway_file_c3_motif_genes.tsv'
+pathway_file_c4_curated_groups = '/home/maoss2/PycharmProjects/breast_cancer/improvisations/group_scm_experimentation/group_types/pathway_file_c4_computational_genes.tsv'
+pathway_file_c5_curated_groups = '/home/maoss2/PycharmProjects/breast_cancer/improvisations/group_scm_experimentation/group_types/pathway_file_c5_gene_ontology_genes.tsv'
+pathway_file_c6_curated_groups = '/home/maoss2/PycharmProjects/breast_cancer/improvisations/group_scm_experimentation/group_types/pathway_file_c6_oncogenetic_genes.tsv'
+pathway_file_c7_curated_groups = '/home/maoss2/PycharmProjects/breast_cancer/improvisations/group_scm_experimentation/group_types/pathway_file_c7_immunologic_signatures_genes.tsv'
+pathway_file_tcga_groups = '/home/maoss2/PycharmProjects/breast_cancer/improvisations/group_scm_experimentation/group_types/pathway_file_genes_tcga.tsv'
+pathway_file_clusters_groups = '/home/maoss2/PycharmProjects/breast_cancer/improvisations/group_scm_experimentation/group_types/pathway_file_clusters_genes.tsv'
+pathway_file_vant_mat_groups = '/home/maoss2/PycharmProjects/breast_cancer/datasets/pathways.txt'
+pathway_file_random_groups = '/home/maoss2/PycharmProjects/breast_cancer/improvisations/group_scm_experimentation/group_types/pathway_file_random_groups.tsv'
+pathway_file_views_group = '/home/maoss2/PycharmProjects/breast_cancer/improvisations/group_scm_experimentation/group_types/pathway_file_views_groups.tsv'
 
 
 def load_data(data, return_views='all'):
@@ -404,106 +473,6 @@ class ExtractGroupsToPickle:
             pickle.dump(saving_dict, f)
 
 
-def construction_pathway_gene_groups_tcga(data_path, return_views='all', output_file_name='pathway_file_genes_tcga.txt'):
-    _, _, features_names = load_data(data=data_path, return_views=return_views)
-    groups_dict = {}
-    for el in features_names:
-        cles = [el.split('_')[-1]]
-        if cles[0].find(';') != -1:
-            cles = cles[0].split(';')
-        for cle in cles:
-            if cle not in groups_dict.keys():
-                groups_dict[cle] = [el]
-            else:
-                groups_dict[cle].append(el)
-    with open(output_file_name, 'w') as f:
-        f.write('G\tIDS\n')
-        for item in groups_dict.items():
-            for gene in item[1]:
-                f.write('{}\t{}\n'.format(item[0], gene))
-
-
-def construction_pathway_clusters_groups(data_path, model_loaded=False, return_views='all',
-                                         output_file_name='pathway_file_clusters_genes.txt',
-                                         model_agglomeration_file_name='feature_agglomeration_model.pck'):
-    from sklearn.cluster import FeatureAgglomeration
-    agglo = FeatureAgglomeration(n_clusters=1000)
-    x, y, features_names = load_data(data=data_path, return_views=return_views)
-    if model_loaded:
-        assert model_agglomeration_file_name != '', 'You should give the model agglomeration name file'
-        f = open(model_agglomeration_file_name, 'rb')
-        agglo = pickle.load(f)
-        groups_and_features = list(zip(features_names, agglo.labels_))
-        with open(output_file_name, 'w') as f:
-            f.write('G\tIDS\n')
-            for zip_el in groups_and_features:
-                f.write('{}\t{}\n'.format(zip_el[1], zip_el[0]))
-    else:
-        f = open(model_agglomeration_file_name, 'wb')
-        agglo.fit(x)
-        pickle.dump(agglo, f)
-
-
-def construction_pathway_random_groups(data_path, nbre_de_groupe=1000, return_views='all',
-                                       output_file_name='pathway_file_random_groups.txt'):
-    _, _, features_names = load_data(data=data_path, return_views=return_views)
-    features_names_copy = deepcopy(features_names)
-    random.seed(42)
-    np.random.seed(42)
-    nbr_element_per_groups = np.arange(2, 2000)  # un groupe peut contenir jusqua 1000 éléments
-    elements_choisis = []
-    with open(output_file_name, 'w') as f:
-        f.write('G\tIDS\n')
-        for i in range(nbre_de_groupe):
-            taille_groupe = np.random.choice(nbr_element_per_groups)
-            group = random.sample(list(features_names), taille_groupe)
-            elements_choisis.extend(group)
-            for el in group:
-                f.write('group_{}\t{}\n'.format(i, el))
-            print('The group_{} is done and length is {}'.format(i, taille_groupe))
-        elements_restant = np.delete(features_names,
-                                     np.where(np.isin(features_names_copy, elements_choisis) == True)[0])
-        for el in elements_restant:
-            f.write('group_{}\t{}\n'.format(nbre_de_groupe, el))
-        print('The group_{} is done and length is {}'.format(nbre_de_groupe, len(elements_restant)))
-
-
-def construction_pathway_views_groups(data_path, return_views='all', output_file_name='pathway_file_views_groups.txt'):
-    _, _, features_names = load_data(data=data_path, return_views=return_views)
-    with open(output_file_name, 'w') as f:
-        f.write('G\tIDS\n')
-        for el in features_names:
-            if el.startswith('cg'):
-                f.write('group_1\t{}\n'.format(el))
-            if el.startswith('uc'):
-                f.write('group_2\t{}\n'.format(el))
-            if el.startswith('hsa'):
-                f.write('group_3\t{}\n'.format(el))
-
-
-def construction_pathway_file(data_path, return_views, dictionnaire, fichier_pathway_name):
-    x, y, features_names = load_data(data=data_path, return_views=return_views)
-    features_names = list(features_names)
-    features_names_copy = deepcopy(features_names)
-    f = open(dictionnaire, 'r')
-    dict_file = pickle.load(f)
-    with open(fichier_pathway_name, 'w') as f:
-        f.write('G\tIDS\n')
-        for group in dict_file.items():
-            for raw_genes_name in np.asarray(group[1]):
-                for feature in features_names:
-                    feature_splits = feature.split('_')
-                    if len(feature_splits) == 2:
-                        if feature_splits[1] == raw_genes_name:
-                            f.write('{}\t{}\n'.format(group[0], feature))
-                            try:
-                                features_names_copy.remove(feature)  # supprimer de la liste
-                            except ValueError:  # si l'élément a déja été supprimer dans la liste
-                                pass
-        for feature_restant in features_names_copy:
-            f.write('{}\t{}\n'.format('unknown_group', feature_restant))
-
-
 def main_extraction_building():
     extractor = ExtractGroupsToPickle(fichier=c1_file, saving_file='c1_positional_genes.pck')
     extractor.extract()
@@ -523,30 +492,206 @@ def main_extraction_building():
     extractor.extract()
 
 
-# TODO: SHOULD I REBUILD THIS ONE? OR USE THE NEW ONES? With the correct label!
-#  But i might find a new way of doing groups
-def main_pathway_file_building():
-    construction_pathway_file(data_path='', dictionnaire='c1_positional_genes.pck',
-                              fichier_pathway_name='pathway_file_c1_positional_genes.txt', return_views='all')
-    construction_pathway_file(dictionnaire='c2_curated_genes.pck',
-                              fichier_pathway_name='pathway_file_c2_curated_genes.txt')
-    construction_pathway_gene_groups_tcga(data_path='')
-    construction_pathway_clusters_groups(data_path='', model_loaded=True)
-    construction_pathway_file(dictionnaire='c3_motif_genes.pck',
-                              fichier_pathway_name='pathway_file_c3_motif_genes.txt')
-    construction_pathway_file(dictionnaire='c4_computational_genes.pck',
-                              fichier_pathway_name='pathway_file_c4_computational_genes.txt')
-    construction_pathway_file(dictionnaire='c5_gene_ontology_genes.pck',
-                              fichier_pathway_name='pathway_file_c5_gene_ontology_genes.txt')
-    construction_pathway_file(dictionnaire='c6_oncogenetic_genes.pck',
-                              fichier_pathway_name='pathway_file_c6_oncogenetic_genes.txt')
-    construction_pathway_file(dictionnaire='c7_immunologic_signatures_genes.pck',
-                              fichier_pathway_name='pathway_file_c7_immunologic_signatures_genes.txt')
-    construction_pathway_file(dictionnaire='hall_mark_genes.pck',
-                              fichier_pathway_name='pathway_file_hall_mark_genes.txt')
+def construction_pathway_gene_groups_tcga(data_path=data_tn_new_label_unbalanced_mean,
+                                          return_views='all',
+                                          output_file_name='pathway_file_genes_tcga'):
+    """
+    Construct group based on the genes to which the future is related should receive file with future like this
+    ('feature_GENES')
+    Args:
+        data_path: str, data path
+        return_views: str, correct view for the group
+        output_file_name: str, output file name
+    Returns:
+        output_file_name
+    """
+    _, _, features_names = load_data(data=data_path, return_views=return_views)
+    groups_dict = {}
+    for el in features_names:
+        cles = [el.split('_')[-1]]
+        if cles[0].find(';') != -1:
+            cles = cles[0].split(';')
+        for cle in cles:
+            if cle not in groups_dict.keys():
+                groups_dict[cle] = [el]
+            else:
+                groups_dict[cle].append(el)
+    output_file_name = output_file_name + '_{}.tsv'.format(return_views)
+    with open(output_file_name, 'w') as f:
+        f.write('G\tIDS\n')
+        for item in groups_dict.items():
+            for gene in item[1]:
+                f.write('{}\t{}\n'.format(item[0], gene))
+
+
+def construction_pathway_clusters_groups(data_path=data_tn_new_label_unbalanced_mean,
+                                         model_loaded=False,
+                                         return_views='all',
+                                         output_file_name='pathway_file_clusters_genes',
+                                         model_agglomeration_file_name='feature_agglomeration_model.pck'):
+    """
+       Construct group based on clustering
+       Args:
+           data_path: str, data path
+           model_loaded: bool, if true, load the model_agglomeration_file_name, if false re-do the fit
+           return_views: str, correct view for the group
+           output_file_name: str, output file name
+           model_agglomeration_file_name: path to .pck file if we already run the feature agglomeration fit
+       Returns:
+           output_file_name
+       """
+    from sklearn.cluster import FeatureAgglomeration
+    agglo = FeatureAgglomeration(n_clusters=1000)
+    x, y, features_names = load_data(data=data_path, return_views=return_views)
+    output_file_name = output_file_name + '_{}.tsv'.format(return_views)
+    if model_loaded:
+        assert model_agglomeration_file_name != '', 'You should give the model agglomeration name file'
+        f = open(model_agglomeration_file_name, 'rb')
+        agglo = pickle.load(f)
+        groups_and_features = list(zip(features_names, agglo.labels_))
+        with open(output_file_name, 'w') as f:
+            f.write('G\tIDS\n')
+            for zip_el in groups_and_features:
+                f.write('{}\t{}\n'.format(zip_el[1], zip_el[0]))
+    else:
+        f = open(model_agglomeration_file_name, 'wb')
+        agglo.fit(x)
+        pickle.dump(agglo, f)
+        groups_and_features = list(zip(features_names, agglo.labels_))
+        with open(output_file_name, 'w') as f:
+            f.write('G\tIDS\n')
+            for zip_el in groups_and_features:
+                f.write('{}\t{}\n'.format(zip_el[1], zip_el[0]))
+
+
+def construction_pathway_random_groups(data_path=data_tn_new_label_unbalanced_mean,
+                                       nb_of_groups=1000,
+                                       return_views='all',
+                                       output_file_name='pathway_file_random_groups'):
+    """
+    Construct group based on random groups
+    Args:
+        data_path: str, data path
+        return_views: str, correct view for the group
+        output_file_name: str, output file name
+        nb_of_groups: int, nbr of groups we randomly want to build
+    Returns:
+        output_file_name
+    """
+    _, _, features_names = load_data(data=data_path, return_views=return_views)
+    features_names_copy = deepcopy(features_names)
+    random.seed(42)
+    np.random.seed(42)
+    nbr_element_per_groups = np.arange(2, 2000)  # Nbr of feature in the groups
+    elements_choisis = []
+    output_file_name = output_file_name + '_{}_{}.tsv'.format(nb_of_groups, return_views)
+    with open(output_file_name, 'w') as f:
+        f.write('G\tIDS\n')
+        for i in range(nb_of_groups):
+            taille_groupe = np.random.choice(nbr_element_per_groups)
+            group = random.sample(list(features_names), taille_groupe)
+            elements_choisis.extend(group)
+            for el in group:
+                f.write('group_{}\t{}\n'.format(i, el))
+            print('The group_{} is done and length is {}'.format(i, taille_groupe))
+        elements_restant = np.delete(features_names,
+                                     np.where(np.isin(features_names_copy, elements_choisis) == True)[0])
+        for el in elements_restant:
+            f.write('group_{}\t{}\n'.format(nb_of_groups, el))
+        print('The group_{} is done and length is {}'.format(nb_of_groups, len(elements_restant)))
+
+
+def construction_pathway_views_groups(data_path=data_tn_new_label_unbalanced_mean,
+                                      return_views='all',
+                                      output_file_name='pathway_file_views_groups'):
+    """
+       Construct group based on the original views in the dataset
+       Args:
+           data_path: str, data path
+           return_views: str, correct view for the group
+           output_file_name: str, output file name
+       Returns:
+           output_file_name
+       """
+    _, _, features_names = load_data(data=data_path, return_views=return_views)
+    output_file_name = output_file_name + '_{}.tsv'.format(return_views)
+    with open(output_file_name, 'w') as f:
+        f.write('G\tIDS\n')
+        for el in features_names:
+            if el.startswith('cg'):
+                f.write('group_1\t{}\n'.format(el))
+            elif el.startswith('uc'):
+                f.write('group_2\t{}\n'.format(el))
+            elif el.startswith('hsa'):
+                f.write('group_3\t{}\n'.format(el))
+            else:
+                f.write('group_4\t{}\n'.format(el))
+
+
+def construction_pathway_file(data_path=data_tn_new_label_unbalanced_mean,
+                              return_views='all',
+                              dictionnaire='',
+                              output_file_name=''):
+    """
+    Utility function to build pathway file of the groups to be loaded in LearnFromMsigGroups
+    Args:
+        data_path: str, data path
+        return_views: str, correct view for the group
+        dictionnaire: path to the correspond dictionary group
+        output_file_name: str, output file name
+    Return:
+        output_file_name, 'G\tIDS\n'
+    """
+    x, y, features_names = load_data(data=data_path, return_views=return_views)
+    features_names = list(features_names)
+    features_names_copy = deepcopy(features_names)
+    f = open(dictionnaire, 'r')
+    dict_file = pickle.load(f)
+    output_file_name = output_file_name + '_{}.tsv'.format(return_views)
+    with open(output_file_name, 'w') as f:
+        f.write('G\tIDS\n')
+        for group in dict_file.items():
+            for raw_genes_name in np.asarray(group[1]):
+                for feature in features_names:
+                    feature_splits = feature.split('_')
+                    if len(feature_splits) == 2:
+                        if feature_splits[1] == raw_genes_name:
+                            f.write('{}\t{}\n'.format(group[0], feature))
+                            try:
+                                features_names_copy.remove(feature)  # supprimer de la liste
+                            except ValueError:  # si l'élément a déja été supprimer dans la liste
+                                pass
+        for feature_restant in features_names_copy:
+            f.write('{}\t{}\n'.format('unknown_group', feature_restant))
+
+
+def main_construct():
+    for view in return_views:
+        construction_pathway_gene_groups_tcga(return_views=view)
+
+    for view in return_views:
+        construction_pathway_clusters_groups(model_loaded=False,
+                                             return_views=view,
+                                             model_agglomeration_file_name='feature_agglomeration_model_{}.pck'.format(view))
+    for view in return_views:
+        construction_pathway_random_groups(return_views=view)
+
+    for view in return_views:
+        construction_pathway_views_groups(return_views=view)
+
+    for dictionary in list_dict:
+        if dictionary == c2_pickle_dictionary:
+            output_file_name = 'pathway_file_c2_curated_groups'
+        else:
+            output_file_name = 'pathway_file_c5_curated_groups'
+        for view in return_views:
+            construction_pathway_file(return_views=view, dictionnaire=dictionary, output_file_name=output_file_name)
 
 
 def load_go_idmapping():
+    """
+    Utility function to map go_ids
+    """
     res = defaultdict(set)
     with open(goa_file, 'r') as fin:
         for line in fin:
@@ -563,6 +708,9 @@ def load_go_idmapping():
 
 
 def load_biogrid_network():
+    """
+    Utility function to load biogrid_network in graph nx
+    """
     go_terms = load_go_idmapping()
     G = nx.Graph()
     edges = set()
@@ -629,3 +777,7 @@ def load_biogrid_network():
 #     plt.tight_layout()
 #     f.savefig(directory + time.strftime("%Y%m%d-%H%M%S") + '_unbalanced_metric_analysis_{}'.format(metric) + ".png")
 #     plt.close()
+
+
+if __name__ == '__main__':
+    main_construct()
