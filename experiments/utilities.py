@@ -81,6 +81,8 @@ parameters_scm = {'SCM__model_type': param_model_type,
                   'SCM__p': param_p,
                   'SCM__max_rules': param_max_attributes
                   }
+param_lambdas_tanh = [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95]
+param_softmax = [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0]
 
 
 #                                              Parameters for Run Group Experiment                                     #
@@ -524,7 +526,7 @@ def construction_pathway_gene_groups_tcga(data_path=data_tn_new_label_unbalanced
     Returns:
         output_file_name
     """
-    _, _, features_names = load_data(data=data_path, return_views=return_views)
+    _, _, features_names, _ = load_data(data=data_path, return_views=return_views)
     groups_dict = {}
     for el in features_names:
         cles = [el.split('_')[-1]]
@@ -561,7 +563,7 @@ def construction_pathway_clusters_groups(data_path=data_tn_new_label_unbalanced_
        """
     from sklearn.cluster import FeatureAgglomeration
     agglo = FeatureAgglomeration(n_clusters=1000)
-    x, y, features_names = load_data(data=data_path, return_views=return_views)
+    x, y, features_names, _ = load_data(data=data_path, return_views=return_views)
     output_file_name = output_file_name + '_{}.tsv'.format(return_views)
     if model_loaded:
         assert model_agglomeration_file_name != '', 'You should give the model agglomeration name file'
@@ -597,7 +599,7 @@ def construction_pathway_random_groups(data_path=data_tn_new_label_unbalanced_me
     Returns:
         output_file_name
     """
-    _, _, features_names = load_data(data=data_path, return_views=return_views)
+    _, _, features_names, _ = load_data(data=data_path, return_views=return_views)
     features_names_copy = deepcopy(features_names)
     random.seed(42)
     np.random.seed(42)
@@ -632,7 +634,7 @@ def construction_pathway_views_groups(data_path=data_tn_new_label_unbalanced_mea
        Returns:
            output_file_name
        """
-    _, _, features_names = load_data(data=data_path, return_views=return_views)
+    _, _, features_names, _ = load_data(data=data_path, return_views=return_views)
     output_file_name = output_file_name + '_{}.tsv'.format(return_views)
     with open(output_file_name, 'w') as f:
         f.write('G\tIDS\n')
@@ -661,7 +663,7 @@ def construction_pathway_file(data_path=data_tn_new_label_unbalanced_mean,
     Return:
         output_file_name, 'G\tIDS\n'
     """
-    x, y, features_names = load_data(data=data_path, return_views=return_views)
+    x, y, features_names, _ = load_data(data=data_path, return_views=return_views)
     features_names = list(features_names)
     features_names_copy = deepcopy(features_names)
     f = open(dictionnaire, 'r')
