@@ -277,7 +277,7 @@ def results_analysis(directory, output_text_file):
     if directory.find('dt') != -1:
         for model in features_retenus:
             temp = []
-            for el in model:
+            for el in model[0]:
                 if el[2] > 0:
                     temp.append(el)
             var = ''
@@ -289,20 +289,45 @@ def results_analysis(directory, output_text_file):
     if directory.find('rf') != -1:
         for model in features_retenus:
             var = ''
-            for el in model[:3]:
+            for el in model[0][:3]:
                 var += '_{}'.format(el[3])
             model_comptes.append(var)
 
     if directory.find('scm') != -1:
         for model in features_retenus:
             temp = []
-            for el in model:
+            for el in model[0]:
                 temp.append(el[1])
             var = ''
             for el in temp:
                 var += '_{}'.format(el)
             model_comptes.append(var)
-    with open(output_text_file, 'w') as f:
+
+    if directory.find('rf') != -1:
+        features_retenus_flatten = [el[3] for liste in features_retenus for el in liste[:50]]
+        for el in features_retenus_flatten:
+            cnt_rf[el] += 1
+
+        # most_common_features_names = np.asarray([el[0] for el in most_common_features])
+        # most_common_features_values = np.asarray([el[1] for el in most_common_features])
+
+        # nbResults = len(most_common_features)
+        # figKW = {"figsize": (nbResults, 8)}
+        # f, ax = plt.subplots(nrows=1, ncols=1, **figKW)
+        # barWidth = 0.35
+        # ax.set_title('{}'.format('RF 50 most common features in the 50 best features for each experiment'))
+        # rects = ax.bar(range(nbResults), most_common_features_values, barWidth, color="r")
+        # autolabel(rects, ax)
+        # # ax.legend(rects[0], 'Counts')
+        # # ax.set_ylim(-0.1, 1.1)
+        # ax.set_xticks(np.arange(nbResults) + barWidth)
+        # ax.set_xticklabels(most_common_features_names, rotation="vertical")
+        # plt.tight_layout()
+        # f.savefig('RF_50_Most_Common_Features' + time.strftime("%Y%m%d-%H%M%S") + ".png")
+        # plt.close()
+
+    with open(output_text_file, 'a+') as f:
+        f.write('Repository:{}'.format(directory))
         f.write('TRAINING RESULTS\n')
         f.write('-*50\n')
         f.write('Training: Accuracy mean {} +/- {}; Max value: {}, Min value: {}, Median value: {}\n'.format(
@@ -335,29 +360,23 @@ def results_analysis(directory, output_text_file):
 
         for el in model_comptes:
             cnt[el] += 1
-        f.write('Most frequent model\n'.format(cnt.most_common(10)))
-
-    if directory.find('rf') != -1:
-        features_retenus_flatten = [el[3] for liste in features_retenus for el in liste[:50]]
-        for el in features_retenus_flatten:
-            cnt_rf[el] += 1
+        f.write('Most frequent model\n'.format(cnt.most_common(10))) 
         most_common_features = cnt_rf.most_common(50)
-        most_common_features_names = np.asarray([el[0] for el in most_common_features])
-        most_common_features_values = np.asarray([el[1] for el in most_common_features])
-        nbResults = len(most_common_features)
-        figKW = {"figsize": (nbResults, 8)}
-        f, ax = plt.subplots(nrows=1, ncols=1, **figKW)
-        barWidth = 0.35
-        ax.set_title('{}'.format('RF 50 most common features in the 50 best features for each experiment'))
-        rects = ax.bar(range(nbResults), most_common_features_values, barWidth, color="r")
-        autolabel(rects, ax)
-        # ax.legend(rects[0], 'Counts')
-        # ax.set_ylim(-0.1, 1.1)
-        ax.set_xticks(np.arange(nbResults) + barWidth)
-        ax.set_xticklabels(most_common_features_names, rotation="vertical")
-        plt.tight_layout()
-        f.savefig('RF_50_Most_Common_Features' + time.strftime("%Y%m%d-%H%M%S") + ".png")
-        plt.close()
+        f.write('Most frequent Features\n'.format(most_common_features)) 
+    os.chdir(saving_repository)
+
+
+def main_run_analysis():
+    """ 
+    Main utility function to run the run analysis on every repository 
+
+    """
+    list_of_directories = os.listdir('./')
+    output_text_file = saving_repository + '/results_analysis.txt'
+    for directory in list_of_directories:
+        if directory not in ['.DS_Store', '._.DS_Store', 'results_analysis.txt']:
+
+            results_analysis(directory=directory, output_text_file=output_text_file)
 
 
 def autolabel(rects, ax):
