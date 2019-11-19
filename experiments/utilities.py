@@ -122,8 +122,8 @@ def load_data(data, return_views='all'):
     # Had a problem with the features names of the snp view: The original dataset contains it but the one i'm loading no
     # I decided to make a patch here to have a remedy to this. The original builder code is corrected but i don't wanna
     # waste time and ressource to rebuild the datasets
-    data = h5py.File('/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/BRCA_triple_neg_new_labels_unbalanced_mean.h5', 'r')
-    features_names_snps = data['snp/block0_items'][()]
+    d_temp = h5py.File('/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/BRCA_triple_neg_new_labels_unbalanced_mean.h5', 'r')
+    features_names_snps = d_temp['snp/block0_items'][()]
     features_names_snps = np.asarray([el.decode('utf8') for el in features_names_snps])
     snp_data_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/files_to_build_datasets/genome.wustl.edu__IlluminaGA_curated_DNA_sequencing_level2.maf'
     snp_data = pd.read_table(snp_data_file, sep="\t", index_col="Tumor_Sample_Barcode")
