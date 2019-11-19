@@ -288,12 +288,14 @@ def build_brca_dataset_for_graalpy(dataset='',
     index_to_drop = [idx for idx in snp_data.index if index_patterns.match(idx) is None]
     snp_data.drop(index_to_drop, axis=0, inplace=True)
     # Identifiant unique des SNP
-    snp_data["snp_id"] = '{}_{}_{}_{}_{}_{}'.format(snp_data.Entrez_Gene_Id.map(str),
-                                                    snp_data.Chrom.map(str),
-                                                    snp_data.Start_Position.map(str),
-                                                    snp_data.End_Position.map(str),
-                                                    snp_data.Reference_Allele.map(str),
-                                                    snp_data.Tumor_Seq_Allele2)
+    chrom = snp_data.Chrom.values
+    start_position = snp_data.Start_Position.values
+    end_position = snp_data.End_Position.values
+    reference_allele = snp_data.Reference_Allele.values
+    tumor_seq_allele2 = snp_data.Tumor_Seq_Allele2.values
+    snp_id_list = ['{}_{}_{}_{}_{}'.format(chrom[idx], start_position[idx], end_position[idx],
+                                           reference_allele[idx], tumor_seq_allele2[idx]) for idx in range(len(chrom))]
+    snp_data["snp_id"] = snp_id_list
     snp_data = snp_data.loc[snp_data['snp_id'].isin(features_names_snps)]
     zipping_name = list(zip(snp_data['Hugo_Symbol'], snp_data['snp_id']))
     features_names_snps_linked = np.asarray([None] * features_names_snps.shape[0])
