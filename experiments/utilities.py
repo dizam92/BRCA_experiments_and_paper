@@ -37,33 +37,34 @@ list_dict = [c2_pickle_dictionary, c5_pickle_dictionary]
 saving_repository = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/saving_repository'
 data_repository = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/{}'
 data_tn_new_label_balanced_mean = data_repository.format('triple_neg_new_labels_balanced_mean.h5')
-data_tn_new_label_balanced_median = data_repository.format('triple_neg_new_labels_balanced_median.h5')
-data_tn_new_label_balanced_zero = data_repository.format('triple_neg_new_labels_balanced_zero.h5')
+# data_tn_new_label_balanced_median = data_repository.format('triple_neg_new_labels_balanced_median.h5')
+# data_tn_new_label_balanced_zero = data_repository.format('triple_neg_new_labels_balanced_zero.h5')
 
 data_tn_new_label_unbalanced_mean = data_repository.format('triple_neg_new_labels_unbalanced_mean.h5')
-data_tn_new_label_unbalanced_median = data_repository.format('triple_neg_new_labels_unbalanced_median.h5')
-data_tn_new_label_unbalanced_zero = data_repository.format('triple_neg_new_labels_unbalanced_zero.h5')
+# data_tn_new_label_unbalanced_median = data_repository.format('triple_neg_new_labels_unbalanced_median.h5')
+# data_tn_new_label_unbalanced_zero = data_repository.format('triple_neg_new_labels_unbalanced_zero.h5')
 
-data_tn_old_label_balanced_mean = data_repository.format('triple_neg_old_labels_balanced_mean.h5')
-data_tn_old_label_balanced_median = data_repository.format('triple_neg_old_labels_balanced_median.h5')
-data_tn_old_label_balanced_zero = data_repository.format('triple_neg_old_labels_balanced_zero.h5')
+# data_tn_old_label_balanced_mean = data_repository.format('triple_neg_old_labels_balanced_mean.h5')
+# data_tn_old_label_balanced_median = data_repository.format('triple_neg_old_labels_balanced_median.h5')
+# data_tn_old_label_balanced_zero = data_repository.format('triple_neg_old_labels_balanced_zero.h5')
 
-data_tn_old_label_unbalanced_mean = data_repository.format('triple_neg_old_labels_unbalanced_mean.h5')
-data_tn_old_label_unbalanced_median = data_repository.format('triple_neg_old_labels_unbalanced_median.h5')
-data_tn_old_label_unbalanced_zero = data_repository.format('triple_neg_old_labels_unbalanced_zero.h5')
+# data_tn_old_label_unbalanced_mean = data_repository.format('triple_neg_old_labels_unbalanced_mean.h5')
+# data_tn_old_label_unbalanced_median = data_repository.format('triple_neg_old_labels_unbalanced_median.h5')
+# data_tn_old_label_unbalanced_zero = data_repository.format('triple_neg_old_labels_unbalanced_zero.h5')
+
+# datasets_new_labels = [data_tn_new_label_unbalanced_mean, data_tn_new_label_unbalanced_median,
+#                        data_tn_new_label_unbalanced_zero, data_tn_new_label_balanced_mean,
+#                        data_tn_new_label_balanced_median, data_tn_new_label_balanced_zero]
+#
+# datasets_old_labels = [data_tn_old_label_unbalanced_mean, data_tn_old_label_unbalanced_median,
+#                        data_tn_old_label_unbalanced_zero, data_tn_old_label_balanced_mean,
+#                        data_tn_old_label_balanced_median, data_tn_old_label_balanced_zero]
 
 return_views = ['methyl_rna_iso_mirna', 'methyl_rna_iso_mirna_snp_clinical',
                 'methyl_rna_mirna', 'methyl_rna_mirna_snp_clinical', 'all']
-datasets_new_labels_mean = [data_tn_new_label_unbalanced_mean,  data_tn_new_label_balanced_mean]
-datasets_new_labels_median = [data_tn_new_label_unbalanced_median,  data_tn_new_label_balanced_median]
 
-datasets_new_labels = [data_tn_new_label_unbalanced_mean, data_tn_new_label_unbalanced_median,
-                       data_tn_new_label_unbalanced_zero, data_tn_new_label_balanced_mean,
-                       data_tn_new_label_balanced_median, data_tn_new_label_balanced_zero]
+datasets_new_labels = [data_tn_new_label_unbalanced_mean,  data_tn_new_label_balanced_mean]
 
-datasets_old_labels = [data_tn_old_label_unbalanced_mean, data_tn_old_label_unbalanced_median,
-                       data_tn_old_label_unbalanced_zero, data_tn_old_label_balanced_mean,
-                       data_tn_old_label_balanced_median, data_tn_old_label_balanced_zero]
 
 parameters_dt = {'max_depth': np.arange(1, 7),
                  'min_samples_split': np.arange(2, 9),
@@ -266,7 +267,6 @@ def load_data(data, return_views='all'):
         x_all = np.hstack((x_methyl, x_rna, x_rna_iso, x_mirna, x_snp, x_clinical))
         x = x_all
         x = x.T
-        features_names[np.where(features_names == 'None')[0]] = features_names_snps_linked
         data_x_names = list(zip(x, features_names))
         random.seed(42)
         random.shuffle(data_x_names)
@@ -727,8 +727,8 @@ def construction_pathway_file(data_path=data_tn_new_label_unbalanced_mean,
 
 
 def main_construct():
-    # for view in return_views:
-    #     construction_pathway_gene_groups_tcga(return_views=view)
+    for view in return_views:
+        construction_pathway_gene_groups_tcga(return_views=view)
 
     for view in return_views:
         construction_pathway_random_groups(return_views=view)
@@ -744,11 +744,11 @@ def main_construct():
         for view in return_views:
             construction_pathway_file(return_views=view, dictionnaire=dictionary, output_file_name=output_file_name)
 
-    # for view in return_views:
-    #     construction_pathway_clusters_groups(model_loaded=False,
-    #                                          return_views=view,
-    #                                          model_agglomeration_file_name='feature_agglomeration_model_{}.pck'.format(
-    #                                              view))
+    for view in return_views:
+        construction_pathway_clusters_groups(model_loaded=False,
+                                             return_views=view,
+                                             model_agglomeration_file_name='feature_agglomeration_model_{}.pck'.format(
+                                                 view))
 
 
 def load_go_idmapping():

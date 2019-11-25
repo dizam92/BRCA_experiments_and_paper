@@ -335,8 +335,10 @@ def build_brca_dataset_for_graalpy(dataset='',
 
 
 def main_brca_dataset_builder():
-    for filling in ['mean', 'median', 'zero']:
-        for label_file in [new_label_file, label_file_triple_all]:
+    # for filling in ['mean', 'median', 'zero']:
+    #     for label_file in [new_label_file, label_file_triple_all]:
+    for filling in ['mean']:
+        for label_file in [new_label_file]:
             for balanced in [False, True]:
                 brca_builder = BuildBrcaDatasets(cancer_name='BRCA',
                                                  label_file=label_file,

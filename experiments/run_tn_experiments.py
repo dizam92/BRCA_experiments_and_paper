@@ -1150,7 +1150,7 @@ def run_experiment_majority_vote(data, experiment_name, return_views, nb_repetit
 
 def main_run_experiments_new_labels():
     for view in return_views:
-        for dataset in datasets_new_labels_mean:
+        for dataset in datasets_new_labels:
             if dataset.find("mean") != -1:
                 if dataset.find('unbalanced') != -1:
                     run_experiment(data=dataset,
@@ -1194,7 +1194,7 @@ def main_run_experiments_new_labels():
 
 def main_run_experiments_majority_vote_new_labels():
     for view in return_views:
-        for dataset in datasets_new_labels_mean:
+        for dataset in datasets_new_labels:
             if dataset.find("mean") != -1:
                 if dataset.find('unbalanced') != -1:
                     run_experiment(data=dataset,
@@ -1236,94 +1236,95 @@ def main_run_experiments_majority_vote_new_labels():
                                    saving_rep=saving_repository)
 
 
-def main_run_experiments_old_labels():
-    for view in return_views:
-        for dataset in datasets_old_labels:
-            if dataset.find("mean") != -1:
-                if dataset.find('unbalanced') != -1:
-                    run_experiment(data=dataset,
-                                   experiment_name='experiment_tn_old_label_unbalanced_mean',
-                                   return_views=view,
-                                   nb_repetitions=15,
-                                   saving_rep=saving_repository)
-                if dataset.find('balanced') != -1:
-                    run_experiment(data=dataset,
-                                   experiment_name='experiment_tn_old_label_balanced_mean',
-                                   return_views=view,
-                                   nb_repetitions=15,
-                                   saving_rep=saving_repository)
-            if dataset.find("median") != -1:
-                if dataset.find('unbalanced') != -1:
-                    run_experiment(data=dataset,
-                                   experiment_name='experiment_tn_old_label_unbalanced_median',
-                                   return_views=view,
-                                   nb_repetitions=15,
-                                   saving_rep=saving_repository)
-                if dataset.find('balanced') != -1:
-                    run_experiment(data=dataset,
-                                   experiment_name='experiment_tn_old_label_balanced_median',
-                                   return_views=view,
-                                   nb_repetitions=15,
-                                   saving_rep=saving_repository)
-            if dataset.find("zero") != -1:
-                if dataset.find('unbalanced') != -1:
-                    run_experiment(data=dataset,
-                                   experiment_name='experiment_tn_old_label_unbalanced_zero',
-                                   return_views=view,
-                                   nb_repetitions=15,
-                                   saving_rep=saving_repository)
-                if dataset.find('balanced') != -1:
-                    run_experiment(data=dataset,
-                                   experiment_name='experiment_tn_old_label_balanced_zero',
-                                   return_views=view,
-                                   nb_repetitions=15,
-                                   saving_rep=saving_repository)
-
-
-def main_run_experiments_majority_vote_old_labels():
-    for view in return_views:
-        for dataset in datasets_old_labels:
-            if dataset.find("mean") != -1:
-                if dataset.find('unbalanced') != -1:
-                    run_experiment(data=dataset,
-                                   experiment_name='experiment_majority_vote_old_label_unbalanced_mean',
-                                   return_views=view,
-                                   nb_repetitions=15,
-                                   saving_rep=saving_repository)
-                if dataset.find('balanced') != -1:
-                    run_experiment(data=dataset,
-                                   experiment_name='experiment_majority_vote_old_label_balanced_mean',
-                                   return_views=view,
-                                   nb_repetitions=15,
-                                   saving_rep=saving_repository)
-            if dataset.find("median") != -1:
-                if dataset.find('unbalanced') != -1:
-                    run_experiment(data=dataset,
-                                   experiment_name='experiment_majority_vote_old_label_unbalanced_median',
-                                   return_views=view,
-                                   nb_repetitions=15,
-                                   saving_rep=saving_repository)
-                if dataset.find('balanced') != -1:
-                    run_experiment(data=dataset,
-                                   experiment_name='experiment_majority_vote_old_label_balanced_median',
-                                   return_views=view,
-                                   nb_repetitions=15,
-                                   saving_rep=saving_repository)
-            if dataset.find("zero") != -1:
-                if dataset.find('unbalanced') != -1:
-                    run_experiment(data=dataset,
-                                   experiment_name='experiment_majority_vote_old_label_unbalanced_zero',
-                                   return_views=view,
-                                   nb_repetitions=15,
-                                   saving_rep=saving_repository)
-                if dataset.find('balanced') != -1:
-                    run_experiment(data=dataset,
-                                   experiment_name='experiment_majority_vote_old_label_balanced_zero',
-                                   return_views=view,
-                                   nb_repetitions=15,
-                                   saving_rep=saving_repository)
+# TODO: I dont need them for now so comment
+# def main_run_experiments_old_labels():
+#     for view in return_views:
+#         for dataset in datasets_old_labels:
+#             if dataset.find("mean") != -1:
+#                 if dataset.find('unbalanced') != -1:
+#                     run_experiment(data=dataset,
+#                                    experiment_name='experiment_tn_old_label_unbalanced_mean',
+#                                    return_views=view,
+#                                    nb_repetitions=15,
+#                                    saving_rep=saving_repository)
+#                 if dataset.find('balanced') != -1:
+#                     run_experiment(data=dataset,
+#                                    experiment_name='experiment_tn_old_label_balanced_mean',
+#                                    return_views=view,
+#                                    nb_repetitions=15,
+#                                    saving_rep=saving_repository)
+#             if dataset.find("median") != -1:
+#                 if dataset.find('unbalanced') != -1:
+#                     run_experiment(data=dataset,
+#                                    experiment_name='experiment_tn_old_label_unbalanced_median',
+#                                    return_views=view,
+#                                    nb_repetitions=15,
+#                                    saving_rep=saving_repository)
+#                 if dataset.find('balanced') != -1:
+#                     run_experiment(data=dataset,
+#                                    experiment_name='experiment_tn_old_label_balanced_median',
+#                                    return_views=view,
+#                                    nb_repetitions=15,
+#                                    saving_rep=saving_repository)
+#             if dataset.find("zero") != -1:
+#                 if dataset.find('unbalanced') != -1:
+#                     run_experiment(data=dataset,
+#                                    experiment_name='experiment_tn_old_label_unbalanced_zero',
+#                                    return_views=view,
+#                                    nb_repetitions=15,
+#                                    saving_rep=saving_repository)
+#                 if dataset.find('balanced') != -1:
+#                     run_experiment(data=dataset,
+#                                    experiment_name='experiment_tn_old_label_balanced_zero',
+#                                    return_views=view,
+#                                    nb_repetitions=15,
+#                                    saving_rep=saving_repository)
+#
+#
+# def main_run_experiments_majority_vote_old_labels():
+#     for view in return_views:
+#         for dataset in datasets_old_labels:
+#             if dataset.find("mean") != -1:
+#                 if dataset.find('unbalanced') != -1:
+#                     run_experiment(data=dataset,
+#                                    experiment_name='experiment_majority_vote_old_label_unbalanced_mean',
+#                                    return_views=view,
+#                                    nb_repetitions=15,
+#                                    saving_rep=saving_repository)
+#                 if dataset.find('balanced') != -1:
+#                     run_experiment(data=dataset,
+#                                    experiment_name='experiment_majority_vote_old_label_balanced_mean',
+#                                    return_views=view,
+#                                    nb_repetitions=15,
+#                                    saving_rep=saving_repository)
+#             if dataset.find("median") != -1:
+#                 if dataset.find('unbalanced') != -1:
+#                     run_experiment(data=dataset,
+#                                    experiment_name='experiment_majority_vote_old_label_unbalanced_median',
+#                                    return_views=view,
+#                                    nb_repetitions=15,
+#                                    saving_rep=saving_repository)
+#                 if dataset.find('balanced') != -1:
+#                     run_experiment(data=dataset,
+#                                    experiment_name='experiment_majority_vote_old_label_balanced_median',
+#                                    return_views=view,
+#                                    nb_repetitions=15,
+#                                    saving_rep=saving_repository)
+#             if dataset.find("zero") != -1:
+#                 if dataset.find('unbalanced') != -1:
+#                     run_experiment(data=dataset,
+#                                    experiment_name='experiment_majority_vote_old_label_unbalanced_zero',
+#                                    return_views=view,
+#                                    nb_repetitions=15,
+#                                    saving_rep=saving_repository)
+#                 if dataset.find('balanced') != -1:
+#                     run_experiment(data=dataset,
+#                                    experiment_name='experiment_majority_vote_old_label_balanced_zero',
+#                                    return_views=view,
+#                                    nb_repetitions=15,
+#                                    saving_rep=saving_repository)
 
 
 if __name__ == '__main__':
     main_run_experiments_new_labels()
-    # main_run_experiments_majority_vote_new_labels()
+    main_run_experiments_majority_vote_new_labels()
