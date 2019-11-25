@@ -61,7 +61,7 @@ class BuildBrcaDatasets(BuildOmicsDatasets):
             # Save to file
             labels.to_hdf(name, "labels")
         except ValueError:
-            labels = pd.read_csv('{}'.format(self.labels_file), sep=';', index_col="bcr_patient_barcode")
+            labels = pd.read_csv('{}'.format(self.labels_file), sep=',', index_col="bcr_patient_barcode")
             y_labels = labels['phenotype_TN']
             index_pos = labels.loc[labels['phenotype_TN'] == 1].index.values
             index_neg = labels.loc[labels['phenotype_TN'] == -1].index.values
