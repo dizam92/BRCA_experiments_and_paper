@@ -119,40 +119,40 @@ def load_data(data, return_views='all'):
     Returns:
         x, y, features_names, patients_names
     """
-    # Had a problem with the features names of the snp view: The original dataset contains it but the one i'm loading no
-    # I decided to make a patch here to have a remedy to this. The original builder code is corrected but i don't wanna
-    # waste time and ressource to rebuild the datasets
-    d_temp = h5py.File('/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/BRCA_triple_neg_new_labels_unbalanced_mean.h5', 'r')
-    features_names_snps = d_temp['snp/block0_items'][()]
-    features_names_snps = np.asarray([el.decode('utf8') for el in features_names_snps])
-    snp_data_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/files_to_build_datasets/genome.wustl.edu__IlluminaGA_curated_DNA_sequencing_level2.maf'
-    snp_data = pd.read_table(snp_data_file, sep="\t", index_col="Tumor_Sample_Barcode")
-    drop_columns = ["Center", "Ncbi_Build", "Archive_Name", "Strand", "Dbsnp_Rs", "Dbsnp_Val_Status",
-                    "Verification_Status", "Sequencer", "Validation_Status", "Validation_Method", "Score", "File_Name",
-                    "Bam_File", "Mutation_Status", "Sequence_Source", "Sequencing_Phase", "Line_Number",
-                    "Tumor_Validation_Allele1", "Tumor_Validation_Allele2", "Match_Norm_Validation_Allele1",
-                    "Match_Norm_Validation_Allele2"]
-    snp_data.drop(drop_columns, axis=1, inplace=True)
-    index_patterns = re.compile(r'(TCGA-\w+-\w+-01A-\w+-\w+-\w+)', re.U | re.M | re.I)
-    index_to_drop = [idx for idx in snp_data.index if index_patterns.match(idx) is None]
-    snp_data.drop(index_to_drop, axis=0, inplace=True)
-    # Identifiant unique des SNP
-    # entrez_dene_id = snp_data.Entrez_Gene_Id.values
-    chrom = snp_data.Chrom.values
-    start_position = snp_data.Start_Position.values
-    end_position = snp_data.End_Position.values
-    reference_allele = snp_data.Reference_Allele.values
-    tumor_seq_allele2 = snp_data.Tumor_Seq_Allele2.values
-    snp_id_list = ['{}_{}_{}_{}_{}'.format(chrom[idx], start_position[idx], end_position[idx],
-                                              reference_allele[idx], tumor_seq_allele2[idx]) for idx in range(len(chrom))]
-    snp_data["snp_id"] = snp_id_list
-    snp_data = snp_data.loc[snp_data['snp_id'].isin(features_names_snps)]
-    zipping_name = list(zip(snp_data['Hugo_Symbol'], snp_data['snp_id']))
-    features_names_snps_linked = np.asarray([None] * features_names_snps.shape[0])
-    for i, el in enumerate(features_names_snps):
-        for zip_el in zipping_name:
-            if zip_el[1] == el:
-                features_names_snps_linked[i] = '{}_{}'.format(el, zip_el[0])
+    # # Had a problem with the features names of the snp view: The original dataset contains it but the one i'm loading no
+    # # I decided to make a patch here to have a remedy to this. The original builder code is corrected but i don't wanna
+    # # waste time and ressource to rebuild the datasets
+    # d_temp = h5py.File('/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/BRCA_triple_neg_new_labels_unbalanced_mean.h5', 'r')
+    # features_names_snps = d_temp['snp/block0_items'][()]
+    # features_names_snps = np.asarray([el.decode('utf8') for el in features_names_snps])
+    # snp_data_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/files_to_build_datasets/genome.wustl.edu__IlluminaGA_curated_DNA_sequencing_level2.maf'
+    # snp_data = pd.read_table(snp_data_file, sep="\t", index_col="Tumor_Sample_Barcode")
+    # drop_columns = ["Center", "Ncbi_Build", "Archive_Name", "Strand", "Dbsnp_Rs", "Dbsnp_Val_Status",
+    #                 "Verification_Status", "Sequencer", "Validation_Status", "Validation_Method", "Score", "File_Name",
+    #                 "Bam_File", "Mutation_Status", "Sequence_Source", "Sequencing_Phase", "Line_Number",
+    #                 "Tumor_Validation_Allele1", "Tumor_Validation_Allele2", "Match_Norm_Validation_Allele1",
+    #                 "Match_Norm_Validation_Allele2"]
+    # snp_data.drop(drop_columns, axis=1, inplace=True)
+    # index_patterns = re.compile(r'(TCGA-\w+-\w+-01A-\w+-\w+-\w+)', re.U | re.M | re.I)
+    # index_to_drop = [idx for idx in snp_data.index if index_patterns.match(idx) is None]
+    # snp_data.drop(index_to_drop, axis=0, inplace=True)
+    # # Identifiant unique des SNP
+    # # entrez_dene_id = snp_data.Entrez_Gene_Id.values
+    # chrom = snp_data.Chrom.values
+    # start_position = snp_data.Start_Position.values
+    # end_position = snp_data.End_Position.values
+    # reference_allele = snp_data.Reference_Allele.values
+    # tumor_seq_allele2 = snp_data.Tumor_Seq_Allele2.values
+    # snp_id_list = ['{}_{}_{}_{}_{}'.format(chrom[idx], start_position[idx], end_position[idx],
+    #                                           reference_allele[idx], tumor_seq_allele2[idx]) for idx in range(len(chrom))]
+    # snp_data["snp_id"] = snp_id_list
+    # snp_data = snp_data.loc[snp_data['snp_id'].isin(features_names_snps)]
+    # zipping_name = list(zip(snp_data['Hugo_Symbol'], snp_data['snp_id']))
+    # features_names_snps_linked = np.asarray([None] * features_names_snps.shape[0])
+    # for i, el in enumerate(features_names_snps):
+    #     for zip_el in zipping_name:
+    #         if zip_el[1] == el:
+    #             features_names_snps_linked[i] = '{}_{}'.format(el, zip_el[0])
 
     assert return_views in ['methyl_rna_iso_mirna', 'methyl_rna_iso_mirna_snp_clinical',
                             'methyl_rna_mirna', 'methyl_rna_mirna_snp_clinical', 'all', 'majority_vote']
@@ -182,8 +182,8 @@ def load_data(data, return_views='all'):
     features_names_mirna = features_names[96980:98026]
     # SNP
     x_snp = x[:, 98026:102218]
-    # features_names_snp = features_names[98026:102218]
-    features_names_snp = features_names_snps_linked
+    features_names_snp = features_names[98026:102218]
+    # features_names_snp = features_names_snps_linked
     # Clinical
     x_clinical = x[:, 102218:102235]
     features_names_clinical = features_names[102218:102235]

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 __author__ = 'maoss2'
 from datasets.datasets_utilities import *
-
+# Build the clinical file and stuf with the jupyter notebook file
 
 class BuildBrcaDatasets(BuildOmicsDatasets):
     def __init__(self,
