@@ -706,7 +706,7 @@ def construction_pathway_file(data_path=data_tn_new_label_unbalanced_mean,
     x, y, features_names, _ = load_data(data=data_path, return_views=return_views)
     features_names = list(features_names)
     features_names_copy = deepcopy(features_names)
-    f = open(dictionnaire, 'r')
+    f = open(dictionnaire, 'rb')
     dict_file = pickle.load(f)
     output_file_name = output_file_name + '_{}.tsv'.format(return_views)
     with open(output_file_name, 'w') as f:
@@ -727,14 +727,16 @@ def construction_pathway_file(data_path=data_tn_new_label_unbalanced_mean,
 
 
 def main_construct():
-    for view in return_views:
-        construction_pathway_gene_groups_tcga(return_views=view)
+    # for view in return_views:
+    #     construction_pathway_gene_groups_tcga(return_views=view)
+    #
+    # for view in return_views:
+    #     construction_pathway_random_groups(return_views=view)
+    #
+    # for view in return_views:
+    #     construction_pathway_views_groups(return_views=view)
 
-    for view in return_views:
-        construction_pathway_random_groups(return_views=view)
-
-    for view in return_views:
-        construction_pathway_views_groups(return_views=view)
+    # construction_biogrid_pathway_file(output_file_name='pathways_biogrid')
 
     for dictionary in list_dict:
         if dictionary == c2_pickle_dictionary:
@@ -790,6 +792,63 @@ def load_biogrid_network():
         G.nodes[node]["go_terms"] = go_terms[node]
     print("BioGRID: {} genes and {} interactions".format(G.number_of_nodes(), G.number_of_edges()))
     return G, edges
+
+
+def construction_biogrid_pathway_file(data_path=data_tn_new_label_unbalanced_mean, return_views='all',
+                                      output_file_name=''):
+    """
+    Utility function to build pathway file of the groups to be loaded in LearnFromBiogridGroup
+    Args:
+        data_path: str, data path
+        return_views: str, correct view for the group
+        output_file_name: str, output file name
+    Return:
+        output_file_name, 'G\tIDS\n'
+    """
+    graph, _ = load_biogrid_network()
+    x, y, features_names, _ = load_data(data=data_path, return_views=return_views)
+    features_names = list(features_names)
+    adjacency_matrix = np.asarray(list(graph.adjacency()))
+    nodes = np.asarray(list(graph.nodes))
+    # Initialisation dictionnaire
+    dico_results = {feature: [] for feature in features_names}
+    for feature in features_names:
+        if feature.find('_') != -1:
+            # I went step by step for the comprehension but remember the gene is always at the end of the feature so
+            # use the [-1] access
+            split_results = feature.split('_')
+            gene_cible = split_results[-1]
+            if gene_cible.find(';'):
+                gene_cibles = gene_cible.split(';')
+                for gene in gene_cibles:
+                    pos_temp = np.where(nodes == gene.lower())[0]
+                    if len(pos_temp) > 0:
+                        pos = pos_temp[0]
+                        dico_results[feature].extend(list(adjacency_matrix[pos][1].keys()))
+                    else:
+                        dico_results[feature].extend(['INEXISTANT'])
+            else:
+                pos_temp = np.where(nodes == gene_cible.lower())[0]
+                if len(pos_temp) > 0:
+                    pos = pos_temp[0]
+                    dico_results[feature].extend(list(adjacency_matrix[pos][1].keys()))
+                else:
+                    dico_results[feature] = ['INEXISTANT']
+        elif feature.find('|') != -1:
+            # Here the gene is the 1st element always since it's directly the RNA view only
+            split_results = feature.split('|')
+            gene_cible = split_results[0]
+            pos_temp = np.where(nodes == gene_cible.lower())[0]
+            if len(pos_temp) > 0:
+                pos = pos_temp[0]
+                dico_results[feature].extend(list(adjacency_matrix[pos][1].keys()))
+        elif feature.startswith('hsa'):  # MiRNA View: faire le traitement directement
+            dico_results[feature].extend(['miRNA'])
+        else:  # Clinical View
+            dico_results[feature].extend(['clinical View'])
+
+    with open(output_file_name + '.pck', 'wb') as f:
+        pickle.dump(dico_results, f)
 
 
 # # TODO: To be modified and adapted to the new outing: COme back here soon
