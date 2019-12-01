@@ -1326,5 +1326,5 @@ def main_run_experiments_majority_vote_old_labels():
 
 
 if __name__ == '__main__':
-    main_run_experiments_new_labels()
-    main_run_experiments_majority_vote_new_labels()
+    main_run_experiments_old_labels()
+    main_run_experiments_majority_vote_old_labels()

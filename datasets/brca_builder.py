@@ -71,6 +71,7 @@ class BuildBrcaDatasets(BuildOmicsDatasets):
                 index_neg_non_selected = [el for el in index_neg if el not in index_neg_selected]
                 labels.drop(index_neg_non_selected, axis=0, inplace=True)
                 index_neg = index_neg_selected
+                y_labels = labels['phenotype_TN']
             labels.replace(['LA', 'LB', 'HER2++', 'TN'], [1, 2, 3, 4],
                            inplace=True)  # IMPORTANT POUR DECODER LEUR SIGNIFICATION
             labels.replace(['NON TN', 'BASAL NON TN'], [1, 2],
@@ -304,10 +305,13 @@ def build_brca_dataset_for_graalpy(dataset='',
         for zip_el in zipping_name:
             if zip_el[1] == el:
                 features_names_snps_linked[i] = '{}_{}'.format(el, zip_el[0])
-
-    x_clinical = np.hstack((data['clinical_view/block0_values'][()], data['clinical_view/block1_values'][()]))
-    features_names_clinical = np.hstack((data['clinical_view/block0_items'][()],
-                                         data['clinical_view/block1_items'][()]))
+    if len(list(data['clinical_view'].values())) == 6:
+        x_clinical = np.hstack((data['clinical_view/block0_values'][()], data['clinical_view/block1_values'][()]))
+        features_names_clinical = np.hstack((data['clinical_view/block0_items'][()],
+                                            data['clinical_view/block1_items'][()]))
+    else:
+        x_clinical = data['clinical_view/block0_values'][()]
+        features_names_clinical = data['clinical_view/block0_items'][()]
     features_names_clinical = np.asarray([el.decode('utf8') for el in features_names_clinical])
     try:
         y = data['labels/block0_values'][()]
@@ -339,7 +343,7 @@ def main_brca_dataset_builder():
     # for filling in ['mean', 'median', 'zero']:
     #     for label_file in [new_label_file, label_file_triple_all]:
     for filling in ['mean']:
-        for label_file in [new_label_file]:
+        for label_file in [new_label_file, label_file_triple_all]:
             for balanced in [False, True]:
                 brca_builder = BuildBrcaDatasets(cancer_name='BRCA',
                                                  label_file=label_file,

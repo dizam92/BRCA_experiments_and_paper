@@ -44,11 +44,11 @@ data_tn_new_label_unbalanced_mean = data_repository.format('triple_neg_new_label
 # data_tn_new_label_unbalanced_median = data_repository.format('triple_neg_new_labels_unbalanced_median.h5')
 # data_tn_new_label_unbalanced_zero = data_repository.format('triple_neg_new_labels_unbalanced_zero.h5')
 
-# data_tn_old_label_balanced_mean = data_repository.format('triple_neg_old_labels_balanced_mean.h5')
+data_tn_old_label_balanced_mean = data_repository.format('triple_neg_old_labels_balanced_mean.h5')
 # data_tn_old_label_balanced_median = data_repository.format('triple_neg_old_labels_balanced_median.h5')
 # data_tn_old_label_balanced_zero = data_repository.format('triple_neg_old_labels_balanced_zero.h5')
 
-# data_tn_old_label_unbalanced_mean = data_repository.format('triple_neg_old_labels_unbalanced_mean.h5')
+data_tn_old_label_unbalanced_mean = data_repository.format('triple_neg_old_labels_unbalanced_mean.h5')
 # data_tn_old_label_unbalanced_median = data_repository.format('triple_neg_old_labels_unbalanced_median.h5')
 # data_tn_old_label_unbalanced_zero = data_repository.format('triple_neg_old_labels_unbalanced_zero.h5')
 
@@ -64,23 +64,36 @@ return_views = ['methyl_rna_iso_mirna', 'methyl_rna_iso_mirna_snp_clinical',
                 'methyl_rna_mirna', 'methyl_rna_mirna_snp_clinical', 'all']
 
 datasets_new_labels = [data_tn_new_label_unbalanced_mean,  data_tn_new_label_balanced_mean]
+datasets_old_labels = [data_tn_old_label_unbalanced_mean,  data_tn_old_label_balanced_mean]
+# TODO: Old parameters for learning: I'm changing all of them since there is overfitting (especially in the RF)
+# parameters_dt = {'max_depth': np.arange(1, 7),
+#                  'min_samples_split': np.arange(2, 9),
+#                  'criterion': ['gini', 'entropy']
+#                  }
+# parameters_rf = {'max_depth': np.arange(1, 7),
+#                  'min_samples_split': np.arange(2, 9),
+#                  'criterion': ['gini', 'entropy'],
+#                  'n_estimators': [100, 200, 500, 1000]
+#                  }
+# param_model_type = ['conjunction', 'disjunction']
+# # param_p = [0.001, 0.1, 0.178, 0.316, 0.562, 1.0, 1.778, 3.162, 5.623, 10.0, 999999.0]
+# # param_p = [0.001, 0.05, 0.1, 0.178, 0.25, 0.316, 0.45, 0.562, 0.85, 1.0, 1.5, 1.778, 2, 2.5, 3.162, 4.39, 5.623,
+# #            6.62, 7.623, 8.386, 9.15, 10.0, 11.0]
+# param_p = [0.001, 0.1, 0.178, 0.316, 0.45, 0.562, 0.85, 1.0, 1.778, 2.5, 3.162, 4.39, 5.623, 7.623, 10.0, 999999.0]
 
-
-parameters_dt = {'max_depth': np.arange(1, 7),
-                 'min_samples_split': np.arange(2, 9),
+parameters_dt = {'max_depth': np.arange(1, 5),  # Moins de profondeur pour toujours eviter l'overfitting
+                 'min_samples_split': np.arange(4, 15),  # Eviter les small value pour eviter l'overfitting
                  'criterion': ['gini', 'entropy']
                  }
-parameters_rf = {'max_depth': np.arange(1, 7),
-                 'min_samples_split': np.arange(2, 9),
+parameters_rf = {'max_depth': np.arange(1, 5),
+                 'min_samples_split': np.arange(4, 15),
                  'criterion': ['gini', 'entropy'],
-                 'n_estimators': [100, 200, 500, 1000]
+                 'n_estimators': [25, 50, 75, 100]
                  }
 param_model_type = ['conjunction', 'disjunction']
-# param_p = [0.001, 0.1, 0.178, 0.316, 0.562, 1.0, 1.778, 3.162, 5.623, 10.0, 999999.0]
-# param_p = [0.001, 0.05, 0.1, 0.178, 0.25, 0.316, 0.45, 0.562, 0.85, 1.0, 1.5, 1.778, 2, 2.5, 3.162, 4.39, 5.623,
-#            6.62, 7.623, 8.386, 9.15, 10.0, 11.0]
-param_p = [0.001, 0.1, 0.178, 0.316, 0.45, 0.562, 0.85, 1.0, 1.778, 2.5, 3.162, 4.39, 5.623, 7.623, 10.0, 999999.0]
-param_max_attributes = np.arange(1, 11, 1)
+param_p = [0.1, 0.316, 0.45, 0.562, 0.65, 0.85, 1.0, 2.5, 4.39, 5.623, 7.623, 10.0]
+
+param_max_attributes = np.arange(1, 7, 1)
 parameters_scm = {'SCM__model_type': param_model_type,
                   'SCM__p': param_p,
                   'SCM__max_rules': param_max_attributes
@@ -120,41 +133,6 @@ def load_data(data, return_views='all'):
     Returns:
         x, y, features_names, patients_names
     """
-    # # Had a problem with the features names of the snp view: The original dataset contains it but the one i'm loading no
-    # # I decided to make a patch here to have a remedy to this. The original builder code is corrected but i don't wanna
-    # # waste time and ressource to rebuild the datasets
-    # d_temp = h5py.File('/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/BRCA_triple_neg_new_labels_unbalanced_mean.h5', 'r')
-    # features_names_snps = d_temp['snp/block0_items'][()]
-    # features_names_snps = np.asarray([el.decode('utf8') for el in features_names_snps])
-    # snp_data_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/files_to_build_datasets/genome.wustl.edu__IlluminaGA_curated_DNA_sequencing_level2.maf'
-    # snp_data = pd.read_table(snp_data_file, sep="\t", index_col="Tumor_Sample_Barcode")
-    # drop_columns = ["Center", "Ncbi_Build", "Archive_Name", "Strand", "Dbsnp_Rs", "Dbsnp_Val_Status",
-    #                 "Verification_Status", "Sequencer", "Validation_Status", "Validation_Method", "Score", "File_Name",
-    #                 "Bam_File", "Mutation_Status", "Sequence_Source", "Sequencing_Phase", "Line_Number",
-    #                 "Tumor_Validation_Allele1", "Tumor_Validation_Allele2", "Match_Norm_Validation_Allele1",
-    #                 "Match_Norm_Validation_Allele2"]
-    # snp_data.drop(drop_columns, axis=1, inplace=True)
-    # index_patterns = re.compile(r'(TCGA-\w+-\w+-01A-\w+-\w+-\w+)', re.U | re.M | re.I)
-    # index_to_drop = [idx for idx in snp_data.index if index_patterns.match(idx) is None]
-    # snp_data.drop(index_to_drop, axis=0, inplace=True)
-    # # Identifiant unique des SNP
-    # # entrez_dene_id = snp_data.Entrez_Gene_Id.values
-    # chrom = snp_data.Chrom.values
-    # start_position = snp_data.Start_Position.values
-    # end_position = snp_data.End_Position.values
-    # reference_allele = snp_data.Reference_Allele.values
-    # tumor_seq_allele2 = snp_data.Tumor_Seq_Allele2.values
-    # snp_id_list = ['{}_{}_{}_{}_{}'.format(chrom[idx], start_position[idx], end_position[idx],
-    #                                           reference_allele[idx], tumor_seq_allele2[idx]) for idx in range(len(chrom))]
-    # snp_data["snp_id"] = snp_id_list
-    # snp_data = snp_data.loc[snp_data['snp_id'].isin(features_names_snps)]
-    # zipping_name = list(zip(snp_data['Hugo_Symbol'], snp_data['snp_id']))
-    # features_names_snps_linked = np.asarray([None] * features_names_snps.shape[0])
-    # for i, el in enumerate(features_names_snps):
-    #     for zip_el in zipping_name:
-    #         if zip_el[1] == el:
-    #             features_names_snps_linked[i] = '{}_{}'.format(el, zip_el[0])
-
     assert return_views in ['methyl_rna_iso_mirna', 'methyl_rna_iso_mirna_snp_clinical',
                             'methyl_rna_mirna', 'methyl_rna_mirna_snp_clinical', 'all', 'majority_vote']
     d = h5py.File(data, 'r')

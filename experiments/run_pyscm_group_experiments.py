@@ -12,7 +12,7 @@ from sklearn.metrics import confusion_matrix
 logging.getLogger('parso.python.diff').disabled = True
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-nb_jobs = 30
+nb_jobs = 15
 cv_fold = KFold(n_splits=5, random_state=42)
 
 
@@ -695,8 +695,8 @@ def main_unbalanced_methyl_rna_mirna_snp_clinical():
 
 
 if __name__ == '__main__':
-    main_unbalanced_all()
-    # main_unbalanced_methyl_rna_iso_mirna()
+    # main_unbalanced_all()
+    main_unbalanced_methyl_rna_iso_mirna()
     # main_unbalanced_methyl_rna_iso_mirna_snp_clinical()
     # main_unbalanced_methyl_rna_mirna()
     # main_unbalanced_methyl_rna_mirna_snp_clinical()
