@@ -13,7 +13,7 @@ logging.getLogger('parso.python.diff').disabled = True
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 nb_jobs = 15
-cv_fold = KFold(n_splits=5, random_state=42)
+cv_fold = KFold(n_splits=3, random_state=42)
 
 
 def cv_function(x_train, y_train, param, groups_ids=None, groups_ids_weights=None, tiebreaker=None,
@@ -252,6 +252,7 @@ class LearnFromBiogridGroup(GenericGroupScmTcga):
         # Je fais l'assumption pour les groupes overlaper de faire l'addition des weights calculés pour ces features
         # donc ca donne le truc de flatten et de faire la somme sur chaque valeur
         self.groups_ids_weights = [np.sum(el) for el in self.groups_ids_weights]
+        del self.dict_biogrid_groups
         # Faire flatten la liste et faire la somme dessus pour que pyscmgroup  comme c'est fait actuellement aille
         # juste chercher la bonne affaire à la bonne place straight up
         # TODO: peut changer j'ai pris pour l'instant taille du groupe / nbre total de groupe

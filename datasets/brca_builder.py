@@ -33,7 +33,7 @@ class BuildBrcaDatasets(BuildOmicsDatasets):
                         mirna_file=mirna_file,
                         clinical_file=new_clinical_file,
                         balanced_dataset=False,
-                        filling_type='mean'):
+                        methyl_rna_mirna_snp=False):
         """
         Combine all the .tsv files to build the dataset
         Args: methyl_450_file, str, path to methyl 450 file,
@@ -44,53 +44,26 @@ class BuildBrcaDatasets(BuildOmicsDatasets):
               mirna_file=str, path to mirna file,
               clinical_file=str, path to clinical file
               balanced_dataset, bool, False to build unbalanced dataset, True to build balanced one
-              filling_type, str, 'mean', 'zero', 'median' or None
+              methyl_rna_mirna_snp, Bool, default False, if false juste merge on the methyl_rna_mirna_clinical
+                (ignore the snp)  if true merge on everything include the snps
         :return:
         """
+        running_on_new_labelisation = True
         if balanced_dataset:
-            name = '{}_balanced_{}.h5'.format(file_name, filling_type)
+            if methyl_rna_mirna_snp:
+                name = '{}_balanced_{}.h5'.format(file_name, 'all_views')
+            else:
+                name = '{}_balanced_{}.h5'.format(file_name, 'cpg_rna_rna_iso_mirna')
         else:
-            name = '{}_unbalanced_{}.h5'.format(file_name, filling_type)
+            if methyl_rna_mirna_snp:
+                name = '{}_unbalanced_{}.h5'.format(file_name, 'all_views')
+            else:
+                name = '{}_unbalanced_{}.h5'.format(file_name, 'cpg_rna_rna_iso_mirna')
         try:
             labels = pd.read_csv('{}'.format(self.labels_file), index_col="example_id", sep="\t")
-            index_pos = labels.loc[labels['labels'] == 1].index.values
-            index_neg = labels.loc[labels['labels'] == -1].index.values
-            if balanced_dataset:
-                index_neg_selected = np.asarray(random.sample(list(index_neg), len(index_pos)))
-                index_neg_non_selected = [el for el in index_neg if el not in index_neg_selected]
-                labels.drop(index_neg_non_selected, axis=0, inplace=True)
-                index_neg = index_neg_selected
-            # Save to file
-            labels.to_hdf(name, "labels")
+            running_on_new_labelisation = False
         except ValueError:
             labels = pd.read_csv('{}'.format(self.labels_file), sep=',', index_col="bcr_patient_barcode")
-            y_labels = labels['phenotype_TN']
-            index_pos = labels.loc[labels['phenotype_TN'] == 1].index.values
-            index_neg = labels.loc[labels['phenotype_TN'] == -1].index.values
-            if balanced_dataset:
-                index_neg_selected = np.asarray(random.sample(list(index_neg), len(index_pos)))
-                index_neg_non_selected = [el for el in index_neg if el not in index_neg_selected]
-                labels.drop(index_neg_non_selected, axis=0, inplace=True)
-                index_neg = index_neg_selected
-                y_labels = labels['phenotype_TN']
-            labels.replace(['LA', 'LB', 'HER2++', 'TN'], [1, 2, 3, 4],
-                           inplace=True)  # IMPORTANT POUR DECODER LEUR SIGNIFICATION
-            labels.replace(['NON TN', 'BASAL NON TN'], [1, 2],
-                           inplace=True)  # IMPORTANT POUR DECODER LEUR SIGNIFICATION
-            labels_phenotype_normal = labels['phenotype']
-            labels_phenotype_diablo = labels['phenotype_DIABLO']
-            labels_phenotype_diablo_TN_and_basal = labels['phenotype_DIABLO_TN_AND_BASAL']
-            er_positive_probability = labels['er_status_ihc_Percent_Positive']
-            pr_positive_probability = labels['pr_status_ihc_percent_Positive']
-            her_positive_probability = labels['her2_ihc_percent_Positive']
-            # Save to file
-            y_labels.to_hdf(name, "labels")
-            labels_phenotype_normal.to_hdf(name, 'label_normal_phenotype')
-            labels_phenotype_diablo.to_hdf(name, 'label_diablo_phenotype')
-            labels_phenotype_diablo_TN_and_basal.to_hdf(name, 'label_diablo_TN_and_basal_phenotype')
-            er_positive_probability.to_hdf(name, 'er_positive_probability')
-            pr_positive_probability.to_hdf(name, 'pr_positive_probability')
-            her_positive_probability.to_hdf(name, 'her_positive_probability')
 
         methylation_27 = pd.read_csv(methyl_27_file, sep="\t")
         methylation_27.dropna(axis=0, inplace=True)  # delete the nan feature
@@ -108,10 +81,6 @@ class BuildBrcaDatasets(BuildOmicsDatasets):
         methylation_fusion_27.drop(['Unnamed: 0'], axis=1, inplace=True)
         methylation_fusion_450.drop(['Unnamed: 0'], axis=1, inplace=True)
         methylation_fusion = pd.concat([methylation_fusion_27, methylation_fusion_450], axis=1)
-        methylation_fusion = methylation_fusion.T
-        methylation_fusion.to_csv('methylation_fusion.tsv', sep="\t", encoding='utf-8')
-        methylation_fusion = methylation_fusion.loc[labels.index.values]
-        methylation_fusion = methylation_fusion.apply(pd.to_numeric, errors='coerce')
 
         rnaseq_genes = pd.read_csv(rnaseq_genes_file, sep="\t")
         liste = []
@@ -121,34 +90,90 @@ class BuildBrcaDatasets(BuildOmicsDatasets):
         rnaseq_genes.drop(axis=0, index=liste, inplace=True)
         indexes = np.array(list(map(str, np.array(rnaseq_genes["Unnamed: 0"]))))
         rnaseq_genes.set_index(indexes, inplace=True)
-        rnaseq_genes = rnaseq_genes.T.loc[labels.index.values]
-        rnaseq_genes = rnaseq_genes.loc[:, rnaseq_genes.count() > 0]
+        rnaseq_genes.drop(['Unnamed: 0'], axis=1, inplace=True)
 
         rnaseq_isoforms = pd.read_csv(rnaseq_isoforms_file, sep="\t")
         indexes = np.array(list(map(str, np.array(rnaseq_isoforms["Unnamed: 0"]))))
         rnaseq_isoforms.set_index(indexes, inplace=True)
-        rnaseq_isoforms = rnaseq_isoforms.T.loc[labels.index.values]
-        rnaseq_isoforms = rnaseq_isoforms.loc[:, rnaseq_isoforms.count() > 0]
+        rnaseq_isoforms.drop(['Unnamed: 0'], axis=1, inplace=True)
 
         snps = pd.read_csv(snp_file, sep="\t")
         indexes = np.array(list(map(str, np.array(snps["Unnamed: 0"]))))
         snps.set_index(indexes, inplace=True)
-        snps = snps.T.loc[labels.index.values]
-        snps = snps.loc[:, snps.count() > 0]
-        snps = snps.apply(pd.to_numeric, errors='coerce')
 
         mirnas = pd.read_csv(mirna_file, sep="\t")
         indexes = np.array(list(map(str, np.array(mirnas["Unnamed: 0"]))))
         mirnas.set_index(indexes, inplace=True)
-        mirnas = mirnas.T.loc[labels.index.values]
-        mirnas = mirnas.loc[:, mirnas.count() > 0]
-        mirnas = self.method_to_fill_nan(data=mirnas, idx_pos=index_pos, idx_neg=index_neg, filling_type='mean')
-        # Obliger de fill the mirnas car il y a des patients pour lesquels c'est pas disponible du tout malgre le filtre
-        
+        mirnas.drop(['Unnamed: 0'], axis=1, inplace=True)
+
         clinical_data = pd.read_csv(clinical_file, sep='\t')
         indexes = np.array(list(map(str, clinical_data['bcr_patient_barcode'].values)))
         clinical_data.set_index(indexes, inplace=True)
         clinical_data.drop(['Unnamed: 0', 'bcr_patient_barcode'], axis=1, inplace=True)
+
+        liste_1 = [el for el in methylation_fusion.columns if el in labels.index.values]
+        liste_2 = [el for el in rnaseq_genes.columns if el in labels.index.values]
+        liste_3 = [el for el in rnaseq_isoforms.columns if el in labels.index.values]  # liste_3 == liste_
+        liste_4 = [el for el in mirnas.columns if el in labels.index.values]
+        liste_5 = [el for el in snps.columns if el in labels.index.values]
+        if methyl_rna_mirna_snp is True:
+            patients_informations_available_for_all_view = list(set(liste_1).intersection(liste_2, liste_4, liste_5))
+        else:
+            patients_informations_available_for_all_view = list(set(liste_1).intersection(liste_2, liste_4))
+
+        if running_on_new_labelisation is True:
+            labels = labels.loc[labels.index.isin(patients_informations_available_for_all_view)]
+            y_labels = labels['phenotype_TN']
+            index_pos = labels.loc[labels['phenotype_TN'] == 1].index.values
+            index_neg = labels.loc[labels['phenotype_TN'] == -1].index.values
+            if balanced_dataset:
+                index_neg_selected = np.asarray(random.sample(list(index_neg), len(index_pos)))
+                index_neg_non_selected = [el for el in index_neg if el not in index_neg_selected]
+                labels.drop(index_neg_non_selected, axis=0, inplace=True)
+                y_labels = labels['phenotype_TN']
+            labels.replace(['LA', 'LB', 'HER2++', 'TN'], [1, 2, 3, 4],
+                           inplace=True)  # IMPORTANT POUR DECODER LEUR SIGNIFICATION
+            labels.replace(['NON TN', 'BASAL NON TN'], [1, 2],
+                           inplace=True)  # IMPORTANT POUR DECODER LEUR SIGNIFICATION
+            labels_phenotype_normal = labels['phenotype']
+            labels_phenotype_diablo = labels['phenotype_DIABLO']
+            labels_phenotype_diablo_TN_and_basal = labels['phenotype_DIABLO_TN_AND_BASAL']
+            er_positive_probability = labels['er_status_ihc_Percent_Positive']
+            pr_positive_probability = labels['pr_status_ihc_percent_Positive']
+            her_positive_probability = labels['her2_ihc_percent_Positive']
+            y_multi_labels = labels['phenotype']
+            # Save to file
+            y_labels.to_hdf(name, "labels")
+            y_multi_labels.to_hdf(name, 'multi_labels')
+            labels_phenotype_normal.to_hdf(name, 'label_normal_phenotype')
+            labels_phenotype_diablo.to_hdf(name, 'label_diablo_phenotype')
+            labels_phenotype_diablo_TN_and_basal.to_hdf(name, 'label_diablo_TN_and_basal_phenotype')
+            er_positive_probability.to_hdf(name, 'er_positive_probability')
+            pr_positive_probability.to_hdf(name, 'pr_positive_probability')
+            her_positive_probability.to_hdf(name, 'her_positive_probability')
+
+        else:
+            labels = labels.loc[labels.index.isin(patients_informations_available_for_all_view)]
+            index_pos = labels.loc[labels['labels'] == 1].index.values
+            index_neg = labels.loc[labels['labels'] == -1].index.values
+            if balanced_dataset:
+                index_neg_selected = np.asarray(random.sample(list(index_neg), len(index_pos)))
+                index_neg_non_selected = [el for el in index_neg if el not in index_neg_selected]
+                labels.drop(index_neg_non_selected, axis=0, inplace=True)
+            # Save to file
+            labels.to_hdf(name, "labels")
+
+        methylation_fusion = methylation_fusion.T.loc[labels.index.values]
+        methylation_fusion = methylation_fusion.apply(pd.to_numeric, errors='coerce')
+        rnaseq_genes = rnaseq_genes.T.loc[labels.index.values]
+        rnaseq_genes = rnaseq_genes.loc[:, rnaseq_genes.count() > 0]
+        rnaseq_isoforms = rnaseq_isoforms.T.loc[labels.index.values]
+        rnaseq_isoforms = rnaseq_isoforms.loc[:, rnaseq_isoforms.count() > 0]
+        mirnas = mirnas.T.loc[labels.index.values]
+        mirnas = mirnas.loc[:, mirnas.count() > 0]
+        snps = snps.T.loc[labels.index.values]
+        snps = snps.loc[:, snps.count() > 0]
+        snps = snps.apply(pd.to_numeric, errors='coerce')
         clinical_data = clinical_data.loc[labels.index.values]
         clinical_data = clinical_data.apply(pd.to_numeric, errors='coerce')
 
@@ -185,7 +210,7 @@ class BuildBrcaDatasets(BuildOmicsDatasets):
                              snp_file=snp_file,
                              mirna_file=mirna_file,
                              clinical_file=new_clinical_file,
-                             filling_type='mean')
+                             methyl_rna_mirna_snp=True)
 
 
 def build_brca_dataset_for_graalpy(dataset='',
@@ -270,36 +295,43 @@ def build_brca_dataset_for_graalpy(dataset='',
                 0]  # recuperer la position ou l'élément est
             features_names_rna_isoforms_linked[i] = temp_features_names_rna_isoforms_linked[
                 index_el]  # remplacer par le nouveau nom
+    try:
+        x_snps = data['snp/block0_values'][()]
+        features_names_snps = data['snp/block0_items'][()]
+        features_names_snps = np.asarray([el.decode('utf8') for el in features_names_snps])
+        indices_mad_selected = select_features_based_on_mad(x=x_snps, nb_features=1000)
+        x_snps = x_snps[:, indices_mad_selected]
+        features_names_snps = features_names_snps[indices_mad_selected]
+        snp_data = pd.read_table(snp_data_file, sep="\t", index_col="Tumor_Sample_Barcode")
+        drop_columns = ["Center", "Ncbi_Build", "Archive_Name", "Strand", "Dbsnp_Rs", "Dbsnp_Val_Status",
+                        "Verification_Status", "Sequencer", "Validation_Status", "Validation_Method", "Score", "File_Name",
+                        "Bam_File", "Mutation_Status", "Sequence_Source", "Sequencing_Phase", "Line_Number",
+                        "Tumor_Validation_Allele1", "Tumor_Validation_Allele2", "Match_Norm_Validation_Allele1",
+                        "Match_Norm_Validation_Allele2"]
+        snp_data.drop(drop_columns, axis=1, inplace=True)
+        index_patterns = re.compile(r'(TCGA-\w+-\w+-01A-\w+-\w+-\w+)', re.U | re.M | re.I)
+        index_to_drop = [idx for idx in snp_data.index if index_patterns.match(idx) is None]
+        snp_data.drop(index_to_drop, axis=0, inplace=True)
+        # Identifiant unique des SNP
+        chrom = snp_data.Chrom.values
+        start_position = snp_data.Start_Position.values
+        end_position = snp_data.End_Position.values
+        reference_allele = snp_data.Reference_Allele.values
+        tumor_seq_allele2 = snp_data.Tumor_Seq_Allele2.values
+        snp_id_list = ['{}_{}_{}_{}_{}'.format(chrom[idx], start_position[idx], end_position[idx],
+                                               reference_allele[idx], tumor_seq_allele2[idx]) for idx in range(len(chrom))]
+        snp_data["snp_id"] = snp_id_list
+        snp_data = snp_data.loc[snp_data['snp_id'].isin(features_names_snps)]
+        zipping_name = list(zip(snp_data['Hugo_Symbol'], snp_data['snp_id']))
+        features_names_snps_linked = np.asarray([None] * features_names_snps.shape[0])
+        for i, el in enumerate(features_names_snps):
+            for zip_el in zipping_name:
+                if zip_el[1] == el:
+                    features_names_snps_linked[i] = '{}_{}'.format(el, zip_el[0])
+    except KeyError:
+        x_snps = []
+        features_names_snps_linked = []
 
-    x_snps = data['snp/block0_values'][()]
-    features_names_snps = data['snp/block0_items'][()]
-    features_names_snps = np.asarray([el.decode('utf8') for el in features_names_snps])
-    snp_data = pd.read_table(snp_data_file, sep="\t", index_col="Tumor_Sample_Barcode")
-    drop_columns = ["Center", "Ncbi_Build", "Archive_Name", "Strand", "Dbsnp_Rs", "Dbsnp_Val_Status",
-                    "Verification_Status", "Sequencer", "Validation_Status", "Validation_Method", "Score", "File_Name",
-                    "Bam_File", "Mutation_Status", "Sequence_Source", "Sequencing_Phase", "Line_Number",
-                    "Tumor_Validation_Allele1", "Tumor_Validation_Allele2", "Match_Norm_Validation_Allele1",
-                    "Match_Norm_Validation_Allele2"]
-    snp_data.drop(drop_columns, axis=1, inplace=True)
-    index_patterns = re.compile(r'(TCGA-\w+-\w+-01A-\w+-\w+-\w+)', re.U | re.M | re.I)
-    index_to_drop = [idx for idx in snp_data.index if index_patterns.match(idx) is None]
-    snp_data.drop(index_to_drop, axis=0, inplace=True)
-    # Identifiant unique des SNP
-    chrom = snp_data.Chrom.values
-    start_position = snp_data.Start_Position.values
-    end_position = snp_data.End_Position.values
-    reference_allele = snp_data.Reference_Allele.values
-    tumor_seq_allele2 = snp_data.Tumor_Seq_Allele2.values
-    snp_id_list = ['{}_{}_{}_{}_{}'.format(chrom[idx], start_position[idx], end_position[idx],
-                                           reference_allele[idx], tumor_seq_allele2[idx]) for idx in range(len(chrom))]
-    snp_data["snp_id"] = snp_id_list
-    snp_data = snp_data.loc[snp_data['snp_id'].isin(features_names_snps)]
-    zipping_name = list(zip(snp_data['Hugo_Symbol'], snp_data['snp_id']))
-    features_names_snps_linked = np.asarray([None] * features_names_snps.shape[0])
-    for i, el in enumerate(features_names_snps):
-        for zip_el in zipping_name:
-            if zip_el[1] == el:
-                features_names_snps_linked[i] = '{}_{}'.format(el, zip_el[0])
     if len(list(data['clinical_view'].values())) == 6:
         x_clinical = np.hstack((data['clinical_view/block0_values'][()], data['clinical_view/block1_values'][()]))
         features_names_clinical = np.hstack((data['clinical_view/block0_items'][()],
@@ -313,13 +345,21 @@ def build_brca_dataset_for_graalpy(dataset='',
     except KeyError:
         y = data['labels/values'][()]
     y = y.reshape(-1)
-    x = np.hstack((x_methyl_fusion, x_rna_isoforms, x_mirna, x_snps, x_clinical, x_rna))
-    features_names_methyl_fusion_linked = np.asarray(features_names_methyl_fusion_linked, dtype='str')
-    features_names_rna_isoforms_linked = np.asarray(features_names_rna_isoforms_linked, dtype='str')
-    features_names_snps_linked = np.asarray(features_names_snps_linked, dtype='str')
-    features_names = np.hstack((features_names_methyl_fusion_linked, features_names_rna_isoforms_linked,
-                                features_names_mirna, features_names_snps_linked, features_names_clinical,
-                                features_names_rna))
+    if len(x_snps) > 0:
+        x = np.hstack((x_methyl_fusion, x_rna_isoforms, x_mirna, x_snps, x_clinical, x_rna))
+        features_names_methyl_fusion_linked = np.asarray(features_names_methyl_fusion_linked, dtype='str')
+        features_names_rna_isoforms_linked = np.asarray(features_names_rna_isoforms_linked, dtype='str')
+        features_names_snps_linked = np.asarray(features_names_snps_linked, dtype='str')
+        features_names = np.hstack((features_names_methyl_fusion_linked, features_names_rna_isoforms_linked,
+                                    features_names_mirna, features_names_snps_linked, features_names_clinical,
+                                    features_names_rna))
+    else:
+        x = np.hstack((x_methyl_fusion, x_rna_isoforms, x_mirna, x_clinical, x_rna))
+        features_names_methyl_fusion_linked = np.asarray(features_names_methyl_fusion_linked, dtype='str')
+        features_names_rna_isoforms_linked = np.asarray(features_names_rna_isoforms_linked, dtype='str')
+        features_names = np.hstack((features_names_methyl_fusion_linked, features_names_rna_isoforms_linked,
+                                    features_names_mirna, features_names_clinical, features_names_rna))
+
     features_names = [str(x).encode('utf-8') for x in features_names]
     data.close()
     # New add section: Lire la matrice avec pandas :) et extraire les patients ids car je veux tester pour
@@ -334,25 +374,27 @@ def build_brca_dataset_for_graalpy(dataset='',
     f.create_dataset('patients_ids', data=patients_ids)
 
 
-def select_features_based_on_mad(x, nb_features=5000):
+def select_features_based_on_mad(x, axe=0, nb_features=5000):
     """
     Utility function to help build the mad. Compute the mad for each features
     and make a sort on the features to take the n best features
     Args:
         x, numpy array, data of each view
+        axe, int, 0 or 1: if 0 run on the columns, if 1 run on the row (Unconventional cause i'm using a stats library)
         nb_features, int, default number of feature to be selected
     Return:
         indices_features, the indices in the array of the features to be selected
     """
-    mad_all_features = median_absolute_deviation(x, axis=1)
+    assert axe in [0, 1], 'Can not do on axe {}'.format(axe)
+    mad_all_features = median_absolute_deviation(x, axis=axe)
     indices_features = np.argsort(mad_all_features)[::-1]
-    return indices_features
+    return indices_features[:nb_features]
 
 
 def main_brca_dataset_builder():
     # for filling in ['mean', 'median', 'zero']:
     #     for label_file in [new_label_file, label_file_triple_all]:
-    for filling in ['mean']:
+    for boolean in [True, False]:
         for label_file in [new_label_file, label_file_triple_all]:
             for balanced in [False, True]:
                 brca_builder = BuildBrcaDatasets(cancer_name='BRCA',
@@ -372,13 +414,22 @@ def main_brca_dataset_builder():
                                                  mirna_file=mirna_file,
                                                  clinical_file=new_clinical_file,
                                                  balanced_dataset=balanced,
-                                                 filling_type=filling)
+                                                 methyl_rna_mirna_snp=boolean)
                     if balanced:
-                        dataset_name = 'BRCA_triple_neg_new_labels_balanced_{}.h5'.format(filling)
-                        final_dataset_name = 'triple_neg_new_labels_balanced_{}'.format(filling)
+                        if boolean is True:
+                            dataset_name = 'BRCA_triple_neg_new_labels_balanced_all_views.h5'
+                            final_dataset_name = 'triple_neg_new_labels_balanced_all_views'
+                        else:
+                            dataset_name = 'BRCA_triple_neg_new_labels_balanced_cpg_rna_rna_iso_mirna.h5'
+                            final_dataset_name = 'triple_neg_new_labels_balanced_cpg_rna_rna_iso_mirna'
                     else:
-                        dataset_name = 'BRCA_triple_neg_new_labels_unbalanced_{}.h5'.format(filling)
-                        final_dataset_name = 'triple_neg_new_labels_unbalanced_{}'.format(filling)
+                        if boolean is True:
+                            dataset_name = 'BRCA_triple_neg_new_labels_unbalanced_all_views.h5'
+                            final_dataset_name = 'triple_neg_new_labels_unbalanced_all_views'
+                        else:
+                            dataset_name = 'BRCA_triple_neg_new_labels_unbalanced_cpg_rna_rna_iso_mirna.h5'
+                            final_dataset_name = 'triple_neg_new_labels_unbalanced_cpg_rna_rna_iso_mirna'
+
                     build_brca_dataset_for_graalpy(dataset=dataset_name, name=final_dataset_name)
                 else:
                     brca_builder.combine_dataset(file_name='BRCA_triple_neg_old_labels',
@@ -390,13 +441,21 @@ def main_brca_dataset_builder():
                                                  mirna_file=mirna_file,
                                                  clinical_file=new_clinical_file,
                                                  balanced_dataset=balanced,
-                                                 filling_type=filling)
+                                                 methyl_rna_mirna_snp=boolean)
                     if balanced:
-                        dataset_name = 'BRCA_triple_neg_old_labels_balanced_{}.h5'.format(filling)
-                        final_dataset_name = 'triple_neg_old_labels_balanced_{}'.format(filling)
+                        if boolean is True:
+                            dataset_name = 'BRCA_triple_neg_old_labels_balanced_all_views.h5'
+                            final_dataset_name = 'triple_neg_old_labels_balanced_all_views'
+                        else:
+                            dataset_name = 'BRCA_triple_neg_old_labels_balanced_cpg_rna_rna_iso_mirna.h5'
+                            final_dataset_name = 'triple_neg_old_labels_balanced_cpg_rna_rna_iso_mirna'
                     else:
-                        dataset_name = 'BRCA_triple_neg_old_labels_unbalanced_{}.h5'.format(filling)
-                        final_dataset_name = 'triple_neg_old_labels_unbalanced_{}'.format(filling)
+                        if boolean is True:
+                            dataset_name = 'BRCA_triple_neg_old_labels_unbalanced_all_views.h5'
+                            final_dataset_name = 'triple_neg_old_labels_unbalanced_all_views'
+                        else:
+                            dataset_name = 'BRCA_triple_neg_old_labels_unbalanced_cpg_rna_rna_iso_mirna.h5'
+                            final_dataset_name = 'triple_neg_old_labels_unbalanced_cpg_rna_rna_iso_mirna'
                     build_brca_dataset_for_graalpy(dataset=dataset_name, name=final_dataset_name)
 
 

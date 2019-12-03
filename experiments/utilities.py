@@ -36,35 +36,26 @@ list_dict = [c2_pickle_dictionary, c5_pickle_dictionary]
 
 saving_repository = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/saving_repository'
 data_repository = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/{}'
-data_tn_new_label_balanced_mean = data_repository.format('triple_neg_new_labels_balanced_mean.h5')
-# data_tn_new_label_balanced_median = data_repository.format('triple_neg_new_labels_balanced_median.h5')
-# data_tn_new_label_balanced_zero = data_repository.format('triple_neg_new_labels_balanced_zero.h5')
 
-data_tn_new_label_unbalanced_mean = data_repository.format('triple_neg_new_labels_unbalanced_mean.h5')
-# data_tn_new_label_unbalanced_median = data_repository.format('triple_neg_new_labels_unbalanced_median.h5')
-# data_tn_new_label_unbalanced_zero = data_repository.format('triple_neg_new_labels_unbalanced_zero.h5')
+data_tn_new_label_balanced_all_views = data_repository.format('triple_neg_new_labels_balanced_all_views.h5')
+data_tn_new_label_balanced_cpg_rna_rna_iso_mirna = data_repository.format('triple_neg_new_labels_balanced_cpg_rna_rna_iso_mirna.h5')
+data_tn_new_label_unbalanced_all_views = data_repository.format('triple_neg_new_labels_unbalanced_all_views.h5')
+data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna = data_repository.format('triple_neg_new_labels_unbalanced_cpg_rna_rna_iso_mirna.h5')
 
-data_tn_old_label_balanced_mean = data_repository.format('triple_neg_old_labels_balanced_mean.h5')
-# data_tn_old_label_balanced_median = data_repository.format('triple_neg_old_labels_balanced_median.h5')
-# data_tn_old_label_balanced_zero = data_repository.format('triple_neg_old_labels_balanced_zero.h5')
-
-data_tn_old_label_unbalanced_mean = data_repository.format('triple_neg_old_labels_unbalanced_mean.h5')
-# data_tn_old_label_unbalanced_median = data_repository.format('triple_neg_old_labels_unbalanced_median.h5')
-# data_tn_old_label_unbalanced_zero = data_repository.format('triple_neg_old_labels_unbalanced_zero.h5')
-
-# datasets_new_labels = [data_tn_new_label_unbalanced_mean, data_tn_new_label_unbalanced_median,
-#                        data_tn_new_label_unbalanced_zero, data_tn_new_label_balanced_mean,
-#                        data_tn_new_label_balanced_median, data_tn_new_label_balanced_zero]
-#
-# datasets_old_labels = [data_tn_old_label_unbalanced_mean, data_tn_old_label_unbalanced_median,
-#                        data_tn_old_label_unbalanced_zero, data_tn_old_label_balanced_mean,
-#                        data_tn_old_label_balanced_median, data_tn_old_label_balanced_zero]
+data_tn_old_label_balanced_all_views = data_repository.format('triple_neg_old_labels_balanced_all_views.h5')
+data_tn_old_label_balanced_cpg_rna_rna_iso_mirna = data_repository.format('triple_neg_old_labels_balanced_cpg_rna_rna_iso_mirna.h5')
+data_tn_old_label_unbalanced_all_views = data_repository.format('triple_neg_old_labels_unbalanced_all_views.h5')
+data_tn_old_label_unbalanced_cpg_rna_rna_iso_mirna = data_repository.format('triple_neg_old_labels_unbalanced_cpg_rna_rna_iso_mirna.h5')
 
 return_views = ['methyl_rna_iso_mirna', 'methyl_rna_iso_mirna_snp_clinical',
                 'methyl_rna_mirna', 'methyl_rna_mirna_snp_clinical', 'all']
 
-datasets_new_labels = [data_tn_new_label_unbalanced_mean,  data_tn_new_label_balanced_mean]
-datasets_old_labels = [data_tn_old_label_unbalanced_mean,  data_tn_old_label_balanced_mean]
+datasets_new_labels = [data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna, data_tn_new_label_unbalanced_all_views,
+                       data_tn_new_label_balanced_cpg_rna_rna_iso_mirna,  data_tn_new_label_balanced_all_views]
+
+datasets_old_labels = [data_tn_old_label_unbalanced_cpg_rna_rna_iso_mirna, data_tn_old_label_unbalanced_all_views,
+                       data_tn_old_label_balanced_cpg_rna_rna_iso_mirna, data_tn_old_label_balanced_all_views]
+
 # TODO: Old parameters for learning: I'm changing all of them since there is overfitting (especially in the RF)
 # parameters_dt = {'max_depth': np.arange(1, 7),
 #                  'min_samples_split': np.arange(2, 9),
@@ -151,24 +142,48 @@ def load_data(data, return_views='all'):
     x = np.asarray(x)
     y = np.asarray(y)
     patients_names = np.asarray(patients_names)
-    x_methyl = x[:, 0:23381]
-    features_names_methyl = features_names[0:23381]
+    # Indices retrieving
+    merge_liste = []
+    index_methyl = [idx for idx, el in enumerate(features_names) if el.startswith('cg')]
+    index_rna_iso = [idx for idx, el in enumerate(features_names) if el.startswith('uc')]
+    index_mirna = [idx for idx, el in enumerate(features_names) if el.startswith('hsa')]
+    index_rna = [idx for idx, el in enumerate(features_names) if el.find('|') != -1]
+    index_snps = []
+    for idx, el in enumerate(features_names):
+        splitting = el.split('_')
+        if len(splitting) == 6:
+            try:
+                _ = int(splitting[0])
+                index_snps.append(idx)
+            except ValueError:  # That means it's a string
+                if splitting[0] == 'X':
+                    index_snps.append(idx)
+    merge_liste.extend(index_methyl)
+    merge_liste.extend(index_rna_iso)
+    merge_liste.extend(index_mirna)
+    merge_liste.extend(index_rna)
+    if len(index_snps) != 0:
+        merge_liste.extend(index_snps)
+    index_clinical = [idx for idx in range(len(features_names)) if idx not in merge_liste]
+    # Methyl
+    x_methyl = x[:, index_methyl]
+    features_names_methyl = features_names[index_methyl]
     # RNA ISO
-    x_rna_iso = x[:, 23381:96980]
-    features_names_rna_iso = features_names[23381:96980]
+    x_rna_iso = x[:, index_rna_iso]
+    features_names_rna_iso = features_names[index_rna_iso]
     # MiRNA
-    x_mirna = x[:, 96980:98026]
-    features_names_mirna = features_names[96980:98026]
+    x_mirna = x[:, index_mirna]
+    features_names_mirna = features_names[index_mirna]
     # SNP
-    x_snp = x[:, 98026:102218]
-    features_names_snp = features_names[98026:102218]
-    # features_names_snp = features_names_snps_linked
+    if len(index_snps) != 0:
+        x_snp = x[:, index_snps]
+        features_names_snp = features_names[index_snps]
     # Clinical
-    x_clinical = x[:, 102218:102235]
-    features_names_clinical = features_names[102218:102235]
+    x_clinical = x[:, index_clinical]
+    features_names_clinical = features_names[index_clinical]
     # RNA
-    x_rna = x[:, 102235:122767]
-    features_names_rna = features_names[102235:122767]
+    x_rna = x[:, index_rna]
+    features_names_rna = features_names[index_rna]
     # Normalization
     x_rna_iso = StandardScaler().fit_transform(x_rna_iso)
     x_mirna = StandardScaler().fit_transform(x_mirna)
@@ -190,10 +205,15 @@ def load_data(data, return_views='all'):
         return x, y, features_names, patients_names
 
     if return_views == 'methyl_rna_iso_mirna_snp_clinical':
-        x_methyl_rna_iso_mirna_snp_clinical = np.hstack((x_methyl, x_rna_iso, x_mirna, x_snp, x_clinical))
-        features_names_rna_iso_mirna_snp_clinical = np.hstack((features_names_methyl, features_names_rna_iso,
+        if len(index_snps) != 0:
+            x_methyl_rna_iso_mirna_snp_clinical = np.hstack((x_methyl, x_rna_iso, x_mirna, x_snp, x_clinical))
+            features_names_rna_iso_mirna_snp_clinical = np.hstack((features_names_methyl, features_names_rna_iso,
                                                                features_names_mirna, features_names_snp,
                                                                features_names_clinical))
+        else:
+            x_methyl_rna_iso_mirna_snp_clinical = np.hstack((x_methyl, x_rna_iso, x_mirna, x_clinical))
+            features_names_rna_iso_mirna_snp_clinical = np.hstack((features_names_methyl, features_names_rna_iso,
+                                                               features_names_mirna, features_names_clinical))
         x = x_methyl_rna_iso_mirna_snp_clinical
         features_names = features_names_rna_iso_mirna_snp_clinical
         x = x.T
@@ -224,10 +244,15 @@ def load_data(data, return_views='all'):
         return x, y, features_names, patients_names
 
     if return_views == 'methyl_rna_mirna_snp_clinical':
-        x_methyl_rna_mirna_snp_clinical = np.hstack((x_methyl, x_rna, x_mirna, x_snp, x_clinical))
-        features_names_rna_mirna_snp_clinical = np.hstack((features_names_methyl, features_names_rna,
-                                                           features_names_mirna, features_names_snp,
-                                                           features_names_clinical))
+        if len(index_snps) != 0:
+            x_methyl_rna_mirna_snp_clinical = np.hstack((x_methyl, x_rna, x_mirna, x_snp, x_clinical))
+            features_names_rna_mirna_snp_clinical = np.hstack((features_names_methyl, features_names_rna,
+                                                               features_names_mirna, features_names_snp,
+                                                               features_names_clinical))
+        else:
+            x_methyl_rna_mirna_snp_clinical = np.hstack((x_methyl, x_rna, x_mirna, x_clinical))
+            features_names_rna_mirna_snp_clinical = np.hstack((features_names_methyl, features_names_rna,
+                                                               features_names_mirna, features_names_clinical))
         x = x_methyl_rna_mirna_snp_clinical
         features_names = features_names_rna_mirna_snp_clinical
         x = x.T
@@ -242,7 +267,12 @@ def load_data(data, return_views='all'):
         return x, y, features_names, patients_names
 
     if return_views == 'all':
-        x_all = np.hstack((x_methyl, x_rna, x_rna_iso, x_mirna, x_snp, x_clinical))
+        if len(index_snps) != 0:
+            x_all = np.hstack((x_methyl, x_rna, x_rna_iso, x_mirna, x_snp, x_clinical))
+        else:
+            x_all = np.hstack((x_methyl, x_rna, x_rna_iso, x_mirna, x_clinical))
+            features_names =  np.hstack((features_names_methyl, features_names_rna,features_names_rna_iso, 
+                features_names_mirna, features_names_clinical))
         x = x_all
         x = x.T
         data_x_names = list(zip(x, features_names))
@@ -256,11 +286,17 @@ def load_data(data, return_views='all'):
         return x, y, features_names, patients_names
 
     if return_views == 'majority_vote':
-        x_all = np.hstack((x_methyl, x_rna, x_rna_iso, x_mirna, x_snp, x_clinical))
-        x = x_all
-        return x, x_methyl, x_rna, x_rna_iso, x_mirna, x_snp, x_clinical, y, features_names, features_names_methyl, \
-               features_names_rna, features_names_rna_iso, features_names_mirna, features_names_snp, \
-               features_names_clinical, patients_names
+        if len(index_snps) != 0:
+            x_all = np.hstack((x_methyl, x_rna, x_rna_iso, x_mirna, x_snp, x_clinical))
+            x = x_all
+            return x, x_methyl, x_rna, x_rna_iso, x_mirna, x_snp, x_clinical, y, features_names, features_names_methyl, \
+                   features_names_rna, features_names_rna_iso, features_names_mirna, features_names_snp, \
+                   features_names_clinical, patients_names
+        else:
+            x_all = np.hstack((x_methyl, x_rna, x_rna_iso, x_mirna, x_clinical))
+            x = x_all
+            return x, x_methyl, x_rna, x_rna_iso, x_mirna, x_clinical, y, features_names, features_names_methyl, \
+                   features_names_rna, features_names_rna_iso, features_names_mirna, features_names_clinical, patients_names
 
 
 def results_analysis(directory, output_text_file):
@@ -347,9 +383,10 @@ def results_analysis(directory, output_text_file):
         # plt.close()
 
     with open(output_text_file, 'a+') as f:
-        f.write('Repository:{}'.format(directory))
+        f.write('Repository:{}\n'.format(directory))
         f.write('TRAINING RESULTS\n')
-        f.write('-*50\n')
+        f.write('-'*50)
+        f.write('\n')
         f.write('Training: Accuracy mean {} +/- {}; Max value: {}, Min value: {}, Median value: {}\n'.format(
             np.round(np.mean(accuracy_train), 4), np.round(np.std(accuracy_train), 4), np.round(np.max(accuracy_train), 4),
             np.round(np.min(accuracy_train), 4), np.round(np.median(accuracy_train), 4)))
@@ -531,7 +568,7 @@ def main_extraction_building():
     extractor.extract()
 
 
-def construction_pathway_gene_groups_tcga(data_path=data_tn_new_label_unbalanced_mean,
+def construction_pathway_gene_groups_tcga(data_path=data_tn_new_label_balanced_cpg_rna_rna_iso_mirna,
                                           return_views='all',
                                           output_file_name='pathway_file_genes_tcga'):
     """
@@ -563,7 +600,7 @@ def construction_pathway_gene_groups_tcga(data_path=data_tn_new_label_unbalanced
                 f.write('{}\t{}\n'.format(item[0], gene))
 
 
-def construction_pathway_clusters_groups(data_path=data_tn_new_label_unbalanced_mean,
+def construction_pathway_clusters_groups(data_path=data_tn_new_label_balanced_cpg_rna_rna_iso_mirna,
                                          model_loaded=False,
                                          return_views='all',
                                          output_file_name='pathway_file_clusters_genes',
@@ -603,7 +640,7 @@ def construction_pathway_clusters_groups(data_path=data_tn_new_label_unbalanced_
                 f.write('{}\t{}\n'.format(zip_el[1], zip_el[0]))
 
 
-def construction_pathway_random_groups(data_path=data_tn_new_label_unbalanced_mean,
+def construction_pathway_random_groups(data_path=data_tn_new_label_balanced_cpg_rna_rna_iso_mirna,
                                        nb_of_groups=1000,
                                        return_views='all',
                                        output_file_name='pathway_file_random_groups'):
@@ -640,7 +677,7 @@ def construction_pathway_random_groups(data_path=data_tn_new_label_unbalanced_me
         print('The group_{} is done and length is {}'.format(nb_of_groups, len(elements_restant)))
 
 
-def construction_pathway_views_groups(data_path=data_tn_new_label_unbalanced_mean,
+def construction_pathway_views_groups(data_path=data_tn_new_label_balanced_cpg_rna_rna_iso_mirna,
                                       return_views='all',
                                       output_file_name='pathway_file_views_groups'):
     """
@@ -667,7 +704,7 @@ def construction_pathway_views_groups(data_path=data_tn_new_label_unbalanced_mea
                 f.write('group_4\t{}\n'.format(el))
 
 
-def construction_pathway_file(data_path=data_tn_new_label_unbalanced_mean,
+def construction_pathway_file(data_path=data_tn_new_label_balanced_cpg_rna_rna_iso_mirna,
                               return_views='all',
                               dictionnaire='',
                               output_file_name=''):
@@ -772,7 +809,7 @@ def load_biogrid_network():
     return G, edges
 
 
-def construction_biogrid_pathway_file(data_path=data_tn_new_label_unbalanced_mean, return_views='all',
+def construction_biogrid_pathway_file(data_path=data_tn_new_label_balanced_cpg_rna_rna_iso_mirna, return_views='all',
                                       output_file_name=''):
     """
     Utility function to build pathway file of the groups to be loaded in LearnFromBiogridGroup
