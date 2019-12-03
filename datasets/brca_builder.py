@@ -90,62 +90,44 @@ class BuildBrcaDatasets(BuildOmicsDatasets):
             er_positive_probability.to_hdf(name, 'er_positive_probability')
             pr_positive_probability.to_hdf(name, 'pr_positive_probability')
             her_positive_probability.to_hdf(name, 'her_positive_probability')
+
         methylation_27 = pd.read_csv(methyl_27_file, sep="\t")
+        methylation_27.dropna(axis=0, inplace=True)  # delete the nan feature
         indexes = np.array(list(map(str, np.array(methylation_27["Unnamed: 0"]))))
         methylation_27.set_index(indexes, inplace=True)
-        methylation_27 = methylation_27.T.loc[labels.index.values]
-        methylation_27 = methylation_27.loc[:, methylation_27.count() > 0]
 
         methylation_450 = pd.read_csv(methyl_450_file, sep="\t")
+        methylation_450.dropna(axis=0, inplace=True)  # delete the nan feature
         indexes = np.array(list(map(str, np.array(methylation_450["Unnamed: 0"]))))
         methylation_450.set_index(indexes, inplace=True)
-        methylation_450 = methylation_450.T.loc[labels.index.values]
-        methylation_450 = methylation_450.loc[:, methylation_450.count() > 0]
 
-        indexes_fusion = [el for el in methylation_27.columns.values if el in methylation_450.columns.values]
-        methylation_fusion_450 = methylation_450[indexes_fusion]
-        methylation_fusion_27 = methylation_27[indexes_fusion]
-        methylation_fusion = deepcopy(methylation_fusion_450)
-        # Saving file (temp)
-        # methylation_fusion_450.to_csv('methylation_fusion_450.tsv', sep="\t", encoding='utf-8')
-        # methylation_fusion_27.to_csv('methylation_fusion_27.tsv', sep="\t", encoding='utf-8')
-        # recuperer les endroits ou c'est nan dans methylation_fusion_450
-        informations_on_the_nan_places = methylation_fusion_450.isnull().all(axis=1)
-        for i in range(methylation_450.shape[0]):  # iterer sur le nombre des exemples, c'est lent mais bon
-            if informations_on_the_nan_places[i] is True:
-                methylation_fusion.set_value(i, methylation_fusion_27[i])
-        methylation_fusion = methylation_fusion.apply(pd.to_numeric, errors='coerce')
+        indexes_fusion = [el for el in methylation_27.index.values if el in methylation_450.index.values]
+        methylation_fusion_27 = methylation_27.loc[indexes_fusion]
+        methylation_fusion_450 = methylation_450.loc[indexes_fusion]
+        methylation_fusion_27.drop(['Unnamed: 0'], axis=1, inplace=True)
+        methylation_fusion_450.drop(['Unnamed: 0'], axis=1, inplace=True)
+        methylation_fusion = pd.concat([methylation_fusion_27, methylation_fusion_450], axis=1)
+        methylation_fusion = methylation_fusion.T
         methylation_fusion.to_csv('methylation_fusion.tsv', sep="\t", encoding='utf-8')
-
-        if filling_type is not None:
-            methylation_27 = self.method_to_fill_nan(data=methylation_27, idx_pos=index_pos, idx_neg=index_neg,
-                                                     filling_type=filling_type)
-            methylation_450 = self.method_to_fill_nan(data=methylation_450, idx_pos=index_pos, idx_neg=index_neg,
-                                                      filling_type=filling_type)
-            methylation_fusion = self.method_to_fill_nan(data=methylation_fusion, idx_pos=index_pos, idx_neg=index_neg,
-                                                         filling_type=filling_type)
-            methylation_fusion_27 = self.method_to_fill_nan(data=methylation_fusion_27, idx_pos=index_pos,
-                                                            idx_neg=index_neg, filling_type=filling_type)
-            methylation_fusion_450 = self.method_to_fill_nan(data=methylation_fusion_450, idx_pos=index_pos,
-                                                             idx_neg=index_neg, filling_type=filling_type)
+        methylation_fusion = methylation_fusion.loc[labels.index.values]
+        methylation_fusion = methylation_fusion.apply(pd.to_numeric, errors='coerce')
 
         rnaseq_genes = pd.read_csv(rnaseq_genes_file, sep="\t")
+        liste = []
+        for idx, el in enumerate(rnaseq_genes['Unnamed: 0']):
+            if el.split('|')[0] == '?':
+                liste.append(idx)
+        rnaseq_genes.drop(axis=0, index=liste, inplace=True)
         indexes = np.array(list(map(str, np.array(rnaseq_genes["Unnamed: 0"]))))
         rnaseq_genes.set_index(indexes, inplace=True)
         rnaseq_genes = rnaseq_genes.T.loc[labels.index.values]
         rnaseq_genes = rnaseq_genes.loc[:, rnaseq_genes.count() > 0]
-        if filling_type is not None:
-            rnaseq_genes = self.method_to_fill_nan(data=rnaseq_genes, idx_pos=index_pos, idx_neg=index_neg,
-                                                   filling_type=filling_type)
 
         rnaseq_isoforms = pd.read_csv(rnaseq_isoforms_file, sep="\t")
         indexes = np.array(list(map(str, np.array(rnaseq_isoforms["Unnamed: 0"]))))
         rnaseq_isoforms.set_index(indexes, inplace=True)
         rnaseq_isoforms = rnaseq_isoforms.T.loc[labels.index.values]
         rnaseq_isoforms = rnaseq_isoforms.loc[:, rnaseq_isoforms.count() > 0]
-        if filling_type is not None:
-            rnaseq_isoforms = self.method_to_fill_nan(data=rnaseq_isoforms, idx_pos=index_pos, idx_neg=index_neg,
-                                                      filling_type=filling_type)
 
         snps = pd.read_csv(snp_file, sep="\t")
         indexes = np.array(list(map(str, np.array(snps["Unnamed: 0"]))))
@@ -153,16 +135,12 @@ class BuildBrcaDatasets(BuildOmicsDatasets):
         snps = snps.T.loc[labels.index.values]
         snps = snps.loc[:, snps.count() > 0]
         snps = snps.apply(pd.to_numeric, errors='coerce')
-        if filling_type is not None:
-            snps = self.method_to_fill_nan(data=snps, idx_pos=index_pos, idx_neg=index_neg, filling_type='zero')
+
         mirnas = pd.read_csv(mirna_file, sep="\t")
         indexes = np.array(list(map(str, np.array(mirnas["Unnamed: 0"]))))
         mirnas.set_index(indexes, inplace=True)
         mirnas = mirnas.T.loc[labels.index.values]
         mirnas = mirnas.loc[:, mirnas.count() > 0]
-        if filling_type is not None:
-            mirnas = self.method_to_fill_nan(data=mirnas, idx_pos=index_pos, idx_neg=index_neg,
-                                             filling_type=filling_type)
 
         clinical_data = pd.read_csv(clinical_file, sep='\t')
         indexes = np.array(list(map(str, clinical_data['bcr_patient_barcode'].values)))
