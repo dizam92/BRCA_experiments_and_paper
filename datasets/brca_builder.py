@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 __author__ = 'maoss2'
 from datasets.datasets_utilities import *
+from scipy.stats import median_absolute_deviation
 # Build the clinical file and stuf with the jupyter notebook file
 
 
@@ -150,8 +151,6 @@ class BuildBrcaDatasets(BuildOmicsDatasets):
         clinical_data = clinical_data.apply(pd.to_numeric, errors='coerce')
 
         # Check the examples
-        assert np.all(labels.index.values == methylation_450.index.values)
-        assert np.all(labels.index.values == methylation_27.index.values)
         assert np.all(labels.index.values == rnaseq_isoforms.index.values)
         assert np.all(labels.index.values == rnaseq_genes.index.values)
         assert np.all(labels.index.values == snps.index.values)
@@ -208,6 +207,12 @@ def build_brca_dataset_for_graalpy(dataset='',
     x_methyl_fusion = data['methylation_fusion/block0_values'][()]
     features_names_methyl_fusion = data['methylation_fusion/block0_items'][()]
     features_names_methyl_fusion = np.asarray([el.decode('utf8') for el in features_names_methyl_fusion])
+    indices_mad_selected = select_features_based_on_mad(x=x_methyl_fusion, nb_features=2000)
+    # PK j'ai pris 2000 pour methyl parce que ca chute vite on rentre dans des valeurs tres petites du coup pas vraiment
+    # de variance dans le feature (entre exemple)
+    x_methyl_fusion = x_methyl_fusion[:, indices_mad_selected]
+    features_names_methyl_fusion = features_names_methyl_fusion[indices_mad_selected]
+
     # linked the methyl_name to the genes_name
     d = pd.read_table(methyl_example_file, skiprows=[0], header='infer')
     d.fillna('INEXISTANT', inplace=True)
@@ -219,13 +224,23 @@ def build_brca_dataset_for_graalpy(dataset='',
     x_mirna = data['mirna/block0_values'][()]
     features_names_mirna = data['mirna/block0_items'][()]
     features_names_mirna = np.asarray([el.decode('utf8') for el in features_names_mirna])
+    indices_mad_selected = select_features_based_on_mad(x=x_mirna, nb_features=250)
+    x_mirna = x_mirna[:, indices_mad_selected]
+    features_names_mirna = features_names_mirna[indices_mad_selected]
+
     x_rna_isoforms = data['rnaseq_isoforms/block0_values'][()]
     features_names_rna_isoforms = data['rnaseq_isoforms/block0_items'][()]
     features_names_rna_isoforms = np.asarray([el.decode('utf8') for el in features_names_rna_isoforms])
+    indices_mad_selected = select_features_based_on_mad(x=x_rna_isoforms, nb_features=2000)
+    x_rna_isoforms = x_rna_isoforms[:, indices_mad_selected]
+    features_names_rna_isoforms = features_names_rna_isoforms[indices_mad_selected]
 
     x_rna = data['rnaseq_genes/block0_values'][()]
     features_names_rna = data['rnaseq_genes/block0_items'][()]
     features_names_rna = np.asarray([el.decode('utf8') for el in features_names_rna])
+    indices_mad_selected = select_features_based_on_mad(x=x_rna, nb_features=2000)
+    x_rna = x_rna[:, indices_mad_selected]
+    features_names_rna = features_names_rna[indices_mad_selected]
 
     # linked the rna isoforms name to the genes names
     d = pd.read_table(genes_example_file)
@@ -315,6 +330,21 @@ def build_brca_dataset_for_graalpy(dataset='',
     f.create_dataset('target', data=y)
     f.create_dataset('features_names', data=features_names)
     f.create_dataset('patients_ids', data=patients_ids)
+
+
+def select_features_based_on_mad(x, nb_features=5000):
+    """
+    Utility function to help build the mad. Compute the mad for each features
+    and make a sort on the features to take the n best features
+    Args:
+        x, numpy array, data of each view
+        nb_features, int, default number of feature to be selected
+    Return:
+        indices_features, the indices in the array of the features to be selected
+    """
+    mad_all_features = median_absolute_deviation(x, axis=1)
+    indices_features = np.argsort(mad_all_features)[::-1]
+    return indices_features
 
 
 def main_brca_dataset_builder():
