@@ -82,11 +82,11 @@ datasets_old_labels = [data_tn_old_label_unbalanced_mean,  data_tn_old_label_bal
 # param_p = [0.001, 0.1, 0.178, 0.316, 0.45, 0.562, 0.85, 1.0, 1.778, 2.5, 3.162, 4.39, 5.623, 7.623, 10.0, 999999.0]
 
 parameters_dt = {'max_depth': np.arange(1, 5),  # Moins de profondeur pour toujours eviter l'overfitting
-                 'min_samples_split': np.arange(4, 15),  # Eviter les small value pour eviter l'overfitting
+                 'min_samples_split': np.arange(2, 15),  # Eviter les small value pour eviter l'overfitting
                  'criterion': ['gini', 'entropy']
                  }
 parameters_rf = {'max_depth': np.arange(1, 5),
-                 'min_samples_split': np.arange(4, 15),
+                 'min_samples_split': np.arange(2, 15),
                  'criterion': ['gini', 'entropy'],
                  'n_estimators': [25, 50, 75, 100]
                  }

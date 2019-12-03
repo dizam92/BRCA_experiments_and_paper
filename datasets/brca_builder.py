@@ -142,7 +142,9 @@ class BuildBrcaDatasets(BuildOmicsDatasets):
         mirnas.set_index(indexes, inplace=True)
         mirnas = mirnas.T.loc[labels.index.values]
         mirnas = mirnas.loc[:, mirnas.count() > 0]
-
+        mirnas = self.method_to_fill_nan(data=mirnas, idx_pos=index_pos, idx_neg=index_neg, filling_type='mean')
+        # Obliger de fill the mirnas car il y a des patients pour lesquels c'est pas disponible du tout malgre le filtre
+        
         clinical_data = pd.read_csv(clinical_file, sep='\t')
         indexes = np.array(list(map(str, clinical_data['bcr_patient_barcode'].values)))
         clinical_data.set_index(indexes, inplace=True)
