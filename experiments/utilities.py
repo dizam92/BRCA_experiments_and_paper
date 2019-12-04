@@ -50,8 +50,7 @@ data_tn_old_label_unbalanced_cpg_rna_rna_iso_mirna = data_repository.format('tri
 return_views = ['methyl_rna_iso_mirna', 'methyl_rna_iso_mirna_snp_clinical',
                 'methyl_rna_mirna', 'methyl_rna_mirna_snp_clinical', 'all']
 
-datasets_new_labels = [data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna, data_tn_new_label_unbalanced_all_views,
-                       data_tn_new_label_balanced_cpg_rna_rna_iso_mirna,  data_tn_new_label_balanced_all_views]
+datasets_new_labels = [data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna]
 
 datasets_old_labels = [data_tn_old_label_unbalanced_cpg_rna_rna_iso_mirna, data_tn_old_label_unbalanced_all_views,
                        data_tn_old_label_balanced_cpg_rna_rna_iso_mirna, data_tn_old_label_balanced_all_views]

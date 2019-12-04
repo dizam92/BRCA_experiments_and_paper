@@ -51,13 +51,16 @@ class LearnTN(object):
             dictionary['rules'].append(classifier.best_estimator_.named_steps['SCM'].get_stats())
             dictionary['rules_str'].append([(el.__str__(), features_names[el.feature_idx]) for el in
                                             dictionary['rules'][-1]['Binary_attributes']])
+            logger.info('{}'.format(dictionary['rules_str']))
         else:
             importances = classifier.best_estimator_.feature_importances_
             indices = np.argsort(importances)[::-1]
             for f in range(100):
                 if importances[indices[f]] > 0:
-                    print("%d. feature %d (%f) %s" % (f + 1, indices[f], importances[indices[f]],
+                    logger.info("%d. feature %d (%f) %s" % (f + 1, indices[f], importances[indices[f]],
                                                       features_names[indices[f]]))
+                    # print("%d. feature %d (%f) %s" % (f + 1, indices[f], importances[indices[f]],
+                    #                                   features_names[indices[f]]))
 
             dictionary['importances'].append(importances)
             listes_resultats = [(f + 1, indices[f], importances[indices[f]], features_names[indices[f]]) for f in
@@ -340,6 +343,8 @@ def run_experiment(data, experiment_name, return_views, nb_repetitions, saving_r
                           return_views=return_views)
             x_train, x_test, y_train, y_test, patients_train, patients_test = \
                 train_test_split(x, y, patients_names, train_size=0.8, random_state=random_seeds_list[state])
+            logger.info('Train set shape {}'.format(x_train.shape))
+            logger.info('Test set shape {}'.format(x_test.shape))
             clf.learning(features_names=features_names, x_train=x_train, x_test=x_test,
                          y_train=y_train, y_test=y_test, patients_train=patients_train,
                          patients_test=patients_test)
@@ -358,6 +363,8 @@ def run_experiment(data, experiment_name, return_views, nb_repetitions, saving_r
                           return_views=return_views)
             x_train, x_test, y_train, y_test, patients_train, patients_test = \
                 train_test_split(x, y, patients_names, train_size=0.8, random_state=random_seeds_list[state])
+            logger.info('Train set shape {}'.format(x_train.shape))
+            logger.info('Test set shape {}'.format(x_test.shape))
             clf.learning(features_names=features_names, x_train=x_train, x_test=x_test,
                          y_train=y_train, y_test=y_test, patients_train=patients_train,
                          patients_test=patients_test)
@@ -379,6 +386,8 @@ def run_experiment(data, experiment_name, return_views, nb_repetitions, saving_r
                           return_views=return_views)
             x_train, x_test, y_train, y_test, patients_train, patients_test = \
                 train_test_split(x, y, patients_names, train_size=0.8, random_state=random_seeds_list[state])
+            logger.info('Train set shape {}'.format(x_train.shape))
+            logger.info('Test set shape {}'.format(x_test.shape))
             clf.learning(features_names=features_names, x_train=x_train, x_test=x_test,
                          y_train=y_train, y_test=y_test, patients_train=patients_train,
                          patients_test=patients_test)
@@ -397,6 +406,8 @@ def run_experiment(data, experiment_name, return_views, nb_repetitions, saving_r
                           return_views=return_views)
             x_train, x_test, y_train, y_test, patients_train, patients_test = \
                 train_test_split(x, y, patients_names, train_size=0.8, random_state=random_seeds_list[state])
+            logger.info('Train set shape {}'.format(x_train.shape))
+            logger.info('Test set shape {}'.format(x_test.shape))
             clf.learning(features_names=features_names, x_train=x_train, x_test=x_test,
                          y_train=y_train, y_test=y_test, patients_train=patients_train,
                          patients_test=patients_test)
@@ -418,6 +429,8 @@ def run_experiment(data, experiment_name, return_views, nb_repetitions, saving_r
                           return_views=return_views)
             x_train, x_test, y_train, y_test, patients_train, patients_test = \
                 train_test_split(x, y, patients_names, train_size=0.8, random_state=random_seeds_list[state])
+            logger.info('Train set shape {}'.format(x_train.shape))
+            logger.info('Test set shape {}'.format(x_test.shape))
             clf.learning(features_names=features_names, x_train=x_train, x_test=x_test,
                          y_train=y_train, y_test=y_test, patients_train=patients_train,
                          patients_test=patients_test)
@@ -436,6 +449,8 @@ def run_experiment(data, experiment_name, return_views, nb_repetitions, saving_r
                           return_views=return_views)
             x_train, x_test, y_train, y_test, patients_train, patients_test = \
                 train_test_split(x, y, patients_names, train_size=0.8, random_state=random_seeds_list[state])
+            logger.info('Train set shape {}'.format(x_train.shape))
+            logger.info('Test set shape {}'.format(x_test.shape))
             clf.learning(features_names=features_names, x_train=x_train, x_test=x_test,
                          y_train=y_train, y_test=y_test, patients_train=patients_train,
                          patients_test=patients_test)
@@ -504,6 +519,8 @@ def run_experiment_majority_vote(data, experiment_name, return_views, nb_repetit
                           return_views=return_views)
             x_train, x_test, y_train, y_test, patients_train, patients_test, indices_train, indices_test = \
                 train_test_split(x, y, patients_names, indices, train_size=0.8, random_state=random_seeds_list[state])
+            logger.info('Train set shape {}'.format(x_train.shape))
+            logger.info('Test set shape {}'.format(x_test.shape))
             if return_views == 'methyl_rna_iso_mirna':
                 clf.majority_learning(y_train=y_train,
                                       y_test=y_test,
@@ -674,6 +691,8 @@ def run_experiment_majority_vote(data, experiment_name, return_views, nb_repetit
                           return_views=return_views)
             x_train, x_test, y_train, y_test, patients_train, patients_test, indices_train, indices_test = \
                 train_test_split(x, y, patients_names, indices, train_size=0.8, random_state=random_seeds_list[state])
+            logger.info('Train set shape {}'.format(x_train.shape))
+            logger.info('Test set shape {}'.format(x_test.shape))
             if return_views == 'methyl_rna_iso_mirna':
                 clf.majority_learning(y_train=y_train,
                                       y_test=y_test,
@@ -847,6 +866,8 @@ def run_experiment_majority_vote(data, experiment_name, return_views, nb_repetit
                           return_views=return_views)
             x_train, x_test, y_train, y_test, patients_train, patients_test, indices_train, indices_test = \
                 train_test_split(x, y, patients_names, indices, train_size=0.8, random_state=random_seeds_list[state])
+            logger.info('Train set shape {}'.format(x_train.shape))
+            logger.info('Test set shape {}'.format(x_test.shape))
             if return_views == 'methyl_rna_iso_mirna':
                 clf.majority_learning(y_train=y_train,
                                       y_test=y_test,
@@ -1017,6 +1038,8 @@ def run_experiment_majority_vote(data, experiment_name, return_views, nb_repetit
                           return_views=return_views)
             x_train, x_test, y_train, y_test, patients_train, patients_test, indices_train, indices_test = \
                 train_test_split(x, y, patients_names, indices, train_size=0.8, random_state=random_seeds_list[state])
+            logger.info('Train set shape {}'.format(x_train.shape))
+            logger.info('Test set shape {}'.format(x_test.shape))
             if return_views == 'methyl_rna_iso_mirna':
                 clf.majority_learning(y_train=y_train,
                                       y_test=y_test,
@@ -1190,6 +1213,8 @@ def run_experiment_majority_vote(data, experiment_name, return_views, nb_repetit
                           return_views=return_views)
             x_train, x_test, y_train, y_test, patients_train, patients_test, indices_train, indices_test = \
                 train_test_split(x, y, patients_names, indices, train_size=0.8, random_state=random_seeds_list[state])
+            logger.info('Train set shape {}'.format(x_train.shape))
+            logger.info('Test set shape {}'.format(x_test.shape))
             if return_views == 'methyl_rna_iso_mirna':
                 clf.majority_learning(y_train=y_train,
                                       y_test=y_test,
@@ -1360,6 +1385,8 @@ def run_experiment_majority_vote(data, experiment_name, return_views, nb_repetit
                           return_views=return_views)
             x_train, x_test, y_train, y_test, patients_train, patients_test, indices_train, indices_test = \
                 train_test_split(x, y, patients_names, indices, train_size=0.8, random_state=random_seeds_list[state])
+            logger.info('Train set shape {}'.format(x_train.shape))
+            logger.info('Test set shape {}'.format(x_test.shape))
             if return_views == 'methyl_rna_iso_mirna':
                 clf.majority_learning(y_train=y_train,
                                       y_test=y_test,
@@ -1530,14 +1557,14 @@ def main_run_experiments_new_labels():
                                    return_views=view,
                                    nb_repetitions=15,
                                    saving_rep=saving_repository)
-                if dataset.find('balanced') != -1:
-                    logger.info('experiment_tn_new_label_balanced_cpg_rna_rna_iso_mirna')
-                    logger.info('--------------------------------------------------------')
-                    run_experiment(data=dataset,
-                                   experiment_name='experiment_tn_new_label_balanced_cpg_rna_rna_iso_mirna',
-                                   return_views=view,
-                                   nb_repetitions=15,
-                                   saving_rep=saving_repository)
+                # if dataset.find('balanced') != -1:
+                #     logger.info('experiment_tn_new_label_balanced_cpg_rna_rna_iso_mirna')
+                #     logger.info('--------------------------------------------------------')
+                #     run_experiment(data=dataset,
+                #                    experiment_name='experiment_tn_new_label_balanced_cpg_rna_rna_iso_mirna',
+                #                    return_views=view,
+                #                    nb_repetitions=15,
+                #                    saving_rep=saving_repository)
             if dataset.find("all_views") != -1:
                 if dataset.find('unbalanced') != -1:
                     logger.info('experiment_tn_new_label_unbalanced_all_views')
@@ -1547,14 +1574,14 @@ def main_run_experiments_new_labels():
                                    return_views=view,
                                    nb_repetitions=15,
                                    saving_rep=saving_repository)
-                if dataset.find('balanced') != -1:
-                    logger.info('experiment_tn_new_label_balanced_all_views')
-                    logger.info('--------------------------------------------------------')
-                    run_experiment(data=dataset,
-                                   experiment_name='experiment_tn_new_label_balanced_all_views',
-                                   return_views=view,
-                                   nb_repetitions=15,
-                                   saving_rep=saving_repository)
+                # if dataset.find('balanced') != -1:
+                #     logger.info('experiment_tn_new_label_balanced_all_views')
+                #     logger.info('--------------------------------------------------------')
+                #     run_experiment(data=dataset,
+                #                    experiment_name='experiment_tn_new_label_balanced_all_views',
+                #                    return_views=view,
+                #                    nb_repetitions=15,
+                #                    saving_rep=saving_repository)
 
 
 def main_run_experiments_majority_vote_new_labels():
@@ -1668,4 +1695,4 @@ def main_run_experiments_majority_vote_old_labels():
 
 if __name__ == '__main__':
     main_run_experiments_new_labels()
-    main_run_experiments_majority_vote_new_labels()
+    # main_run_experiments_majority_vote_new_labels()
