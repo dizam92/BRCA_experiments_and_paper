@@ -16,7 +16,7 @@
 	1. samples coming from the primary solid tumor (sample type code 01) and to the first vial (vial code A)
 	2. Remove all features with nan
 	3. Compute the median absolute deviation (MAD) per features (view) and select a random number fixed: 3000/2000....
-		1. A propros du MAD: They didn't specified how the done it. Mais prudo me propose ceci: __pour chaque gene tu calcule le mad, ensuite tu sort les gene par mad et tu prends les 3000 ou n premiers__ Ceci comme l'article nous permetrait de vraiment selectionner les genes(features) avec le plus de grande variabilités donc susceptibles de mieux nous guidés? 
+		1. A propros du MAD: They didn't specified how the done it. Mais prudo me propose ceci: __pour chaque gene tu calcule le mad, ensuite tu sort les gene par mad et tu prends les 3000 ou n premiers__ Ceci comme l'article nous permetrait de vraiment selectionner les genes(features) avec le plus de grande variabilités donc susceptibles de mieux nous guidés? Dnas l'article ils ont considérer n == 2000 pour cpg et rna. Et beaucoup moins pour les mirnas.
 		2. https://eurekastatistics.com/using-the-median-absolute-deviation-to-find-outliers/ propose de faire des supposition sur la distribution et de chercher les outliers en faisant (x_value > coeff * mad) i.e prendre les x pour lesquelles les valeurs sont strictement superieur à ce calcul. Mais ca ca elimine les outliers (example) mais pas les features right. A moins que je fasse x.T mais essentiellement ca devrait marcher sur les examples? 
 
 Summary Table
@@ -31,3 +31,10 @@ Summary Table
 |clinical.tsv| (934, 20)| (934, 20 )|
 |methyl_fusion| (clinical_file_x, 23381)| (clinical_file_x, 19984)|
 |snps.tsv| (969, 4192) | (969, 4192) |
+
+
+3. I found an error in the data while loading the view with snp and clinical. This does not impact the pretty good results i have so far just on the other 3 view so don't panick and delete everything. 
+	1. We gon save the results we have so far here /home/maoss2/project/maoss2
+	2. We rebuild the new datasets (histoire d'etre têteux): 
+	3. Et on relance les expes froms scratch (should not be a nan probleme after that normalement)
+

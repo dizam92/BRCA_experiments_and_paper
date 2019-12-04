@@ -113,7 +113,7 @@ class BuildBrcaDatasets(BuildOmicsDatasets):
 
         liste_1 = [el for el in methylation_fusion.columns if el in labels.index.values]
         liste_2 = [el for el in rnaseq_genes.columns if el in labels.index.values]
-        liste_3 = [el for el in rnaseq_isoforms.columns if el in labels.index.values]  # liste_3 == liste_
+        liste_3 = [el for el in rnaseq_isoforms.columns if el in labels.index.values]  # liste_3 == liste_2
         liste_4 = [el for el in mirnas.columns if el in labels.index.values]
         liste_5 = [el for el in snps.columns if el in labels.index.values]
         if methyl_rna_mirna_snp is True:
@@ -171,28 +171,25 @@ class BuildBrcaDatasets(BuildOmicsDatasets):
         rnaseq_isoforms = rnaseq_isoforms.loc[:, rnaseq_isoforms.count() > 0]
         mirnas = mirnas.T.loc[labels.index.values]
         mirnas = mirnas.loc[:, mirnas.count() > 0]
-        snps = snps.T.loc[labels.index.values]
-        snps = snps.loc[:, snps.count() > 0]
-        snps = snps.apply(pd.to_numeric, errors='coerce')
         clinical_data = clinical_data.loc[labels.index.values]
         clinical_data = clinical_data.apply(pd.to_numeric, errors='coerce')
+        if methyl_rna_mirna_snp is True:
+            snps = snps.T.loc[labels.index.values]
+            snps = snps.loc[:, snps.count() > 0]
+            snps = snps.apply(pd.to_numeric, errors='coerce')
+            assert np.all(labels.index.values == snps.index.values)
+            snps.to_hdf(name, "snp")
 
         # Check the examples
         assert np.all(labels.index.values == rnaseq_isoforms.index.values)
         assert np.all(labels.index.values == rnaseq_genes.index.values)
-        assert np.all(labels.index.values == snps.index.values)
         assert np.all(labels.index.values == mirnas.index.values)
         assert np.all(labels.index.values == clinical_data.index.values)
 
         # Write the data to hdf5
-        # methylation_450.to_hdf(name, "methylation_450")
-        # methylation_27.to_hdf(name, "methylation_27")
-        # methylation_fusion_27.to_hdf(name, "methylation_fusion_27")
-        # methylation_fusion_450.to_hdf(name, "methylation_fusion_450")
         methylation_fusion.to_hdf(name, "methylation_fusion")
         rnaseq_genes.to_hdf(name, "rnaseq_genes")
         rnaseq_isoforms.to_hdf(name, "rnaseq_isoforms")
-        snps.to_hdf(name, "snp")
         mirnas.to_hdf(name, "mirna")
         clinical_data.to_hdf(name, 'clinical_view')
 

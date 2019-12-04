@@ -8,6 +8,10 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split, GridSearchCV, KFold
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import confusion_matrix
+import logging
+logging.getLogger('parso.python.diff').disabled = True
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 nb_jobs = 30
 cv_fold = KFold(n_splits=5, random_state=42)
 
@@ -1519,12 +1523,16 @@ def main_run_experiments_new_labels():
         for dataset in datasets_new_labels:
             if dataset.find("cpg_rna_rna_iso_mirna") != -1:
                 if dataset.find('unbalanced') != -1:
+                    logger.info('experiment_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna')
+                    logger.info('--------------------------------------------------------')
                     run_experiment(data=dataset,
                                    experiment_name='experiment_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna',
                                    return_views=view,
                                    nb_repetitions=15,
                                    saving_rep=saving_repository)
                 if dataset.find('balanced') != -1:
+                    logger.info('experiment_tn_new_label_balanced_cpg_rna_rna_iso_mirna')
+                    logger.info('--------------------------------------------------------')
                     run_experiment(data=dataset,
                                    experiment_name='experiment_tn_new_label_balanced_cpg_rna_rna_iso_mirna',
                                    return_views=view,
@@ -1532,12 +1540,16 @@ def main_run_experiments_new_labels():
                                    saving_rep=saving_repository)
             if dataset.find("all_views") != -1:
                 if dataset.find('unbalanced') != -1:
+                    logger.info('experiment_tn_new_label_unbalanced_all_views')
+                    logger.info('--------------------------------------------------------')
                     run_experiment(data=dataset,
                                    experiment_name='experiment_tn_new_label_unbalanced_all_views',
                                    return_views=view,
                                    nb_repetitions=15,
                                    saving_rep=saving_repository)
                 if dataset.find('balanced') != -1:
+                    logger.info('experiment_tn_new_label_balanced_all_views')
+                    logger.info('--------------------------------------------------------')
                     run_experiment(data=dataset,
                                    experiment_name='experiment_tn_new_label_balanced_all_views',
                                    return_views=view,
@@ -1550,12 +1562,16 @@ def main_run_experiments_majority_vote_new_labels():
         for dataset in datasets_new_labels:
             if dataset.find("cpg_rna_rna_iso_mirna") != -1:
                 if dataset.find('unbalanced') != -1:
+                    logger.info('experiment_majority_vote_new_label_unbalanced_cpg_rna_rna_iso_mirna')
+                    logger.info('--------------------------------------------------------')
                     run_experiment(data=dataset,
                                    experiment_name='experiment_majority_vote_new_label_unbalanced_cpg_rna_rna_iso_mirna',
                                    return_views=view,
                                    nb_repetitions=15,
                                    saving_rep=saving_repository)
                 if dataset.find('balanced') != -1:
+                    logger.info('experiment_majority_vote_new_label_balanced_cpg_rna_rna_iso_mirna')
+                    logger.info('--------------------------------------------------------')
                     run_experiment(data=dataset,
                                    experiment_name='experiment_majority_vote_new_label_balanced_cpg_rna_rna_iso_mirna',
                                    return_views=view,
@@ -1563,12 +1579,16 @@ def main_run_experiments_majority_vote_new_labels():
                                    saving_rep=saving_repository)
             if dataset.find("all_views") != -1:
                 if dataset.find('unbalanced') != -1:
+                    logger.info('experiment_majority_vote_new_label_unbalanced_all_views')
+                    logger.info('--------------------------------------------------------')
                     run_experiment(data=dataset,
                                    experiment_name='experiment_majority_vote_new_label_unbalanced_all_views',
                                    return_views=view,
                                    nb_repetitions=15,
                                    saving_rep=saving_repository)
                 if dataset.find('balanced') != -1:
+                    logger.info('experiment_majority_vote_new_label_balanced_all_views')
+                    logger.info('--------------------------------------------------------')
                     run_experiment(data=dataset,
                                    experiment_name='experiment_majority_vote_new_label_balanced_all_views',
                                    return_views=view,
@@ -1581,12 +1601,16 @@ def main_run_experiments_old_labels():
         for dataset in datasets_old_labels:
             if dataset.find("cpg_rna_rna_iso_mirna") != -1:
                 if dataset.find('unbalanced') != -1:
+                    logger.info('experiment_tn_old_label_unbalanced_cpg_rna_rna_iso_mirna')
+                    logger.info('--------------------------------------------------------')
                     run_experiment(data=dataset,
                                    experiment_name='experiment_tn_old_label_unbalanced_cpg_rna_rna_iso_mirna',
                                    return_views=view,
                                    nb_repetitions=15,
                                    saving_rep=saving_repository)
                 if dataset.find('balanced') != -1:
+                    logger.info('experiment_tn_old_label_balanced_cpg_rna_rna_iso_mirna')
+                    logger.info('--------------------------------------------------------')
                     run_experiment(data=dataset,
                                    experiment_name='experiment_tn_old_label_balanced_cpg_rna_rna_iso_mirna',
                                    return_views=view,
@@ -1594,12 +1618,16 @@ def main_run_experiments_old_labels():
                                    saving_rep=saving_repository)
             if dataset.find("all_views") != -1:
                 if dataset.find('unbalanced') != -1:
+                    logger.info('experiment_tn_old_label_unbalanced_all_views')
+                    logger.info('--------------------------------------------------------')
                     run_experiment(data=dataset,
                                    experiment_name='experiment_tn_old_label_unbalanced_all_views',
                                    return_views=view,
                                    nb_repetitions=15,
                                    saving_rep=saving_repository)
                 if dataset.find('balanced') != -1:
+                    logger.info('experiment_tn_old_label_balanced_all_views')
+                    logger.info('--------------------------------------------------------')
                     run_experiment(data=dataset,
                                    experiment_name='experiment_tn_old_label_balanced_all_views',
                                    return_views=view,
