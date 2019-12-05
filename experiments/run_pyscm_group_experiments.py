@@ -82,7 +82,9 @@ class GenericGroupScmTcga(object):
         self.n_folds = n_folds
         self.saving_repertory = saving_repertory
         assert return_views != 'majority_vote', 'The majority vote loader is not supported here'
-        self.X, self.y, self.features_names, self.patients_names = load_data(data=data_path, return_views=return_views)
+        self.return_views = return_views
+        self.X, self.y, self.features_names, self.patients_names = load_data(data=data_path,
+                                                                             return_views=self.return_views)
         self.groups_ids = []
         self.groups_ids_weights = []
         self.size_groups = []  # total number of groups
@@ -91,7 +93,7 @@ class GenericGroupScmTcga(object):
         for cpt, indices in enumerate(self.random_state_list):
             random.seed(indices)
             x_train, x_test, y_train, y_test = train_test_split(self.X, self.y, train_size=0.8, random_state=indices)
-            # TODO: I have the intuition along the SCM basic result that it's always the cunjuntion that is picked.
+            # TODO: I have the intuition along the SCM basic result that it's always the conjunction that is picked.
             params = list(ParameterGrid({'max_rules': param_max_attributes,
                                          'p': param_p,
                                          'model_type': ['conjunction'],
@@ -128,8 +130,7 @@ class GenericGroupScmTcga(object):
             self.saving_dict[indices]['groups_ids_weights'] = self.groups_ids_weights
 
         self.saving_file = self.saving_file + '_{}.pck'.format(return_views) + time.strftime("%Y%m%d-%H%M%S")
-        # TODO: COme back on this one
-        with open(os.path.join(self.saving_repertory, self.saving_file), 'wb') as f:
+        with open(self.saving_file, 'wb') as f:
             pickle.dump(self.saving_dict, f)
 
     def make_group(self):
@@ -284,69 +285,31 @@ def run_pyscm_group_experiment_msig(data, experiment_name, pathway_file_name, re
     random_seeds_list = [random.randint(1, 2000) for _ in range(nb_of_splits_seeds)]
     if function_name == 'tanh':
         logger.info('Experimentation of: {}'.format(experiment_name.format(function_name)))
-        try:
-            os.mkdir('{}/group_scm_{}_{}_{}_{}_{}'.format(saving_rep, experiment_name, function_name, return_views,
-                                                          function_name, nb_of_splits_seeds))
-            os.chdir('{}/group_scm_{}_{}_{}_{}_{}'.format(saving_rep, experiment_name, function_name, return_views,
-                                                          function_name, nb_of_splits_seeds))
-            learner = LearnFromMsigGroups(pathway_file=pathway_file_name,
-                                          data_path=data,
-                                          function_hps=param_lambdas_tanh,
-                                          function_name=function_name,
-                                          random_state_list=random_seeds_list,
-                                          saving_repertory=saving_rep,
-                                          saving_file=experiment_name,
-                                          return_views=return_views,
-                                          n_folds=3,
-                                          remove_inexistant_group=remove_inexistant_group)
-            learner.learning()
-        except OSError:
-            os.chdir('{}/group_scm_{}_{}_{}_{}_{}'.format(saving_rep, experiment_name, function_name, return_views,
-                                                          function_name, nb_of_splits_seeds))
-            learner = LearnFromMsigGroups(pathway_file=pathway_file_name,
-                                          data_path=data,
-                                          function_hps=param_lambdas_tanh,
-                                          function_name=function_name,
-                                          random_state_list=random_seeds_list,
-                                          saving_repertory=saving_rep,
-                                          saving_file=experiment_name,
-                                          return_views=return_views,
-                                          n_folds=3,
-                                          remove_inexistant_group=remove_inexistant_group)
-            learner.learning()
+        learner = LearnFromMsigGroups(pathway_file=pathway_file_name,
+                                      data_path=data,
+                                      function_hps=param_lambdas_tanh,
+                                      function_name=function_name,
+                                      random_state_list=random_seeds_list,
+                                      saving_repertory=saving_rep,
+                                      saving_file=experiment_name,
+                                      return_views=return_views,
+                                      n_folds=3,
+                                      remove_inexistant_group=remove_inexistant_group)
+        learner.learning()
 
     if function_name == 'softmax':
         logger.info('Experimentation of: {}'.format(experiment_name.format(function_name)))
-        try:
-            os.mkdir('{}/group_scm_{}_{}_{}_{}_{}'.format(saving_rep, experiment_name, function_name, return_views,
-                                                          function_name, nb_of_splits_seeds))
-            os.chdir('{}/group_scm_{}_{}_{}_{}_{}'.format(saving_rep, experiment_name, function_name, return_views,
-                                                          function_name, nb_of_splits_seeds))
-            learner = LearnFromMsigGroups(pathway_file=pathway_file_name,
-                                          data_path=data,
-                                          function_hps=param_softmax,
-                                          function_name=function_name,
-                                          random_state_list=random_seeds_list,
-                                          saving_repertory=saving_rep,
-                                          saving_file=experiment_name,
-                                          return_views=return_views,
-                                          n_folds=3,
-                                          remove_inexistant_group=remove_inexistant_group)
-            learner.learning()
-        except OSError:
-            os.chdir('{}/group_scm_{}_{}_{}_{}_{}'.format(saving_rep, experiment_name, function_name, return_views,
-                                                          function_name, nb_of_splits_seeds))
-            learner = LearnFromMsigGroups(pathway_file=pathway_file_name,
-                                          data_path=data,
-                                          function_hps=param_softmax,
-                                          function_name=function_name,
-                                          random_state_list=random_seeds_list,
-                                          saving_repertory=saving_rep,
-                                          saving_file=experiment_name,
-                                          return_views=return_views,
-                                          n_folds=3,
-                                          remove_inexistant_group=remove_inexistant_group)
-            learner.learning()
+        learner = LearnFromMsigGroups(pathway_file=pathway_file_name,
+                                      data_path=data,
+                                      function_hps=param_softmax,
+                                      function_name=function_name,
+                                      random_state_list=random_seeds_list,
+                                      saving_repertory=saving_rep,
+                                      saving_file=experiment_name,
+                                      return_views=return_views,
+                                      n_folds=3,
+                                      remove_inexistant_group=remove_inexistant_group)
+        learner.learning()
 
 
 def run_pyscm_group_experiment_biogrid(data, experiment_name, pathway_file_name, return_views, nb_of_splits_seeds=5,
@@ -370,72 +333,31 @@ def run_pyscm_group_experiment_biogrid(data, experiment_name, pathway_file_name,
     random_seeds_list = [random.randint(1, 2000) for _ in range(nb_of_splits_seeds)]
     if function_name == 'tanh_lambda':
         logger.info('Experimentation of: {}'.format(experiment_name.format(function_name)))
-        try:
-            os.mkdir('{}/group_scm_{}_{}_{}_{}'.format(saving_rep, experiment_name, function_name, return_views,
-                                                       nb_of_splits_seeds))
-            os.chdir('{}/group_scm_{}_{}_{}_{}'.format(saving_rep, experiment_name, function_name, return_views,
-                                                       nb_of_splits_seeds))
-            learner = LearnFromBiogridGroup(pathway_file=pathway_file_name,
-                                            data_path=data,
-                                            function_hps=param_lambdas_tanh,
-                                            function_name=function_name,
-                                            random_state_list=random_seeds_list,
-                                            saving_repertory=saving_rep,
-                                            saving_file=experiment_name,
-                                            return_views=return_views,
-                                            n_folds=3,
-                                            remove_inexistant_group=remove_inexistant_group)
-            learner.learning()
-        except OSError:
-            os.chdir('{}/group_scm_{}_{}_{}_{}'.format(saving_rep, experiment_name, function_name, return_views,
-                                                       nb_of_splits_seeds))
-            learner = LearnFromBiogridGroup(pathway_file=pathway_file_name,
-                                            data_path=data,
-                                            function_hps=param_lambdas_tanh,
-                                            function_name=function_name,
-                                            random_state_list=random_seeds_list,
-                                            saving_repertory=saving_rep,
-                                            saving_file=experiment_name,
-                                            return_views=return_views,
-                                            n_folds=3,
-                                            remove_inexistant_group=remove_inexistant_group)
-            learner.learning()
+        learner = LearnFromBiogridGroup(pathway_file=pathway_file_name,
+                                        data_path=data,
+                                        function_hps=param_lambdas_tanh,
+                                        function_name=function_name,
+                                        random_state_list=random_seeds_list,
+                                        saving_repertory=saving_rep,
+                                        saving_file=experiment_name,
+                                        return_views=return_views,
+                                        n_folds=3,
+                                        remove_inexistant_group=remove_inexistant_group)
+        learner.learning()
 
     if function_name == 'softmax_lambda':
         logger.info('Experimentation of: {}'.format(experiment_name.format(function_name)))
-        try:
-            os.mkdir('{}/group_scm_{}_{}_{}_{}'.format(saving_rep, experiment_name, function_name, return_views,
-                                                       nb_of_splits_seeds))
-            os.chdir('{}/group_scm_{}_{}_{}_{}'.format(saving_rep, experiment_name, function_name, return_views,
-                                                       nb_of_splits_seeds))
-            learner = LearnFromMsigGroups(pathway_file=pathway_file_name,
-                                          data_path=data,
-                                          function_hps=param_softmax,
-                                          function_name=function_name,
-                                          random_state_list=random_seeds_list,
-                                          saving_repertory=saving_rep,
-                                          saving_file=experiment_name,
-                                          return_views=return_views,
-                                          n_folds=3,
-                                          remove_inexistant_group=remove_inexistant_group)
-            learner.learning()
-        except OSError:
-            os.chdir('{}/group_scm_{}_{}_{}_{}'.format(saving_rep, experiment_name, function_name, return_views,
-                                                       nb_of_splits_seeds))
-            learner = LearnFromMsigGroups(pathway_file=pathway_file_name,
-                                          data_path=data,
-                                          function_hps=param_softmax,
-                                          function_name=function_name,
-                                          random_state_list=random_seeds_list,
-                                          saving_repertory=saving_rep,
-                                          saving_file=experiment_name,
-                                          return_views=return_views,
-                                          n_folds=3,
-                                          remove_inexistant_group=remove_inexistant_group)
-            learner.learning()
-
-# ['methyl_rna_iso_mirna', 'methyl_rna_iso_mirna_snp_clinical',
-#                 'methyl_rna_mirna', 'methyl_rna_mirna_snp_clinical', 'all']
+        learner = LearnFromMsigGroups(pathway_file=pathway_file_name,
+                                      data_path=data,
+                                      function_hps=param_softmax,
+                                      function_name=function_name,
+                                      random_state_list=random_seeds_list,
+                                      saving_repertory=saving_rep,
+                                      saving_file=experiment_name,
+                                      return_views=return_views,
+                                      n_folds=3,
+                                      remove_inexistant_group=remove_inexistant_group)
+        learner.learning()
 
 
 def main_unbalanced_all():
@@ -448,14 +370,14 @@ def main_unbalanced_all():
                                        remove_inexistant_group=False,
                                        saving_rep=saving_repository)
 
-    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
-                                       experiment_name='experiment_group_scm_unbalanced_mean_biogrid_remove_inexistant',
-                                       pathway_file_name=data_repository.format('pathways_biogrid.pck'),
-                                       return_views='all',
-                                       nb_of_splits_seeds=5,
-                                       function_name='tanh_lambda',
-                                       remove_inexistant_group=True,
-                                       saving_rep=saving_repository)
+    # run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
+    #                                    experiment_name='experiment_group_scm_unbalanced_mean_biogrid_remove_inexistant',
+    #                                    pathway_file_name=data_repository.format('pathways_biogrid.pck'),
+    #                                    return_views='all',
+    #                                    nb_of_splits_seeds=5,
+    #                                    function_name='tanh_lambda',
+    #                                    remove_inexistant_group=True,
+    #                                    saving_rep=saving_repository)
 
     run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
                                        experiment_name='experiment_group_scm_unbalanced_mean_biogrid',
@@ -466,14 +388,14 @@ def main_unbalanced_all():
                                        remove_inexistant_group=False,
                                        saving_rep=saving_repository)
 
-    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
-                                       experiment_name='experiment_group_scm_unbalanced_mean_biogrid_remove_inexistant',
-                                       pathway_file_name=data_repository.format('pathways_biogrid.pck'),
-                                       return_views='all',
-                                       nb_of_splits_seeds=5,
-                                       function_name='softmax_lambda',
-                                       remove_inexistant_group=True,
-                                       saving_rep=saving_repository)
+    # run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
+    #                                    experiment_name='experiment_group_scm_unbalanced_mean_biogrid_remove_inexistant',
+    #                                    pathway_file_name=data_repository.format('pathways_biogrid.pck'),
+    #                                    return_views='all',
+    #                                    nb_of_splits_seeds=5,
+    #                                    function_name='softmax_lambda',
+    #                                    remove_inexistant_group=True,
+    #                                    saving_rep=saving_repository)
 
 
 def main_unbalanced_methyl_rna_iso_mirna():
@@ -486,14 +408,14 @@ def main_unbalanced_methyl_rna_iso_mirna():
                                        remove_inexistant_group=False,
                                        saving_rep=saving_repository)
 
-    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
-                                       experiment_name='experiment_group_scm_unbalanced_mean_biogrid_remove_inexistant',
-                                       pathway_file_name=data_repository.format('pathways_biogrid.pck'),
-                                       return_views='methyl_rna_iso_mirna',
-                                       nb_of_splits_seeds=5,
-                                       function_name='tanh_lambda',
-                                       remove_inexistant_group=True,
-                                       saving_rep=saving_repository)
+    # run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
+    #                                    experiment_name='experiment_group_scm_unbalanced_mean_biogrid_remove_inexistant',
+    #                                    pathway_file_name=data_repository.format('pathways_biogrid.pck'),
+    #                                    return_views='methyl_rna_iso_mirna',
+    #                                    nb_of_splits_seeds=5,
+    #                                    function_name='tanh_lambda',
+    #                                    remove_inexistant_group=True,
+    #                                    saving_rep=saving_repository)
 
     run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
                                        experiment_name='experiment_group_scm_unbalanced_mean_biogrid',
@@ -504,14 +426,14 @@ def main_unbalanced_methyl_rna_iso_mirna():
                                        remove_inexistant_group=False,
                                        saving_rep=saving_repository)
 
-    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
-                                       experiment_name='experiment_group_scm_unbalanced_mean_biogrid_remove_inexistant',
-                                       pathway_file_name=data_repository.format('pathways_biogrid.pck'),
-                                       return_views='methyl_rna_iso_mirna',
-                                       nb_of_splits_seeds=5,
-                                       function_name='softmax_lambda',
-                                       remove_inexistant_group=True,
-                                       saving_rep=saving_repository)
+    # run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
+    #                                    experiment_name='experiment_group_scm_unbalanced_mean_biogrid_remove_inexistant',
+    #                                    pathway_file_name=data_repository.format('pathways_biogrid.pck'),
+    #                                    return_views='methyl_rna_iso_mirna',
+    #                                    nb_of_splits_seeds=5,
+    #                                    function_name='softmax_lambda',
+    #                                    remove_inexistant_group=True,
+    #                                    saving_rep=saving_repository)
 
 
 def main_unbalanced_methyl_rna_iso_mirna_snp_clinical():
@@ -524,14 +446,14 @@ def main_unbalanced_methyl_rna_iso_mirna_snp_clinical():
                                        remove_inexistant_group=False,
                                        saving_rep=saving_repository)
 
-    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
-                                       experiment_name='experiment_group_scm_unbalanced_mean_biogrid_remove_inexistant',
-                                       pathway_file_name=data_repository.format('pathways_biogrid.pck'),
-                                       return_views='methyl_rna_iso_mirna_snp_clinical',
-                                       nb_of_splits_seeds=5,
-                                       function_name='tanh_lambda',
-                                       remove_inexistant_group=True,
-                                       saving_rep=saving_repository)
+    # run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
+    #                                    experiment_name='experiment_group_scm_unbalanced_mean_biogrid_remove_inexistant',
+    #                                    pathway_file_name=data_repository.format('pathways_biogrid.pck'),
+    #                                    return_views='methyl_rna_iso_mirna_snp_clinical',
+    #                                    nb_of_splits_seeds=5,
+    #                                    function_name='tanh_lambda',
+    #                                    remove_inexistant_group=True,
+    #                                    saving_rep=saving_repository)
 
     run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
                                        experiment_name='experiment_group_scm_unbalanced_mean_biogrid',
@@ -542,14 +464,14 @@ def main_unbalanced_methyl_rna_iso_mirna_snp_clinical():
                                        remove_inexistant_group=False,
                                        saving_rep=saving_repository)
 
-    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
-                                       experiment_name='experiment_group_scm_unbalanced_mean_biogrid_remove_inexistant',
-                                       pathway_file_name=data_repository.format('pathways_biogrid.pck'),
-                                       return_views='methyl_rna_iso_mirna_snp_clinical',
-                                       nb_of_splits_seeds=5,
-                                       function_name='softmax_lambda',
-                                       remove_inexistant_group=True,
-                                       saving_rep=saving_repository)
+    # run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
+    #                                    experiment_name='experiment_group_scm_unbalanced_mean_biogrid_remove_inexistant',
+    #                                    pathway_file_name=data_repository.format('pathways_biogrid.pck'),
+    #                                    return_views='methyl_rna_iso_mirna_snp_clinical',
+    #                                    nb_of_splits_seeds=5,
+    #                                    function_name='softmax_lambda',
+    #                                    remove_inexistant_group=True,
+    #                                    saving_rep=saving_repository)
 
 
 def main_unbalanced_methyl_rna_mirna():
@@ -562,14 +484,14 @@ def main_unbalanced_methyl_rna_mirna():
                                        remove_inexistant_group=False,
                                        saving_rep=saving_repository)
 
-    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
-                                       experiment_name='experiment_group_scm_unbalanced_mean_biogrid_remove_inexistant',
-                                       pathway_file_name=data_repository.format('pathways_biogrid.pck'),
-                                       return_views='methyl_rna_mirna',
-                                       nb_of_splits_seeds=5,
-                                       function_name='tanh_lambda',
-                                       remove_inexistant_group=True,
-                                       saving_rep=saving_repository)
+    # run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
+    #                                    experiment_name='experiment_group_scm_unbalanced_mean_biogrid_remove_inexistant',
+    #                                    pathway_file_name=data_repository.format('pathways_biogrid.pck'),
+    #                                    return_views='methyl_rna_mirna',
+    #                                    nb_of_splits_seeds=5,
+    #                                    function_name='tanh_lambda',
+    #                                    remove_inexistant_group=True,
+    #                                    saving_rep=saving_repository)
 
     run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
                                        experiment_name='experiment_group_scm_unbalanced_mean_biogrid',
@@ -580,14 +502,14 @@ def main_unbalanced_methyl_rna_mirna():
                                        remove_inexistant_group=False,
                                        saving_rep=saving_repository)
 
-    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
-                                       experiment_name='experiment_group_scm_unbalanced_mean_biogrid_remove_inexistant',
-                                       pathway_file_name=data_repository.format('pathways_biogrid.pck'),
-                                       return_views='methyl_rna_mirna',
-                                       nb_of_splits_seeds=5,
-                                       function_name='softmax_lambda',
-                                       remove_inexistant_group=True,
-                                       saving_rep=saving_repository)
+    # run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
+    #                                    experiment_name='experiment_group_scm_unbalanced_mean_biogrid_remove_inexistant',
+    #                                    pathway_file_name=data_repository.format('pathways_biogrid.pck'),
+    #                                    return_views='methyl_rna_mirna',
+    #                                    nb_of_splits_seeds=5,
+    #                                    function_name='softmax_lambda',
+    #                                    remove_inexistant_group=True,
+    #                                    saving_rep=saving_repository)
 
 
 def main_unbalanced_methyl_rna_mirna_snp_clinical():
@@ -600,14 +522,14 @@ def main_unbalanced_methyl_rna_mirna_snp_clinical():
                                        remove_inexistant_group=False,
                                        saving_rep=saving_repository)
 
-    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
-                                       experiment_name='experiment_group_scm_unbalanced_mean_biogrid_remove_inexistant',
-                                       pathway_file_name=data_repository.format('pathways_biogrid.pck'),
-                                       return_views='methyl_rna_mirna_snp_clinical',
-                                       nb_of_splits_seeds=5,
-                                       function_name='tanh_lambda',
-                                       remove_inexistant_group=True,
-                                       saving_rep=saving_repository)
+    # run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
+    #                                    experiment_name='experiment_group_scm_unbalanced_mean_biogrid_remove_inexistant',
+    #                                    pathway_file_name=data_repository.format('pathways_biogrid.pck'),
+    #                                    return_views='methyl_rna_mirna_snp_clinical',
+    #                                    nb_of_splits_seeds=5,
+    #                                    function_name='tanh_lambda',
+    #                                    remove_inexistant_group=True,
+    #                                    saving_rep=saving_repository)
 
     run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
                                        experiment_name='experiment_group_scm_unbalanced_mean_biogrid',
@@ -618,20 +540,19 @@ def main_unbalanced_methyl_rna_mirna_snp_clinical():
                                        remove_inexistant_group=False,
                                        saving_rep=saving_repository)
 
-    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
-                                       experiment_name='experiment_group_scm_unbalanced_mean_biogrid_remove_inexistant',
-                                       pathway_file_name=data_repository.format('pathways_biogrid.pck'),
-                                       return_views='methyl_rna_mirna_snp_clinical',
-                                       nb_of_splits_seeds=5,
-                                       function_name='softmax_lambda',
-                                       remove_inexistant_group=True,
-                                       saving_rep=saving_repository)
+    # run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
+    #                                    experiment_name='experiment_group_scm_unbalanced_mean_biogrid_remove_inexistant',
+    #                                    pathway_file_name=data_repository.format('pathways_biogrid.pck'),
+    #                                    return_views='methyl_rna_mirna_snp_clinical',
+    #                                    nb_of_splits_seeds=5,
+    #                                    function_name='softmax_lambda',
+    #                                    remove_inexistant_group=True,
+    #                                    saving_rep=saving_repository)
 
 
 if __name__ == '__main__':
-    # main_unbalanced_all()
+    main_unbalanced_all()
     main_unbalanced_methyl_rna_iso_mirna()
-    # main_unbalanced_methyl_rna_iso_mirna_snp_clinical()
-    # main_unbalanced_methyl_rna_mirna()
-    # main_unbalanced_methyl_rna_mirna_snp_clinical()
-
+    main_unbalanced_methyl_rna_iso_mirna_snp_clinical()
+    main_unbalanced_methyl_rna_mirna()
+    main_unbalanced_methyl_rna_mirna_snp_clinical()
