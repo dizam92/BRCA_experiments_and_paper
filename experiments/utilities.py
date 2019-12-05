@@ -348,6 +348,9 @@ def results_analysis(directory, output_text_file):
                 var += '_{}'.format(el[3])
             model_comptes.append(var)
 
+        features_retenus_flatten = [el[3] for liste in features_retenus for el in liste[0][:50]]
+        for el in features_retenus_flatten:
+            cnt_rf[el] += 1
     if directory.find('scm') != -1:
         for model in features_retenus:
             temp = []
@@ -357,29 +360,6 @@ def results_analysis(directory, output_text_file):
             for el in temp:
                 var += '_{}'.format(el)
             model_comptes.append(var)
-
-    if directory.find('rf') != -1:
-        features_retenus_flatten = [el[3] for liste in features_retenus for el in liste[:50]]
-        for el in features_retenus_flatten:
-            cnt_rf[el] += 1
-
-        # most_common_features_names = np.asarray([el[0] for el in most_common_features])
-        # most_common_features_values = np.asarray([el[1] for el in most_common_features])
-
-        # nbResults = len(most_common_features)
-        # figKW = {"figsize": (nbResults, 8)}
-        # f, ax = plt.subplots(nrows=1, ncols=1, **figKW)
-        # barWidth = 0.35
-        # ax.set_title('{}'.format('RF 50 most common features in the 50 best features for each experiment'))
-        # rects = ax.bar(range(nbResults), most_common_features_values, barWidth, color="r")
-        # autolabel(rects, ax)
-        # # ax.legend(rects[0], 'Counts')
-        # # ax.set_ylim(-0.1, 1.1)
-        # ax.set_xticks(np.arange(nbResults) + barWidth)
-        # ax.set_xticklabels(most_common_features_names, rotation="vertical")
-        # plt.tight_layout()
-        # f.savefig('RF_50_Most_Common_Features' + time.strftime("%Y%m%d-%H%M%S") + ".png")
-        # plt.close()
 
     with open(output_text_file, 'a+') as f:
         f.write('Repository:{}\n'.format(directory))
@@ -400,7 +380,8 @@ def results_analysis(directory, output_text_file):
             np.round(np.mean(recall_train), 4), np.round(np.std(recall_train), 4), np.round(np.max(recall_train), 4),
             np.round(np.min(recall_train), 4), np.round(np.median(recall_train), 4)))
         f.write('TESTS RESULTS\n')
-        f.write('-*50\n')
+        f.write('-'*50)
+        f.write('\n')
         f.write('Test: Accuracy mean {} +/- {}; Max value: {}, Min value: {}, Median value: {}\n'.format(
             np.round(np.mean(accuracy_test), 4), np.round(np.std(accuracy_test), 4), np.round(np.max(accuracy_test), 4),
             np.round(np.min(accuracy_test), 4), np.round(np.median(accuracy_test), 4)))
@@ -413,12 +394,14 @@ def results_analysis(directory, output_text_file):
         f.write('Test: Recall mean {} +/- {}; Max value: {}, Min value: {}, Median value: {}\n'.format(
             np.round(np.mean(recall_test), 4), np.round(np.std(recall_test), 4), np.round(np.max(recall_test), 4),
             np.round(np.min(recall_test), 4), np.round(np.median(recall_test), 4)))
-
+        # print('model comptes', model_comptes)
         for el in model_comptes:
             cnt[el] += 1
-        f.write('Most frequent model\n'.format(cnt.most_common(10))) 
+        f.write('_-------------_---------_-------_\n')
+        f.write('Most frequent model: {}\n'.format(cnt.most_common(10)))
         most_common_features = cnt_rf.most_common(50)
-        f.write('Most frequent Features\n'.format(most_common_features)) 
+        f.write('_-------------_---------_-------_\n')
+        f.write('Most frequent Features: {}\n'.format(most_common_features))
     os.chdir(saving_repository)
 
 
@@ -430,7 +413,8 @@ def main_run_analysis():
     list_of_directories = os.listdir('./')
     output_text_file = saving_repository + '/results_analysis.txt'
     for directory in list_of_directories:
-        if directory not in ['.DS_Store', '._.DS_Store', 'results_analysis.txt']:
+        if directory not in ['.DS_Store', '._.DS_Store', 'results_analysis.txt', '._results_analysis.txt',
+                             'results_on_previous_4_types_datasets']:
 
             results_analysis(directory=directory, output_text_file=output_text_file)
 
