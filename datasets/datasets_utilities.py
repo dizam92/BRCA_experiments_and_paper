@@ -4,7 +4,6 @@ import random
 import h5py
 import re
 import os
-import seaborn as sns
 import pandas as pd
 import numpy as np
 

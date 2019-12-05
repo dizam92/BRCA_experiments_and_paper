@@ -6,7 +6,6 @@ import h5py
 import time
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import networkx as nx
 import re
 import pickle
@@ -88,9 +87,13 @@ parameters_scm = {'SCM__model_type': param_model_type,
                   'SCM__p': param_p,
                   'SCM__max_rules': param_max_attributes
                   }
-param_lambdas_tanh = [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95]
-param_softmax = [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0]
+# While using this the complexity of all the hps to be tested is way off 2592!!!!!! En CV HELL NOOO!
+# That's why i am exploding the RAM memory everytime
+# param_lambdas_tanh = [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95]
+# param_softmax = [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0]
 
+param_lambdas_tanh = [0.1, 0.3, 0.5, 0.7, 0.9]
+param_softmax = [0.1, 0.3, 0.5, 0.7, 0.9]
 
 #                                              Parameters for Run Group Experiment                                     #
 

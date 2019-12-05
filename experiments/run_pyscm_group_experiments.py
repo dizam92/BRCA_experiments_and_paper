@@ -91,9 +91,10 @@ class GenericGroupScmTcga(object):
         for cpt, indices in enumerate(self.random_state_list):
             random.seed(indices)
             x_train, x_test, y_train, y_test = train_test_split(self.X, self.y, train_size=0.8, random_state=indices)
+            # TODO: I have the intuition along the SCM basic result that it's always the cunjuntion that is picked.
             params = list(ParameterGrid({'max_rules': param_max_attributes,
                                          'p': param_p,
-                                         'model_type': param_model_type,
+                                         'model_type': ['conjunction'],
                                          'reg_lambdas': self.function_hps
                                          }))
             logger.info('Begin the cross-validation')
@@ -348,74 +349,6 @@ def run_pyscm_group_experiment_msig(data, experiment_name, pathway_file_name, re
             learner.learning()
 
 
-# # Creer une liste ou une variable pour les pathway et les mettre dans la boucle
-# groups_pathway_file = []
-#
-#
-# # TODO: COmplete this
-# def main_run_experiments_new_labels():
-#     for view in return_views:
-#         for dataset in datasets_new_labels:
-#             for pathway_name_file in groups_pathway_file:
-#                 if dataset.find("mean") != -1:
-#                     if dataset.find('unbalanced') != -1:
-#                         run_pyscm_group_experiment(data=dataset,
-#                                                    experiment_name='expe_group_scm_',
-#                                                    pathway_file_name=pathway_name_file,
-#                                                    return_views='',
-#                                                    nb_of_splits_seeds=5,
-#                                                    function_name='tanh_lambda',
-#                                                    remove_inexistant_group=False,
-#                                                    saving_rep=saving_repository)
-#                     if dataset.find('balanced') != -1:
-#                         run_pyscm_group_experiment(data=dataset,
-#                                                    experiment_name='',
-#                                                    pathway_file_name=pathway_name_file,
-#                                                    return_views='',
-#                                                    nb_of_splits_seeds=5,
-#                                                    function_name='tanh_lambda',
-#                                                    remove_inexistant_group=False,
-#                                                    saving_rep=saving_repository)
-#                 if dataset.find("median") != -1:
-#                     if dataset.find('unbalanced') != -1:
-#                         run_pyscm_group_experiment(data=dataset,
-#                                                    experiment_name='',
-#                                                    pathway_file_name=pathway_name_file,
-#                                                    return_views='',
-#                                                    nb_of_splits_seeds=5,
-#                                                    function_name='tanh_lambda',
-#                                                    remove_inexistant_group=False,
-#                                                    saving_rep=saving_repository)
-#                     if dataset.find('balanced') != -1:
-#                         run_pyscm_group_experiment(data=dataset,
-#                                                    experiment_name='',
-#                                                    pathway_file_name=pathway_name_file,
-#                                                    return_views='',
-#                                                    nb_of_splits_seeds=5,
-#                                                    function_name='tanh_lambda',
-#                                                    remove_inexistant_group=False,
-#                                                    saving_rep=saving_repository)
-#                 if dataset.find("zero") != -1:
-#                     if dataset.find('unbalanced') != -1:
-#                         run_pyscm_group_experiment(data=dataset,
-#                                                    experiment_name='',
-#                                                    pathway_file_name=pathway_name_file,
-#                                                    return_views='',
-#                                                    nb_of_splits_seeds=5,
-#                                                    function_name='tanh_lambda',
-#                                                    remove_inexistant_group=False,
-#                                                    saving_rep=saving_repository)
-#                     if dataset.find('balanced') != -1:
-#                         run_pyscm_group_experiment(data=dataset,
-#                                                    experiment_name='',
-#                                                    pathway_file_name=pathway_name_file,
-#                                                    return_views='',
-#                                                    nb_of_splits_seeds=5,
-#                                                    function_name='tanh_lambda',
-#                                                    remove_inexistant_group=False,
-#                                                    saving_rep=saving_repository)
-
-
 def run_pyscm_group_experiment_biogrid(data, experiment_name, pathway_file_name, return_views, nb_of_splits_seeds=5,
                                        function_name='tanh_lambda', remove_inexistant_group=False,
                                        saving_rep=saving_repository):
@@ -506,7 +439,7 @@ def run_pyscm_group_experiment_biogrid(data, experiment_name, pathway_file_name,
 
 
 def main_unbalanced_all():
-    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_balanced_cpg_rna_rna_iso_mirna,
+    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
                                        experiment_name='experiment_group_scm_unbalanced_mean_biogrid',
                                        pathway_file_name=data_repository.format('pathways_biogrid.pck'),
                                        return_views='all',
@@ -515,7 +448,7 @@ def main_unbalanced_all():
                                        remove_inexistant_group=False,
                                        saving_rep=saving_repository)
 
-    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_balanced_cpg_rna_rna_iso_mirna,
+    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
                                        experiment_name='experiment_group_scm_unbalanced_mean_biogrid_remove_inexistant',
                                        pathway_file_name=data_repository.format('pathways_biogrid.pck'),
                                        return_views='all',
@@ -524,7 +457,7 @@ def main_unbalanced_all():
                                        remove_inexistant_group=True,
                                        saving_rep=saving_repository)
 
-    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_balanced_cpg_rna_rna_iso_mirna,
+    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
                                        experiment_name='experiment_group_scm_unbalanced_mean_biogrid',
                                        pathway_file_name=data_repository.format('pathways_biogrid.pck'),
                                        return_views='all',
@@ -533,7 +466,7 @@ def main_unbalanced_all():
                                        remove_inexistant_group=False,
                                        saving_rep=saving_repository)
 
-    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_balanced_cpg_rna_rna_iso_mirna,
+    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
                                        experiment_name='experiment_group_scm_unbalanced_mean_biogrid_remove_inexistant',
                                        pathway_file_name=data_repository.format('pathways_biogrid.pck'),
                                        return_views='all',
@@ -544,7 +477,7 @@ def main_unbalanced_all():
 
 
 def main_unbalanced_methyl_rna_iso_mirna():
-    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_balanced_cpg_rna_rna_iso_mirna,
+    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
                                        experiment_name='experiment_group_scm_unbalanced_mean_biogrid',
                                        pathway_file_name=data_repository.format('pathways_biogrid.pck'),
                                        return_views='methyl_rna_iso_mirna',
@@ -553,7 +486,7 @@ def main_unbalanced_methyl_rna_iso_mirna():
                                        remove_inexistant_group=False,
                                        saving_rep=saving_repository)
 
-    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_balanced_cpg_rna_rna_iso_mirna,
+    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
                                        experiment_name='experiment_group_scm_unbalanced_mean_biogrid_remove_inexistant',
                                        pathway_file_name=data_repository.format('pathways_biogrid.pck'),
                                        return_views='methyl_rna_iso_mirna',
@@ -562,7 +495,7 @@ def main_unbalanced_methyl_rna_iso_mirna():
                                        remove_inexistant_group=True,
                                        saving_rep=saving_repository)
 
-    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_balanced_cpg_rna_rna_iso_mirna,
+    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
                                        experiment_name='experiment_group_scm_unbalanced_mean_biogrid',
                                        pathway_file_name=data_repository.format('pathways_biogrid.pck'),
                                        return_views='methyl_rna_iso_mirna',
@@ -571,7 +504,7 @@ def main_unbalanced_methyl_rna_iso_mirna():
                                        remove_inexistant_group=False,
                                        saving_rep=saving_repository)
 
-    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_balanced_cpg_rna_rna_iso_mirna,
+    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
                                        experiment_name='experiment_group_scm_unbalanced_mean_biogrid_remove_inexistant',
                                        pathway_file_name=data_repository.format('pathways_biogrid.pck'),
                                        return_views='methyl_rna_iso_mirna',
@@ -582,7 +515,7 @@ def main_unbalanced_methyl_rna_iso_mirna():
 
 
 def main_unbalanced_methyl_rna_iso_mirna_snp_clinical():
-    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_balanced_cpg_rna_rna_iso_mirna,
+    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
                                        experiment_name='experiment_group_scm_unbalanced_mean_biogrid',
                                        pathway_file_name=data_repository.format('pathways_biogrid.pck'),
                                        return_views='methyl_rna_iso_mirna_snp_clinical',
@@ -591,7 +524,7 @@ def main_unbalanced_methyl_rna_iso_mirna_snp_clinical():
                                        remove_inexistant_group=False,
                                        saving_rep=saving_repository)
 
-    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_balanced_cpg_rna_rna_iso_mirna,
+    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
                                        experiment_name='experiment_group_scm_unbalanced_mean_biogrid_remove_inexistant',
                                        pathway_file_name=data_repository.format('pathways_biogrid.pck'),
                                        return_views='methyl_rna_iso_mirna_snp_clinical',
@@ -600,7 +533,7 @@ def main_unbalanced_methyl_rna_iso_mirna_snp_clinical():
                                        remove_inexistant_group=True,
                                        saving_rep=saving_repository)
 
-    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_balanced_cpg_rna_rna_iso_mirna,
+    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
                                        experiment_name='experiment_group_scm_unbalanced_mean_biogrid',
                                        pathway_file_name=data_repository.format('pathways_biogrid.pck'),
                                        return_views='methyl_rna_iso_mirna_snp_clinical',
@@ -609,7 +542,7 @@ def main_unbalanced_methyl_rna_iso_mirna_snp_clinical():
                                        remove_inexistant_group=False,
                                        saving_rep=saving_repository)
 
-    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_balanced_cpg_rna_rna_iso_mirna,
+    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
                                        experiment_name='experiment_group_scm_unbalanced_mean_biogrid_remove_inexistant',
                                        pathway_file_name=data_repository.format('pathways_biogrid.pck'),
                                        return_views='methyl_rna_iso_mirna_snp_clinical',
@@ -620,7 +553,7 @@ def main_unbalanced_methyl_rna_iso_mirna_snp_clinical():
 
 
 def main_unbalanced_methyl_rna_mirna():
-    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_balanced_cpg_rna_rna_iso_mirna,
+    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
                                        experiment_name='experiment_group_scm_unbalanced_mean_biogrid',
                                        pathway_file_name=data_repository.format('pathways_biogrid.pck'),
                                        return_views='methyl_rna_mirna',
@@ -629,7 +562,7 @@ def main_unbalanced_methyl_rna_mirna():
                                        remove_inexistant_group=False,
                                        saving_rep=saving_repository)
 
-    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_balanced_cpg_rna_rna_iso_mirna,
+    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
                                        experiment_name='experiment_group_scm_unbalanced_mean_biogrid_remove_inexistant',
                                        pathway_file_name=data_repository.format('pathways_biogrid.pck'),
                                        return_views='methyl_rna_mirna',
@@ -638,7 +571,7 @@ def main_unbalanced_methyl_rna_mirna():
                                        remove_inexistant_group=True,
                                        saving_rep=saving_repository)
 
-    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_balanced_cpg_rna_rna_iso_mirna,
+    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
                                        experiment_name='experiment_group_scm_unbalanced_mean_biogrid',
                                        pathway_file_name=data_repository.format('pathways_biogrid.pck'),
                                        return_views='methyl_rna_mirna',
@@ -647,7 +580,7 @@ def main_unbalanced_methyl_rna_mirna():
                                        remove_inexistant_group=False,
                                        saving_rep=saving_repository)
 
-    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_balanced_cpg_rna_rna_iso_mirna,
+    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
                                        experiment_name='experiment_group_scm_unbalanced_mean_biogrid_remove_inexistant',
                                        pathway_file_name=data_repository.format('pathways_biogrid.pck'),
                                        return_views='methyl_rna_mirna',
@@ -658,7 +591,7 @@ def main_unbalanced_methyl_rna_mirna():
 
 
 def main_unbalanced_methyl_rna_mirna_snp_clinical():
-    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_balanced_cpg_rna_rna_iso_mirna,
+    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
                                        experiment_name='experiment_group_scm_unbalanced_mean_biogrid',
                                        pathway_file_name=data_repository.format('pathways_biogrid.pck'),
                                        return_views='methyl_rna_mirna_snp_clinical',
@@ -667,7 +600,7 @@ def main_unbalanced_methyl_rna_mirna_snp_clinical():
                                        remove_inexistant_group=False,
                                        saving_rep=saving_repository)
 
-    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_balanced_cpg_rna_rna_iso_mirna,
+    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
                                        experiment_name='experiment_group_scm_unbalanced_mean_biogrid_remove_inexistant',
                                        pathway_file_name=data_repository.format('pathways_biogrid.pck'),
                                        return_views='methyl_rna_mirna_snp_clinical',
@@ -676,7 +609,7 @@ def main_unbalanced_methyl_rna_mirna_snp_clinical():
                                        remove_inexistant_group=True,
                                        saving_rep=saving_repository)
 
-    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_balanced_cpg_rna_rna_iso_mirna,
+    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
                                        experiment_name='experiment_group_scm_unbalanced_mean_biogrid',
                                        pathway_file_name=data_repository.format('pathways_biogrid.pck'),
                                        return_views='methyl_rna_mirna_snp_clinical',
@@ -685,7 +618,7 @@ def main_unbalanced_methyl_rna_mirna_snp_clinical():
                                        remove_inexistant_group=False,
                                        saving_rep=saving_repository)
 
-    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_balanced_cpg_rna_rna_iso_mirna,
+    run_pyscm_group_experiment_biogrid(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
                                        experiment_name='experiment_group_scm_unbalanced_mean_biogrid_remove_inexistant',
                                        pathway_file_name=data_repository.format('pathways_biogrid.pck'),
                                        return_views='methyl_rna_mirna_snp_clinical',
