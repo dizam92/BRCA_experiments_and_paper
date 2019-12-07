@@ -12,8 +12,8 @@ from pyscm._scm_utility import find_max as find_max_utility  # cpp extensions
 from pyscm.model import ConjunctionModel, DisjunctionModel
 from pyscm.rules import DecisionStump
 
-logging.basicConfig(level=logging.DEBUG)
-logging.basicConfig(filename='pyscm_group.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
+# logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(filename='pyscm_group.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
 
 
 # Dont need the x+ 1 into log no more because by default the new scm is working with features weights of 1
