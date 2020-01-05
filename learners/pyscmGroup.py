@@ -273,7 +273,9 @@ class GroupSetCoveringMachineClassifierClassyVersion(BaseSetCoveringMachine):
                         idx_positions_list.append(idx)
                         idx_positions_list_weights.append(groups_ids_weights[idx])  # recuperer les poids de chacun des groupes
                 # features_weights[idx_positions_list] += 1.  # on repondère en ajoutant + 1 à chaque fois
-                features_weights[idx_positions_list] += idx_positions_list_weights
+                # features_weights[idx_positions_list] += idx_positions_list_weights
+                # Essai pour sous-pondérer les poids
+                features_weights[idx_positions_list] -= idx_positions_list_weights
                 # on repondère en ajoutant la valeur précalculée de la taille pour repondérer le groupe
             return find_max_utility(self.p, X, y, X_argsort_by_feature_T, example_idx,
                                     self.reg_function(x=features_weights, ld=self.reg_lambdas))

@@ -1,6 +1,7 @@
 __pycache__
 .idea/workspace.xml
 .idea/*
+.vscode/*
 *.pyc
 *.h5
 *.tsv
