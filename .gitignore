@@ -11,6 +11,7 @@ __pycache__
 *.log
 *.synctex.gz
 *.toc
+*.dat
 *.zip
 # Jupyter Notebook
 .ipynb_checkpoints
