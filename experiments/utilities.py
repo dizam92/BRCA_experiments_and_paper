@@ -273,7 +273,7 @@ def load_data(data, return_views='all'):
             x_all = np.hstack((x_methyl, x_rna, x_rna_iso, x_mirna, x_snp, x_clinical))
         else:
             x_all = np.hstack((x_methyl, x_rna, x_rna_iso, x_mirna, x_clinical))
-            features_names =  np.hstack((features_names_methyl, features_names_rna,features_names_rna_iso, 
+            features_names = np.hstack((features_names_methyl, features_names_rna,features_names_rna_iso,
                 features_names_mirna, features_names_clinical))
         x = x_all
         x = x.T
