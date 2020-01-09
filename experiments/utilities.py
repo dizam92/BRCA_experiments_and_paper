@@ -742,7 +742,7 @@ def construction_pathway_gene_groups_tcga(data_path=data_tn_new_label_balanced_c
                 f.write('{}\t{}\n'.format(item[0], gene))
 
 
-def construction_pathway_clusters_groups(data_path=data_tn_new_label_balanced_cpg_rna_rna_iso_mirna,
+def construction_pathway_clusters_groups(data_path=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
                                          model_loaded=False,
                                          return_views='all',
                                          output_file_name='pathway_file_clusters_genes',
@@ -782,7 +782,7 @@ def construction_pathway_clusters_groups(data_path=data_tn_new_label_balanced_cp
                 f.write('{}\t{}\n'.format(zip_el[1], zip_el[0]))
 
 
-def construction_pathway_random_groups(data_path=data_tn_new_label_balanced_cpg_rna_rna_iso_mirna,
+def construction_pathway_random_groups(data_path=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
                                        nb_of_groups=1000,
                                        return_views='all',
                                        output_file_name='pathway_file_random_groups'):
@@ -819,7 +819,7 @@ def construction_pathway_random_groups(data_path=data_tn_new_label_balanced_cpg_
         print('The group_{} is done and length is {}'.format(nb_of_groups, len(elements_restant)))
 
 
-def construction_pathway_views_groups(data_path=data_tn_new_label_balanced_cpg_rna_rna_iso_mirna,
+def construction_pathway_views_groups(data_path=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
                                       return_views='all',
                                       output_file_name='pathway_file_views_groups'):
     """
@@ -846,7 +846,7 @@ def construction_pathway_views_groups(data_path=data_tn_new_label_balanced_cpg_r
                 f.write('group_4\t{}\n'.format(el))
 
 
-def construction_pathway_file(data_path=data_tn_new_label_balanced_cpg_rna_rna_iso_mirna,
+def construction_pathway_file(data_path=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
                               return_views='all',
                               dictionnaire='',
                               output_file_name=''):
@@ -884,6 +884,7 @@ def construction_pathway_file(data_path=data_tn_new_label_balanced_cpg_rna_rna_i
 
 
 def main_construct():
+    print()
     # for view in return_views:
     #     construction_pathway_gene_groups_tcga(return_views=view)
     #
@@ -895,19 +896,19 @@ def main_construct():
 
     # construction_biogrid_pathway_file(output_file_name='pathways_biogrid')
 
-    for dictionary in list_dict:
-        if dictionary == c2_pickle_dictionary:
-            output_file_name = 'pathway_file_c2_curated_groups'
-        else:
-            output_file_name = 'pathway_file_c5_curated_groups'
-        for view in return_views:
-            construction_pathway_file(return_views=view, dictionnaire=dictionary, output_file_name=output_file_name)
+    # for dictionary in list_dict:
+    #     if dictionary == c2_pickle_dictionary:
+    #         output_file_name = 'pathway_file_c2_curated_groups'
+    #     else:
+    #         output_file_name = 'pathway_file_c5_curated_groups'
+    #     for view in return_views:
+    #         construction_pathway_file(return_views=view, dictionnaire=dictionary, output_file_name=output_file_name)
 
-    for view in return_views:
-        construction_pathway_clusters_groups(model_loaded=False,
-                                             return_views=view,
-                                             model_agglomeration_file_name='feature_agglomeration_model_{}.pck'.format(
-                                                 view))
+    # for view in return_views:
+    #     construction_pathway_clusters_groups(model_loaded=False,
+    #                                          return_views=view,
+    #                                          model_agglomeration_file_name='feature_agglomeration_model_{}.pck'.format(
+    #                                              view))
 
 
 def load_mirna_dat(data_path=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna, return_views='all'):
@@ -926,11 +927,11 @@ def load_mirna_dat(data_path=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
     for line in lines:
         if  line.startswith('ID') or line.startswith('DR   RFAM'):
             lines_to_keep.append(line.strip('\n'))
-    dict_mirna_features_to_cluster = {features: [] for feature in mirna_features_names}
+    dict_mirna_features_to_cluster = {feature: [] for feature in mirna_features_names}
     for feature in mirna_features_names:
         for idx, line in enumerate(lines_to_keep):
             if line.find(feature) != -1:
-                if lines_to_keep[idx + 1].find(RFAM) != -1:
+                if lines_to_keep[idx + 1].find('RFAM') != -1:
                     valeur = lines_to_keep[idx + 1].split(';')[-1].strip('.')
                     dict_mirna_features_to_cluster[feature].append(valeur)
     return dict_mirna_features_to_cluster
@@ -977,7 +978,7 @@ def load_biogrid_network():
     return G, edges
 
 
-def build_dictionnary_groups(data_path=data_tn_new_label_balanced_cpg_rna_rna_iso_mirna, return_views='all',
+def build_dictionnary_groups(data_path=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna, return_views='all',
                                       output_file_name=''):
     """
     Utility function to build pathway file of the groups to be loaded in LearnFromBiogridGroup
@@ -993,7 +994,7 @@ def build_dictionnary_groups(data_path=data_tn_new_label_balanced_cpg_rna_rna_is
     _, _, features_names, _ = load_data(data=data_path, return_views=return_views)
     features_names = list(features_names)
     adjacency_matrix = np.asarray(list(graph.adjacency()))
-    nodes = np.asarray(list(graph.nodes))
+    # nodes = np.asarray(list(graph.nodes))
     dico_results = {feature: [] for feature in features_names}
     # noeud + et toutes leurs interactions; 
     # el[0] is always the node and list(el[1].keys()) the genes whose are interacting with the node
@@ -1037,7 +1038,7 @@ def build_dictionnary_groups(data_path=data_tn_new_label_balanced_cpg_rna_rna_is
         pickle.dump(dico_results, f)
 
 
-def construction_biogrid_pathway_file(data_path=data_tn_new_label_balanced_cpg_rna_rna_iso_mirna, return_views='all',
+def construction_biogrid_pathway_file(data_path=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna, return_views='all',
                                       output_file_name=''):
     """
     Utility function to build pathway file of the groups to be loaded in LearnFromBiogridGroup
@@ -1049,7 +1050,7 @@ def construction_biogrid_pathway_file(data_path=data_tn_new_label_balanced_cpg_r
         output_file_name, 'G\tIDS\n'
     """
     graph, _ = load_biogrid_network()
-    x, y, features_names, _ = load_data(data=data_path, return_views=return_views)
+    _, _, features_names, _ = load_data(data=data_path, return_views=return_views)
     features_names = list(features_names)
     adjacency_matrix = np.asarray(list(graph.adjacency()))
     nodes = np.asarray(list(graph.nodes))
