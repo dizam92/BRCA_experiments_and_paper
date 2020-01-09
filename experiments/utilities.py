@@ -44,9 +44,6 @@ return_views = ['methyl_rna_iso_mirna', 'methyl_rna_iso_mirna_snp_clinical',
 datasets_new_labels = [data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna] 
 # The only data i am using now is the one with cpg; rna; rnaIso; miRNA; clinical
 
-datasets_old_labels = [data_tn_old_label_unbalanced_cpg_rna_rna_iso_mirna, data_tn_old_label_unbalanced_all_views,
-                       data_tn_old_label_balanced_cpg_rna_rna_iso_mirna, data_tn_old_label_balanced_all_views]
-
 parameters_dt = {'max_depth': np.arange(1, 5),  # Moins de profondeur pour toujours eviter l'overfitting
                  'min_samples_split': np.arange(2, 15),  # Eviter les small value pour eviter l'overfitting
                  'criterion': ['gini', 'entropy']
