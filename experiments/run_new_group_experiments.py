@@ -117,8 +117,8 @@ def run_experiment(data, pathway_file, experiment_name, return_views, nb_repetit
     learner_clf = GroupSCM(features_to_index=features_to_index, prior_rules=prior_rules, groups=dict_biogrid_groups, 
                tiebreaker='', p=1.0, model_type='conjunction', max_rules=10)
     try:
-        os.mkdir('{}/scm_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
-        os.chdir('{}/scm_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
+        os.mkdir('{}/group_scm_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
+        os.chdir('{}/group_scm_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
         for state in range(nb_repetitions):
             clf = LearnGroupTN(parameters=parameters_group_scm,
                                learner=learner_clf,
@@ -167,7 +167,7 @@ def main_run_experiments_new_labels():
                     pathway_file=data_repository.format('pathways_biogrid_groups.pck'), 
                     experiment_name='experiment_group_scm_unbalanced_mean_biogrid', 
                     return_views=view, 
-                    nb_repetitions=1, 
+                    nb_repetitions=15, 
                     saving_rep=saving_repository)
 
 if __name__ == '__main__':

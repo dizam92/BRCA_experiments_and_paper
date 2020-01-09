@@ -36,16 +36,7 @@ list_dict = [c2_pickle_dictionary, c5_pickle_dictionary]
 
 saving_repository = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/saving_repository'
 data_repository = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/{}'
-
-data_tn_new_label_balanced_all_views = data_repository.format('triple_neg_new_labels_balanced_all_views.h5')
-data_tn_new_label_balanced_cpg_rna_rna_iso_mirna = data_repository.format('triple_neg_new_labels_balanced_cpg_rna_rna_iso_mirna.h5')
-data_tn_new_label_unbalanced_all_views = data_repository.format('triple_neg_new_labels_unbalanced_all_views.h5')
 data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna = data_repository.format('triple_neg_new_labels_unbalanced_cpg_rna_rna_iso_mirna.h5')
-
-data_tn_old_label_balanced_all_views = data_repository.format('triple_neg_old_labels_balanced_all_views.h5')
-data_tn_old_label_balanced_cpg_rna_rna_iso_mirna = data_repository.format('triple_neg_old_labels_balanced_cpg_rna_rna_iso_mirna.h5')
-data_tn_old_label_unbalanced_all_views = data_repository.format('triple_neg_old_labels_unbalanced_all_views.h5')
-data_tn_old_label_unbalanced_cpg_rna_rna_iso_mirna = data_repository.format('triple_neg_old_labels_unbalanced_cpg_rna_rna_iso_mirna.h5')
 
 return_views = ['methyl_rna_iso_mirna', 'methyl_rna_iso_mirna_snp_clinical',
                 'methyl_rna_mirna', 'methyl_rna_mirna_snp_clinical', 'all']
@@ -55,22 +46,6 @@ datasets_new_labels = [data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna]
 
 datasets_old_labels = [data_tn_old_label_unbalanced_cpg_rna_rna_iso_mirna, data_tn_old_label_unbalanced_all_views,
                        data_tn_old_label_balanced_cpg_rna_rna_iso_mirna, data_tn_old_label_balanced_all_views]
-
-# TODO: Old parameters for learning: I'm changing all of them since there is overfitting (especially in the RF)
-# parameters_dt = {'max_depth': np.arange(1, 7),
-#                  'min_samples_split': np.arange(2, 9),
-#                  'criterion': ['gini', 'entropy']
-#                  }
-# parameters_rf = {'max_depth': np.arange(1, 7),
-#                  'min_samples_split': np.arange(2, 9),
-#                  'criterion': ['gini', 'entropy'],
-#                  'n_estimators': [100, 200, 500, 1000]
-#                  }
-# param_model_type = ['conjunction', 'disjunction']
-# # param_p = [0.001, 0.1, 0.178, 0.316, 0.562, 1.0, 1.778, 3.162, 5.623, 10.0, 999999.0]
-# # param_p = [0.001, 0.05, 0.1, 0.178, 0.25, 0.316, 0.45, 0.562, 0.85, 1.0, 1.5, 1.778, 2, 2.5, 3.162, 4.39, 5.623,
-# #            6.62, 7.623, 8.386, 9.15, 10.0, 11.0]
-# param_p = [0.001, 0.1, 0.178, 0.316, 0.45, 0.562, 0.85, 1.0, 1.778, 2.5, 3.162, 4.39, 5.623, 7.623, 10.0, 999999.0]
 
 parameters_dt = {'max_depth': np.arange(1, 5),  # Moins de profondeur pour toujours eviter l'overfitting
                  'min_samples_split': np.arange(2, 15),  # Eviter les small value pour eviter l'overfitting
@@ -93,28 +68,6 @@ parameters_group_scm = {'model_type': param_model_type,
                         'p': param_p,
                         'max_rules': param_max_attributes
                   }
-# While using this the complexity of all the hps to be tested is way off 2592!!!!!! En CV HELL NOOO!
-# That's why i am exploding the RAM memory everytime
-# param_lambdas_tanh = [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95]
-# param_softmax = [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0]
-
-param_lambdas_tanh = [0.1, 0.3, 0.5, 0.7, 0.9]
-param_softmax = [0.1, 0.3, 0.5, 0.7, 0.9]
-
-#                                              Parameters for Run Group Experiment                                     #
-
-pathway_file_c1_curated_groups = '/home/maoss2/PycharmProjects/breast_cancer/improvisations/group_scm_experimentation/group_types/pathway_file_c1_positional_genes.tsv'
-pathway_file_c2_curated_groups = '/home/maoss2/PycharmProjects/breast_cancer/improvisations/group_scm_experimentation/group_types/pathway_file_c2_curated_genes.tsv'
-pathway_file_c3_curated_groups = '/home/maoss2/PycharmProjects/breast_cancer/improvisations/group_scm_experimentation/group_types/pathway_file_c3_motif_genes.tsv'
-pathway_file_c4_curated_groups = '/home/maoss2/PycharmProjects/breast_cancer/improvisations/group_scm_experimentation/group_types/pathway_file_c4_computational_genes.tsv'
-pathway_file_c5_curated_groups = '/home/maoss2/PycharmProjects/breast_cancer/improvisations/group_scm_experimentation/group_types/pathway_file_c5_gene_ontology_genes.tsv'
-pathway_file_c6_curated_groups = '/home/maoss2/PycharmProjects/breast_cancer/improvisations/group_scm_experimentation/group_types/pathway_file_c6_oncogenetic_genes.tsv'
-pathway_file_c7_curated_groups = '/home/maoss2/PycharmProjects/breast_cancer/improvisations/group_scm_experimentation/group_types/pathway_file_c7_immunologic_signatures_genes.tsv'
-pathway_file_tcga_groups = '/home/maoss2/PycharmProjects/breast_cancer/improvisations/group_scm_experimentation/group_types/pathway_file_genes_tcga.tsv'
-pathway_file_clusters_groups = '/home/maoss2/PycharmProjects/breast_cancer/improvisations/group_scm_experimentation/group_types/pathway_file_clusters_genes.tsv'
-pathway_file_vant_mat_groups = '/home/maoss2/PycharmProjects/breast_cancer/datasets/pathways.txt'
-pathway_file_random_groups = '/home/maoss2/PycharmProjects/breast_cancer/improvisations/group_scm_experimentation/group_types/pathway_file_random_groups.tsv'
-pathway_file_views_group = '/home/maoss2/PycharmProjects/breast_cancer/improvisations/group_scm_experimentation/group_types/pathway_file_views_groups.tsv'
 
 
 def load_data(data, return_views='all'):
@@ -1142,56 +1095,6 @@ def construction_biogrid_pathway_file(data_path=data_tn_new_label_balanced_cpg_r
 
     with open(output_file_name + '.pck', 'wb') as f:
         pickle.dump(dico_results, f)
-
-
-# # TODO: To be modified and adapted to the new outing: COme back here soon
-# def gen_histogram_results(pattern_to_search='*_unbalanced_*.pck', metric='accuracy', directory='results_analysis',
-#                           results_path='/home/maoss2/PycharmProjects/breast_cancer/experimentations/Results'):
-#     os.chdir('{}'.format(results_path))
-#     assert metric in ['accuracy', 'f1_score', 'precision', 'recall'], 'metric {} is not implemented yet'.format(metric)
-#     noms_fichiers = []
-#     metric_train = []
-#     metric_test = []
-#
-#     for fichier in glob('{}'.format(pattern_to_search)):
-#         noms_fichiers.append(fichier)
-#         f = open(fichier, 'r')
-#         d = pickle.load(f)
-#         if metric == 'accuracy':
-#             metric_train.append(d['train_metrics']['accuracy'])
-#             metric_test.append(d['metrics']['accuracy'])
-#         if metric == 'precision':
-#             metric_train.append(d['train_metrics']['precision'])
-#             metric_test.append(d['metrics']['precision'])
-#         if metric == 'recall':
-#             metric_train.append(d['train_metrics']['recall'])
-#             metric_test.append(d['metrics']['recall'])
-#         if metric == 'f1_score':
-#             metric_train.append(d['train_metrics']['f1_score'])
-#             metric_test.append(d['metrics']['f1_score'])
-#     noms_fichiers = np.asarray(noms_fichiers)
-#     metric_test = np.asarray(metric_test)
-#     metric_train = np.asarray(metric_train)
-#     nbResults = len(metric_train)
-#     figKW = {"figsize": (nbResults, 3.0 / 4 * nbResults + 2.0)}
-#     f, ax = plt.subplots(nrows=1, ncols=1, **figKW)
-#     barWidth = 0.35
-#     sorted_indices = np.argsort(metric_test)
-#     testScores = metric_test[sorted_indices]
-#     trainScores = metric_train[sorted_indices]
-#     names = noms_fichiers[sorted_indices]
-#     ax.set_title(''.format(metric))
-#     rects = ax.bar(range(nbResults), testScores, barWidth, color="r", )
-#     rect2 = ax.bar(np.arange(nbResults) + barWidth, trainScores, barWidth, color="0.7", )
-#     autolabel(rects, ax)
-#     autolabel(rect2, ax)
-#     ax.legend((rects[0], rect2[0]), ('Test', 'Train'))
-#     ax.set_ylim(-0.1, 1.1)
-#     ax.set_xticks(np.arange(nbResults) + barWidth)
-#     ax.set_xticklabels(names, rotation="vertical")
-#     plt.tight_layout()
-#     f.savefig(directory + time.strftime("%Y%m%d-%H%M%S") + '_unbalanced_metric_analysis_{}'.format(metric) + ".png")
-#     plt.close()
 
 
 if __name__ == '__main__':
