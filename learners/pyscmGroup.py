@@ -4,6 +4,7 @@ __author__ = 'maoss2'
 import logging
 import numpy as np
 
+from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils.validation import check_X_y, check_random_state
 from future.utils import iteritems
 
@@ -16,94 +17,29 @@ from pyscm.rules import DecisionStump
 # logging.basicConfig(filename='pyscm_group.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
 
 
-# Dont need the x+ 1 into log no more because by default the new scm is working with features weights of 1
-def log_lambda(x, ld):
-    """
-    Weight function using the log, log(x) / reg
-    Args: x, float, value to be weighted
-         ld: float, reg value
-    Returns:
-        The surponderation value
-    """
-    return (np.log(1 + x) / float(np.log(ld))) + 1
-
-
-def tanh_lambda(x, ld):
-    """
-       Weight function using the tanh, tanh(x) / reg
-       Args: x, float, value to be weighted
-            ld: float, reg value
-       Returns:
-           The surponderation value
-       """
-    return np.tanh(ld * x) + 1
-
-
-def arctan_lambda(x, ld):
-    """
-       Weight function using the arctan
-       Args: x, float, value to be weighted
-            ld: float, reg value
-       Returns:
-           The surponderation value
-       """
-    return ((2 / float(np.pi)) * np.arctan((2 / float(np.pi)) * x * ld)) + 1
-
-
-def abs_lambda(x, ld):
-    """
-       Weight function using the abs
-       Args: x, float, value to be weighted
-            ld: float, reg value
-       Returns:
-           The surponderation value
-       """
-    return (x * ld / float(1 + np.abs(x * ld))) + 1
-
-
-def softmax(x, ld=1.):
-    """
-       Weight function using the lsoftmax
-       Compute softmax values for each sets of scores in x.
-       Args: x, float, value to be weighted
-            ld: float, reg value
-       Returns:
-           The surponderation value
-       """
-    return np.exp(x / ld) / np.sum(np.exp(x / ld), axis=0)
-
-
-def my_tiebreaker(model_indexes, groups_ids, new_indexes_list_, opti_N, opti_P_bar):
-    """
-    A new tiebreaker with a prior on the selected features.
-    Args:
-        model_indexes, list, list of index already selected in the model
-        groups_ids, np.array, list of groups ids
-        new_indexes_list_, list, the new list of indexes to be evaluated
-    Return:
-        index, int,
-    """
-    logging.debug('{} {}'.format(model_indexes, new_indexes_list_))
-    model_indexes_groups_ids = groups_ids[model_indexes]
-    keep_idx = -1
-    for position, idx in enumerate(new_indexes_list_):
-        logging.debug("We enter the tiebreaking on the groups section")
-        if groups_ids[idx] in model_indexes_groups_ids:
-            keep_idx = position
-    if keep_idx == -1:
-        logging.debug("The tiebreaking on the groups cannot be done, Please revert to the default tiebreaking")
-        training_risk_decrease = 1.0 * opti_N - opti_P_bar
-        keep_idx = np.where(training_risk_decrease == training_risk_decrease.max())[0][0]
-    return keep_idx
-
-
-class GroupSetCoveringMachineClassifierClassyVersion(BaseSetCoveringMachine):
+class GroupSetCoveringMachineClassifier(BaseSetCoveringMachine):
     """This version works without features duplication """
-    def __init__(self, p=1.0, model_type="conjunction", max_rules=10, random_state=None):
-        super(GroupSetCoveringMachineClassifierClassyVersion, self).__init__(p=p, model_type=model_type, max_rules=max_rules,
-                                                                             random_state=random_state)
+    def __init__(self, features_to_index, prior_rules, groups, tiebreaker, p=1.0, 
+                 model_type="conjunction", max_rules=10, random_state=None):
+        super(GroupSetCoveringMachineClassifier, self).__init__(p=p, model_type=model_type,
+                                                                max_rules=max_rules, random_state=random_state)
+        """ 
+        Args:
+            features_to_index: a dictionnary with key= idx and value the correspondant features at place idx 
+            prior_rules : The prior or preference on the rules (pre-calculated)
+                default value, p_ri = 1 / |g_i| ou exp ( - |g_i| )
+            groups : g_i \in [1, G]+ is the set of groups associated with the rule r_i, 
+                where G is the total number of groups. 
+                More explicitly each rule can have multiple groups/ pathways
         
-    def fit(self, X, y, features_to_index, prior_rules, groups, tiebreaker=None, iteration_callback=None, **fit_params):
+        """
+        self.features_to_index = features_to_index
+        self.prior_rules = np.asarray(prior_rules)
+        self.groups = groups
+        self.tiebreaker = tiebreaker
+        self.groups_rules = [] # GR
+        
+    def fit(self, X, y, tiebreaker=None, iteration_callback=None, **fit_params):
         """
         Fit a SCM model.
 
@@ -113,12 +49,6 @@ class GroupSetCoveringMachineClassifierClassyVersion(BaseSetCoveringMachine):
             The feature of the input examples.
         y : array-like, shape = [n_samples]
             The labels of the input examples.
-        features_to_index: a dictionnary with key= idx and value the correspondant features at place idx 
-        prior_rules : The prior or preference on the rules (pre-calculated)
-            default value, p_ri = 1 / |g_i| ou exp ( - |g_i| )
-        groups : g_i \in [1, G]+ is the set of groups associated with the rule r_i, 
-            where G is the total number of groups. 
-            More explicitly each rule can have multiple groups/ pathways
         tiebreaker: a function defines by the user, If None, the rule that most
             decreases the training error is selected.
         iteration_callback: function(model)
@@ -181,11 +111,8 @@ class GroupSetCoveringMachineClassifierClassyVersion(BaseSetCoveringMachine):
         logging.debug("Training start")
         remaining_example_idx = np.arange(len(y))
         remaining_negative_example_idx = neg_ex_idx
-        # Start of the algorithm
-        self.features_to_index = features_to_index
-        groups_rules = [] # GR
-        prior_rules = np.asarray(prior_rules)
-        features_weights = prior_rules # Initialization of groups weights 
+        
+        features_weights = self.prior_rules # Initialization of groups weights 
         # Feature_weights is the vector used to multipled the utility function in find_max_utility (update_optimal_solution)
         while len(remaining_negative_example_idx) > 0 and len(self.model_) < self.max_rules:
             iteration_info = {"iteration_number": len(self.model_) + 1}
@@ -200,8 +127,8 @@ class GroupSetCoveringMachineClassifierClassyVersion(BaseSetCoveringMachine):
                                                       y,
                                                       X_argsort_by_feature_T,
                                                       remaining_example_idx.copy(),
-                                                      groups=groups,
-                                                      groups_rules=groups_rules,
+                                                      groups=self.groups,
+                                                      groups_rules=self.groups_rules,
                                                       features_weights=features_weights,
                                                       next_rule_model_idx=self.model_.rules[-1].feature_idx if len(self.model_.rules) != 0 else None, # int or NoneType
                                                       **utility_function_additional_args)
@@ -220,10 +147,13 @@ class GroupSetCoveringMachineClassifierClassyVersion(BaseSetCoveringMachine):
                     training_risk_decrease = 1.0 * opti_N - opti_P_bar
                     keep_idx = np.where(training_risk_decrease == training_risk_decrease.max())[0][0]
                 else: # Tiebreaking using the argmin
-                    list_model_idx = [el.feature_idx for el in self.model_.rules]
-                    rules_to_untie = [self.features_to_index[idx] for idx in list_model_idx]
-                    length_groups_of_rules_to_untie = [len(groups[rule]) for rule in rules_to_untie]
-                    keep_idx = np.argmin(length_groups_of_rules_to_untie)
+                    if len(self.model_.rules) == 0:
+                        keep_idx = 0
+                    else: 
+                        list_model_idx = [el.feature_idx for el in self.model_.rules]
+                        rules_to_untie = [self.features_to_index[idx] for idx in list_model_idx]
+                        length_groups_of_rules_to_untie = [len(self.groups[rule]) for rule in rules_to_untie]
+                        keep_idx = np.argmin(length_groups_of_rules_to_untie)
             else:
                 keep_idx = 0    
             stump = DecisionStump(feature_idx=opti_feat_idx[keep_idx], threshold=opti_threshold[keep_idx],
@@ -252,11 +182,68 @@ class GroupSetCoveringMachineClassifierClassyVersion(BaseSetCoveringMachine):
         else:
             new_rule_choosed = self.features_to_index[next_rule_model_idx] # must give a feature Name
             # UPDATE PR
-            g_i = groups[new_rule_choosed] # list
-            g_i_intersection_groups_rules = len([el for el in g_i if el in groups_rules]) # int
+            g_i = self.groups[new_rule_choosed] # list
+            g_i_intersection_groups_rules = len([el for el in g_i if el in self.groups_rules]) # int
             # REAL UPDATE OPERATION
             features_weights[next_rule_model_idx] *= np.exp(- g_i_intersection_groups_rules)
             # UPDATE GR
-            groups_rules.extend(groups[new_rule_choosed]) # Resultats attendus: [G1, G2, ...]
-            groups_rules = list(np.unique(groups_rules))
+            self.groups_rules.extend(self.groups[new_rule_choosed]) # Resultats attendus: [G1, G2, ...]
+            self.groups_rules = list(np.unique(self.groups_rules))
             return find_max_utility(self.p, X, y, X_argsort_by_feature_T, example_idx, features_weights)
+        
+        
+
+class GroupSCM(BaseEstimator, ClassifierMixin):
+    """
+    A hands on class of GroupSetCoveringMachineClassifier, built with sklearn format in order to use sklearn function on SCM like
+    CV, gridsearch, and so on ...
+    """
+
+    def __init__(self, features_to_index, prior_rules, groups, tiebreaker='', 
+                 model_type='conjunction', p=0.1, max_rules=10, random_state=42):
+        super(GroupSCM, self).__init__()
+        self.model_type = model_type
+        self.p = p
+        self.max_rules = max_rules
+        self.random_state = random_state
+        self.features_to_index = features_to_index
+        self.prior_rules = prior_rules
+        self.groups = groups
+        self.tiebreaker = tiebreaker
+        
+    def fit(self, X, y):
+        self.clf = GroupSetCoveringMachineClassifier(features_to_index=self.features_to_index, 
+                                                    prior_rules=self.prior_rules, 
+                                                    groups=self.groups, 
+                                                    tiebreaker=self.tiebreaker,
+                                                    model_type=self.model_type, 
+                                                    max_rules=self.max_rules, 
+                                                    p=self.p, 
+                                                    random_state=self.random_state)
+        self.clf.fit(X=X, y=y)
+        self.groups_rules = self.clf.groups_rules
+
+    def predict(self, X):
+        return self.clf.predict(X)
+
+    def set_params(self, **params):
+        for key, value in iteritems(params):
+            if key == 'p':
+                self.p = value
+            if key == 'model_type':
+                self.model_type = value
+            if key == 'max_rules':
+                self.max_rules = value
+            if key == 'features_to_index':
+                self.features_to_index = value
+            if key == 'prior_rules':
+                self.prior_rules = value
+            if key == 'groups':
+                self.groups = value
+            if key == 'tiebreaker':
+                self.tiebreaker = value
+        return self
+
+    def get_stats(self):
+        return {"Binary_attributes": self.clf.model_.rules}
+

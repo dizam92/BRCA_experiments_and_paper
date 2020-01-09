@@ -50,7 +50,8 @@ data_tn_old_label_unbalanced_cpg_rna_rna_iso_mirna = data_repository.format('tri
 return_views = ['methyl_rna_iso_mirna', 'methyl_rna_iso_mirna_snp_clinical',
                 'methyl_rna_mirna', 'methyl_rna_mirna_snp_clinical', 'all']
 
-datasets_new_labels = [data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna]
+datasets_new_labels = [data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna] 
+# The only data i am using now is the one with cpg; rna; rnaIso; miRNA; clinical
 
 datasets_old_labels = [data_tn_old_label_unbalanced_cpg_rna_rna_iso_mirna, data_tn_old_label_unbalanced_all_views,
                        data_tn_old_label_balanced_cpg_rna_rna_iso_mirna, data_tn_old_label_balanced_all_views]
@@ -87,6 +88,10 @@ param_max_attributes = np.arange(1, 7, 1)
 parameters_scm = {'SCM__model_type': param_model_type,
                   'SCM__p': param_p,
                   'SCM__max_rules': param_max_attributes
+                  }
+parameters_group_scm = {'model_type': param_model_type,
+                        'p': param_p,
+                        'max_rules': param_max_attributes
                   }
 # While using this the complexity of all the hps to be tested is way off 2592!!!!!! En CV HELL NOOO!
 # That's why i am exploding the RAM memory everytime
