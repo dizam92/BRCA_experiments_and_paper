@@ -99,25 +99,11 @@ def my_tiebreaker(model_indexes, groups_ids, new_indexes_list_, opti_N, opti_P_b
 
 class GroupSetCoveringMachineClassifierClassyVersion(BaseSetCoveringMachine):
     """This version works without features duplication """
-    def __init__(self, p=1.0, reg_lambdas=2, model_type="conjunction", max_rules=10, reg_function_name='log_lambda',
-                 random_state=None):
-        super(GroupSetCoveringMachineClassifierClassyVersion, self).__init__(model_type=model_type, max_rules=max_rules,
+    def __init__(self, p=1.0, model_type="conjunction", max_rules=10, random_state=None):
+        super(GroupSetCoveringMachineClassifierClassyVersion, self).__init__(p=p, model_type=model_type, max_rules=max_rules,
                                                                              random_state=random_state)
-        self.p = p
-        self.reg_lambdas = reg_lambdas
-        self.reg_function_name = reg_function_name
-        if self.reg_function_name == 'log_lambda':
-            self.reg_function = log_lambda
-        elif self.reg_function_name == 'tanh_lambda':
-            self.reg_function = tanh_lambda
-        elif self.reg_function_name == 'arctan_lambda':
-            self.reg_function = arctan_lambda
-        elif self.reg_function_name == 'abs_lambda':
-            self.reg_function = abs_lambda
-        elif self.reg_function_name == 'softmax_lambda':
-            self.reg_function = softmax
-
-    def fit(self, X, y, groups_ids, groups_ids_weights, tiebreaker=None, iteration_callback=None, **fit_params):
+        
+    def fit(self, X, y, features_to_index, prior_rules, groups, tiebreaker=None, iteration_callback=None, **fit_params):
         """
         Fit a SCM model.
 
@@ -127,6 +113,12 @@ class GroupSetCoveringMachineClassifierClassyVersion(BaseSetCoveringMachine):
             The feature of the input examples.
         y : array-like, shape = [n_samples]
             The labels of the input examples.
+        features_to_index: a dictionnary with key= idx and value the correspondant features at place idx 
+        prior_rules : The prior or preference on the rules (pre-calculated)
+            default value, p_ri = 1 / |g_i| ou exp ( - |g_i| )
+        groups : g_i \in [1, G]+ is the set of groups associated with the rule r_i, 
+            where G is the total number of groups. 
+            More explicitly each rule can have multiple groups/ pathways
         tiebreaker: a function defines by the user, If None, the rule that most
             decreases the training error is selected.
         iteration_callback: function(model)
@@ -189,11 +181,15 @@ class GroupSetCoveringMachineClassifierClassyVersion(BaseSetCoveringMachine):
         logging.debug("Training start")
         remaining_example_idx = np.arange(len(y))
         remaining_negative_example_idx = neg_ex_idx
-        groups_ids = np.asarray(groups_ids)
-        features_weights = np.ones((groups_ids.shape[0]))  # Initialization of groups weights
+        # Start of the algorithm
+        self.features_to_index = features_to_index
+        groups_rules = [] # GR
+        prior_rules = np.asarray(prior_rules)
+        features_weights = prior_rules # Initialization of groups weights 
+        # Feature_weights is the vector used to multipled the utility function in find_max_utility (update_optimal_solution)
         while len(remaining_negative_example_idx) > 0 and len(self.model_) < self.max_rules:
-            # iteration_info = {"iteration_number": len(self.model_) + 1}
-            # iteration_info['list_feat_idx_selected'] = []
+            iteration_info = {"iteration_number": len(self.model_) + 1}
+            iteration_info['list_feat_idx_selected'] = []
             logging.debug("Finding the optimal rule to add to the model")
             opti_utility, \
             opti_feat_idx, \
@@ -204,38 +200,32 @@ class GroupSetCoveringMachineClassifierClassyVersion(BaseSetCoveringMachine):
                                                       y,
                                                       X_argsort_by_feature_T,
                                                       remaining_example_idx.copy(),
-                                                      groups_ids=groups_ids,
-                                                      groups_ids_weights=groups_ids_weights,
+                                                      groups=groups,
+                                                      groups_rules=groups_rules,
                                                       features_weights=features_weights,
-                                                      model_attributes_idx=[el.feature_idx for el in self.model_.rules],
+                                                      next_rule_model_idx=self.model_.rules[-1].feature_idx if len(self.model_.rules) != 0 else None, # int or NoneType
                                                       **utility_function_additional_args)
-            # iteration_info["utility_max"] = opti_utility
-            # iteration_info["utility_argmax"] = opti_feat_idx
-            # logging.debug("Greatest utility is %.5f" % iteration_info["utility_max"])
-            # logging.debug("There are %d rules with the same utility." % len(iteration_info["utility_argmax"]))
-            # # Do not select rules that cover no negative examples and make errors on no positive examples
-            # best_utility_idx = iteration_info["utility_argmax"][
-            #     np.logical_or(opti_N != 0, opti_P_bar != 0)]
-            # iteration_info['best_utility_idx'] = best_utility_idx
+            iteration_info["utility_max"] = opti_utility
+            iteration_info["utility_argmax"] = opti_feat_idx
+            logging.debug("Greatest utility is %.5f" % iteration_info["utility_max"])
+            logging.debug("There are %d rules with the same utility." % len(iteration_info["utility_argmax"]))
+            # Do not select rules that cover no negative examples and make errors on no positive examples
+            best_utility_idx = iteration_info["utility_argmax"][
+                np.logical_or(opti_N != 0, opti_P_bar != 0)]
+            iteration_info['best_utility_idx'] = best_utility_idx
             logging.debug("Tiebreaking. Found %d optimal rules" % len(opti_feat_idx))
-            if tiebreaker is None:
-                if len(opti_feat_idx) > 1:
-                    trainig_risk_decrease = 1.0 * opti_N - opti_P_bar
-                    keep_idx = np.where(trainig_risk_decrease == trainig_risk_decrease.max())[0][0]
-                else:
-                    keep_idx = 0
-            else:
-                if len(opti_feat_idx) > 1:
+            # Let's use the default tiebreaker first
+            if len(opti_feat_idx) > 1:
+                if tiebreaker is None:
+                    training_risk_decrease = 1.0 * opti_N - opti_P_bar
+                    keep_idx = np.where(training_risk_decrease == training_risk_decrease.max())[0][0]
+                else: # Tiebreaking using the argmin
                     list_model_idx = [el.feature_idx for el in self.model_.rules]
-                    if list_model_idx == []:
-                        keep_idx = 0
-                    else:
-                        keep_idx = tiebreaker(list_model_idx,
-                                              groups_ids, opti_feat_idx, opti_N, opti_P_bar)
-                        # the tiebreaker must return an index
-                else:
-                    keep_idx = 0
-
+                    rules_to_untie = [self.features_to_index[idx] for idx in list_model_idx]
+                    length_groups_of_rules_to_untie = [len(groups[rule]) for rule in rules_to_untie]
+                    keep_idx = np.argmin(length_groups_of_rules_to_untie)
+            else:
+                keep_idx = 0    
             stump = DecisionStump(feature_idx=opti_feat_idx[keep_idx], threshold=opti_threshold[keep_idx],
                                   kind="greater" if opti_kind[keep_idx] == 0 else "less_equal")
 
@@ -255,28 +245,18 @@ class GroupSetCoveringMachineClassifierClassyVersion(BaseSetCoveringMachine):
         self.rule_importances_ = []  # TODO: implement rule importances (like its done in Kover)
 
         return self
-
-    def _get_best_utility_rules(self, X, y, X_argsort_by_feature_T, example_idx, groups_ids, groups_ids_weights,
-                                features_weights,  model_attributes_idx):
-        if len(model_attributes_idx) == 0:
-            return find_max_utility(self.p, X, y, X_argsort_by_feature_T, example_idx,
-                                    self.reg_function(x=features_weights, ld=self.reg_lambdas))
+    
+    def _get_best_utility_rules(self, X, y, X_argsort_by_feature_T, example_idx, groups, groups_rules, features_weights,  next_rule_model_idx):
+        if next_rule_model_idx is None:
+            return find_max_utility(self.p, X, y, X_argsort_by_feature_T, example_idx, features_weights)
         else:
-            regle_groups_id = groups_ids[model_attributes_idx]
-            regle_groups_id = np.asarray([item for sublist in regle_groups_id for item in sublist])  # flatten the list
-            regles_ids, nb_count = np.unique(regle_groups_id, return_counts=True)
-            for idx_in_regles_ids, ids_in_regles_ids in enumerate(regles_ids):
-                idx_positions_list = []
-                idx_positions_list_weights = []
-                for idx, el_in_groups_id in enumerate(groups_ids):
-                    if len(np.where(el_in_groups_id == ids_in_regles_ids)[0]) != 0:
-                        idx_positions_list.append(idx)
-                        idx_positions_list_weights.append(groups_ids_weights[idx])  # recuperer les poids de chacun des groupes
-                # features_weights[idx_positions_list] += 1.  # on repondère en ajoutant + 1 à chaque fois
-                # features_weights[idx_positions_list] += idx_positions_list_weights
-                # Essai pour sous-pondérer les poids
-                features_weights[idx_positions_list] -= idx_positions_list_weights
-                # on repondère en ajoutant la valeur précalculée de la taille pour repondérer le groupe
-            return find_max_utility(self.p, X, y, X_argsort_by_feature_T, example_idx,
-                                    self.reg_function(x=features_weights, ld=self.reg_lambdas))
-
+            new_rule_choosed = self.features_to_index[next_rule_model_idx] # must give a feature Name
+            # UPDATE PR
+            g_i = groups[new_rule_choosed] # list
+            g_i_intersection_groups_rules = len([el for el in g_i if el in groups_rules]) # int
+            # REAL UPDATE OPERATION
+            features_weights[next_rule_model_idx] *= np.exp(- g_i_intersection_groups_rules)
+            # UPDATE GR
+            groups_rules.extend(groups[new_rule_choosed]) # Resultats attendus: [G1, G2, ...]
+            groups_rules = list(np.unique(groups_rules))
+            return find_max_utility(self.p, X, y, X_argsort_by_feature_T, example_idx, features_weights)

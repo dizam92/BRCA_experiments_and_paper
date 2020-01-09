@@ -252,7 +252,7 @@ class LearnFromBiogridGroup(GenericGroupScmTcga):
                                             if el in pathway_data_features_name_unique]
         self.features_names = self.features_names[features_names_index_to_selected]
         self.X = self.X[:, features_names_index_to_selected]
-
+        # TODO: REVIEW THIS ONE
         self.groups_ids = [[] for _ in range(len(self.features_names))]
         self.groups_ids_weights = [[] for _ in range(len(self.features_names))]
         # To create a list of list structure that will manage the overlapping groups status

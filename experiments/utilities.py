@@ -1043,9 +1043,9 @@ def build_dictionnary_groups(data_path=data_tn_new_label_balanced_cpg_rna_rna_is
     # noeud + et toutes leurs interactions; 
     # el[0] is always the node and list(el[1].keys()) the genes whose are interacting with the node
     biogrid_pathways = [list(el[1].keys()) + [el[0]] for el in adjacency_matrix] # Obtention des pathways de biogrids
-    biogrid_pathways.append(['miRNA']) # biogrid_pathways[20170]
-    biogrid_pathways.append(['clinical View']) # biogrid_pathways[20171]
-    biogrid_pathways.append(['INEXISTANT PATHWAYS KNOWN']) # biogrid_pathways[20172]
+    biogrid_pathways.append('miRNA') # biogrid_pathways[20170]
+    biogrid_pathways.append('clinical View') # biogrid_pathways[20171]
+    biogrid_pathways.append('unknown') # biogrid_pathways[20172]
     # Biogrids rank from 1 to 20170 + 3: pathways
     for feature in features_names:
         if feature.find('_') != -1:
@@ -1053,8 +1053,6 @@ def build_dictionnary_groups(data_path=data_tn_new_label_balanced_cpg_rna_rna_is
             # use the [-1] access
             split_results = feature.split('_')
             gene_cible = split_results[-1]
-            if gene_cible == 'INEXISTANT': # SI on a pas pu le classifier direct on le met dnas le group inexistant
-                dico_results[feature].append(biogrid_pathways[20172])
             if gene_cible.find(';'): # Cas ou on a un feature lié à 2 ou plus genes (surtout pour les cpg)
                 gene_cibles = gene_cible.split(';')
                 for gene in gene_cibles: # Recupere chaque gene et on remplit le dico
@@ -1075,7 +1073,9 @@ def build_dictionnary_groups(data_path=data_tn_new_label_balanced_cpg_rna_rna_is
             dico_results[feature].append(biogrid_pathways[20170])
         else:
             dico_results[feature].append(biogrid_pathways[20171])
-    
+    for cle, valeur in dico_results.items():
+        if valeur == []:
+            dico_results[cle].append(biogrid_pathways[20172])
     with open('biogrid_pathways_list.pck', 'wb') as f:
         pickle.dump(biogrid_pathways, f)
     with open(output_file_name + '.pck', 'wb') as f:
