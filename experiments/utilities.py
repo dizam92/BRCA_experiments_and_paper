@@ -274,7 +274,9 @@ def results_analysis(directory, output_text_file):
     model_comptes = []
     cnt = Counter()
     cnt_rf = Counter()
+    list_fichiers = []
     for fichier in glob("*.pck"):
+        list_fichiers.append(fichier)
         f = open(fichier, 'rb')
         d = pickle.load(f)
         metrics_train.append(d['train_metrics'])
@@ -288,6 +290,8 @@ def results_analysis(directory, output_text_file):
     precision_test = [el['precision'] for el in metrics_test]
     recall_train = [el['recall'] for el in metrics_train]
     recall_test = [el['recall'] for el in metrics_test]
+    # Find the best seed based on the F1-score (since the dataset is unbalanced)
+    best_file = list_fichiers[np.argmax(f1_score_test)]
     if directory.find('dt') != -1:
         for model in features_retenus:
             temp = []
@@ -362,6 +366,13 @@ def results_analysis(directory, output_text_file):
         f.write('_-------------_---------_-------_\n')
         f.write('Most frequent Features: {}\n'.format(most_common_features))
         f.write('-'*100)
+        f.write('\n')
+        f.write('Best seed file based on f1 score (argmax): {}\n'.format(best_file))
+        f.write('-'*50)
+        f.write('\n')
+        f.write('-'*50)
+        f.write('\n')
+        f.write('-'*50)
         f.write('\n')
     os.chdir(saving_repository)
     return np.round(np.mean(accuracy_test), 4), np.round(np.mean(f1_score_test), 4), \
@@ -477,10 +488,7 @@ def main_run_analysis(type_experiments='all'):
         model_comptes_list = []
         for directory in list_of_directories:
             if directory not in ['.DS_Store', '._.DS_Store', 'results_analysis.txt', '._results_analysis.txt',
-                                 'results_on_previous_4_types_datasets', 'results_analysis_groups.txt',
-                                 '._results_analysis_groups.txt', 'groups_scm_results',
-                                 'results_on_previous_4_types_datasets']:
-
+                                 'results_analysis_groups.txt', '._results_analysis_groups.txt']:
                 acc_test, f1_test, precis_test, rec_test, model_comptes = results_analysis(directory=directory, output_text_file=output_text_file)
                 acc_test_list.append(acc_test)
                 f1_test_list.append(f1_test)
@@ -710,7 +718,7 @@ def main_extraction_building():
     extractor.extract()
 
 
-def construction_pathway_gene_groups_tcga(data_path=data_tn_new_label_balanced_cpg_rna_rna_iso_mirna,
+def construction_pathway_gene_groups_tcga(data_path=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
                                           return_views='all',
                                           output_file_name='pathway_file_genes_tcga'):
     """

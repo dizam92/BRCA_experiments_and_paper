@@ -18,7 +18,7 @@ cv_fold = KFold(n_splits=5, random_state=42)
 
 class LearnTN(object):
     def __init__(self, parameters, learner, saving_dict, balanced_weights, saving_file="", rs=42, nb_jobs=nb_jobs,
-                 cv=cv_fold, data_path=data_tn_new_label_balanced_cpg_rna_rna_iso_mirna, return_views='all'):
+                 cv=cv_fold, data_path=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna, return_views='all'):
         """
         Learning Class to learn experiment on TN dataset
         Args:

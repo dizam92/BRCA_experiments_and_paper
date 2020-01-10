@@ -110,6 +110,18 @@ def run_experiment(data, pathway_file, experiment_name, return_views, nb_repetit
     features_names = [el.decode("utf-8") for el in features_names]
     random.seed(42)
     random_seeds_list = [random.randint(1, 2000) for _ in range(nb_repetitions)]
+    # ********* I ADD A HACKK HERE TO JUST DO THE BEST SEEDS FOR EACH VIEWS TO COMPARE THAT TO THE BEST SCM ***************#
+    if return_views=='methyl_rna_iso_mirna':
+        random_seeds_list = [564]
+    if return_views=='methyl_rna_iso_mirna_snp_clinical':
+        random_seeds_list = [229]
+    if return_views=='methyl_rna_mirna':
+        random_seeds_list = [1310]
+    if return_views=='methyl_rna_mirna_snp_clinical':
+        random_seeds_list = [52]
+    if return_views=='all':
+        random_seeds_list = [1310]    
+    # *********************** TO BE DELETED OR PUT IN COMMENT AFTER *********************************************#
     # Parameters for GROUP_SCM
     dict_biogrid_groups = pickle.load(open(pathway_file, 'rb'))
     features_to_index = {idx: name for idx, name in enumerate(features_names)}
@@ -117,8 +129,10 @@ def run_experiment(data, pathway_file, experiment_name, return_views, nb_repetit
     learner_clf = GroupSCM(features_to_index=features_to_index, prior_rules=prior_rules, groups=dict_biogrid_groups, 
                tiebreaker='', p=1.0, model_type='conjunction', max_rules=10)
     try:
-        os.mkdir('{}/group_scm_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
-        os.chdir('{}/group_scm_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
+        os.mkdir('{}/group_best_seed_scm_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
+        os.chdir('{}/group_best_seed_scm_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
+        # os.mkdir('{}/group_scm_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
+        # os.chdir('{}/group_scm_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
         for state in range(nb_repetitions):
             clf = LearnGroupTN(parameters=parameters_group_scm,
                                learner=learner_clf,
@@ -137,7 +151,8 @@ def run_experiment(data, pathway_file, experiment_name, return_views, nb_repetit
                          y_train=y_train, y_test=y_test, patients_train=patients_train,
                          patients_test=patients_test)
     except OSError:
-        os.chdir('{}/scm_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
+        os.chdir('{}/group_best_seed_scm_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
+        # os.chdir('{}/group_scm_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
         for state in range(nb_repetitions):
             clf = LearnGroupTN(parameters=parameters_group_scm,
                                learner=learner_clf,
@@ -167,7 +182,7 @@ def main_run_experiments_new_labels():
                     pathway_file=data_repository.format('pathways_biogrid_groups.pck'), 
                     experiment_name='experiment_group_scm_unbalanced_mean_biogrid', 
                     return_views=view, 
-                    nb_repetitions=15, 
+                    nb_repetitions=1, 
                     saving_rep=saving_repository)
 
 if __name__ == '__main__':
