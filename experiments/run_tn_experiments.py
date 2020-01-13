@@ -478,35 +478,47 @@ def run_experiment(return_views, nb_repetitions, data=data_tn_new_label_unbalanc
 #                         saving_rep=saving_repository)
 
 
-@click.command(help="Train models")
-@click.option('--config_file', '-p', 
-              help="Path to the config file (json) that contains the parameters for the experiment.")
-# @click.option('--output_path', '-o', default=None,
-#               help="Location for saving the training results (model artifacts and output files).")
-def main(config_file):
-    try:
-        # Read config_file
-        with open(config_file, 'r') as tc:
-            train_params = json.load(tc)
-            # if output_path is not None:
-            #     os.makedirs(output_path, exist_ok=True)
+# @click.command(help="Train models")
+# @click.option('--config_file', '-p', 
+#               help="Path to the config file (json) that contains the parameters for the experiment.")
+# # @click.option('--output_path', '-o', default=None,
+# #               help="Location for saving the training results (model artifacts and output files).")
+# def main(config_file):
+#     try:
+#         # Read config_file
+#         with open(config_file, 'r') as tc:
+#             train_params = json.load(tc)
+#             # if output_path is not None:
+#             #     os.makedirs(output_path, exist_ok=True)
 
-        print('Params for this experiement')
-        print(train_params)
-        print()
+#         print('Params for this experiement')
+#         print(train_params)
+#         print()
 
-        print('Starting the training.')
-        run_experiment(**train_params)
+#         print('Starting the training.')
+#         run_experiment(**train_params)
 
-    except Exception as e:
-        trc = traceback.format_exc()
-        # Printing this causes the exception to be in the training job logs, as well.
-        print('Exception during training: ' +
-              str(e) + '\n' + trc, file=sys.stderr)
-        # A non-zero exit code causes the training job to be marked as Failed.
-        sys.exit(255)
+#     except Exception as e:
+#         trc = traceback.format_exc()
+#         # Printing this causes the exception to be in the training job logs, as well.
+#         print('Exception during training: ' +
+#               str(e) + '\n' + trc, file=sys.stderr)
+#         # A non-zero exit code causes the training job to be marked as Failed.
+#         sys.exit(255)
 
-
+def main():
+    parser = argparse.ArgumentParser(description="Learn TN Experiment")
+    parser.add_argument('-rt', '--return_views', type=str, default="all")
+    parser.add_argument('-nb_r', '--nb_repetitions', type=int, default=1)
+    parser.add_argument('-data', '--data', type=str, default=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna)
+    parser.add_argument('-exp_name', '--experiment_name', type=str, default="experiment_tn_new_label_unbalanced")
+    parser.add_argument('-o', '--saving_rep', type=str, default=saving_repository)
+    args = parser.parse_args()
+    run_experiment(data=args.data,
+                experiment_name=args.experiment_name,
+                return_views=args.return_views,
+                nb_repetitions=args.nb_repetitions,
+                saving_rep=args.saving_rep)
     
 
 if __name__ == '__main__':
