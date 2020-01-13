@@ -9,7 +9,7 @@ EXPERIMENTS_PATH = os.environ.get('experiments', join(dirname(abspath(__file__))
 PROJECT_ROOT = dirname(abspath(__file__))
 
 def launch_slurm_experiment(return_views, nb_repetitions, experiment_file, experiment_name, time, dispatch_path):
-    exp_file = join(dispatch_path, f"{return_views}__" + "__".join(experiment_name) + "__".join(nb_repetitions))
+    exp_file = join(dispatch_path, f"{return_views}" + f"{experiment_name}" + f"{nb_repetitions}")
                         
     submission_script = ""
     submission_script += f"#!/bin/bash\n"
