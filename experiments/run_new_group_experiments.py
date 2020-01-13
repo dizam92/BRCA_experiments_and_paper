@@ -6,6 +6,10 @@ from learners.pyscmGroup import GroupSCM
 from sklearn.model_selection import train_test_split, GridSearchCV, KFold
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import confusion_matrix
+import argparse
+from functools import partial
+import multiprocessing
+from multiprocessing import Pool
 import logging
 logging.getLogger('parso.python.diff').disabled = True
 logging.basicConfig(level=logging.INFO)
@@ -184,6 +188,9 @@ def main_run_experiments_new_labels():
                     return_views=view, 
                     nb_repetitions=1, 
                     saving_rep=saving_repository)
+
+def main():
+    print()
 
 if __name__ == '__main__':
     main_run_experiments_new_labels()

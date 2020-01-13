@@ -35,6 +35,7 @@ c5_pickle_dictionary = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/
 list_dict = [c2_pickle_dictionary, c5_pickle_dictionary]
 
 saving_repository = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/saving_repository'
+saving_repository_comparison_folder = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/saving_repository/comparison_folder'
 data_repository = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/{}'
 data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna = data_repository.format('triple_neg_new_labels_unbalanced_cpg_rna_rna_iso_mirna.h5')
 
@@ -374,7 +375,8 @@ def results_analysis(directory, output_text_file):
         f.write('\n')
         f.write('-'*50)
         f.write('\n')
-    os.chdir(saving_repository)
+    # os.chdir(saving_repository)
+    os.chdir(saving_repository_comparison_folder)
     return np.round(np.mean(accuracy_test), 4), np.round(np.mean(f1_score_test), 4), \
            np.round(np.mean(precision_test), 4), np.round(np.mean(recall_test), 4), model_comptes
 
@@ -477,7 +479,7 @@ def main_run_analysis(type_experiments='all'):
     Args:
         type_experiments, str, in ['all', 'rf', 'dt', 'scm'], which type of experiments
     """
-    assert type_experiments in ['all', 'rf', 'dt', 'scm'], 'Wrong experiment'
+    assert type_experiments in ['all', 'rf', 'dt', 'scm', 'group_scm', 'group_best_seed_scm', 'comparison'], 'Wrong experiment'
     list_of_directories = os.listdir('./')
     output_text_file = saving_repository + '/results_analysis.txt'
     if type_experiments == 'all':
@@ -540,6 +542,54 @@ def main_run_analysis(type_experiments='all'):
                 precis_test_list.append(precis_test)
                 rec_test_list.append(rec_test)
                 model_comptes_list.append(model_comptes)
+    if type_experiments == 'group_scm':
+        acc_test_list = []
+        f1_test_list = []
+        precis_test_list = []
+        rec_test_list = []
+        model_comptes_list = []
+        for directory in list_of_directories:
+            if directory.startswith('group_scm'):
+                acc_test, f1_test, precis_test, rec_test, model_comptes = results_analysis(directory=directory,
+                                                                                           output_text_file=output_text_file)
+                acc_test_list.append(acc_test)
+                f1_test_list.append(f1_test)
+                precis_test_list.append(precis_test)
+                rec_test_list.append(rec_test)
+                model_comptes_list.append(model_comptes)
+    if type_experiments == 'group_best_seed_scm':
+        acc_test_list = []
+        f1_test_list = []
+        precis_test_list = []
+        rec_test_list = []
+        model_comptes_list = []
+        for directory in list_of_directories:
+            if directory.startswith('group_best_seed_scm'):
+                acc_test, f1_test, precis_test, rec_test, model_comptes = results_analysis(directory=directory,
+                                                                                           output_text_file=output_text_file)
+                acc_test_list.append(acc_test)
+                f1_test_list.append(f1_test)
+                precis_test_list.append(precis_test)
+                rec_test_list.append(rec_test)
+                model_comptes_list.append(model_comptes)
+    if type_experiments == 'comparison':
+        acc_test_list = []
+        f1_test_list = []
+        precis_test_list = []
+        rec_test_list = []
+        model_comptes_list = []
+        directory = 'comparison_folder'
+        os.chdir('{}'.format(directory))
+        list_of_directories = os.listdir('./')
+        for directory in list_of_directories:
+            if directory not in ['._.DS_Store', '.DS_Store']:
+                acc_test, f1_test, precis_test, rec_test, model_comptes = results_analysis(directory=directory,
+                                                                                            output_text_file=output_text_file)
+                acc_test_list.append(acc_test)
+                f1_test_list.append(f1_test)
+                precis_test_list.append(precis_test)
+                rec_test_list.append(rec_test)
+                model_comptes_list.append(model_comptes)           
     with open(output_text_file, 'a+') as f:
         f.write('-' * 50)
         f.write('\n')

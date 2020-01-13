@@ -9,6 +9,15 @@ from sklearn.model_selection import train_test_split, GridSearchCV, KFold
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import confusion_matrix
 import logging
+import click
+import time
+import json
+import hashlib
+import subprocess
+import argparse
+import sys
+import traceback
+from pathlib import Path
 logging.getLogger('parso.python.diff').disabled = True
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -303,7 +312,8 @@ class LearnTN(object):
             pickle.dump(self.saving_dict, f)
 
 
-def run_experiment(data, experiment_name, return_views, nb_repetitions, saving_rep=saving_repository):
+def run_experiment(return_views, nb_repetitions, data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna, 
+                   experiment_name='experiment_tn_new_label_unbalanced', saving_rep=saving_repository):
     """
     Utility function to run experiment on specific data and with specific wiew. To be called in a loop in a main
     Args:
@@ -456,15 +466,49 @@ def run_experiment(data, experiment_name, return_views, nb_repetitions, saving_r
                          patients_test=patients_test)
     os.chdir('/home/maoss2/')
 
-def main_run_experiments_new_labels():
-    for view in return_views:
-        logger.info('experiment_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna')
-        logger.info('--------------------------------------------------------')
-        run_experiment(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
-                        experiment_name='experiment_tn_new_label_unbalanced',
-                        return_views=view,
-                        nb_repetitions=15,
-                        saving_rep=saving_repository)
+
+# def main_run_experiments_new_labels():
+#     for view in return_views:
+#         logger.info('experiment_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna')
+#         logger.info('--------------------------------------------------------')
+#         run_experiment(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
+#                         experiment_name='experiment_tn_new_label_unbalanced',
+#                         return_views=view,
+#                         nb_repetitions=15,
+#                         saving_rep=saving_repository)
+
+
+@click.command(help="Train models")
+@click.option('--config_file', '-p', 
+              help="Path to the config file (json) that contains the parameters for the experiment.")
+# @click.option('--output_path', '-o', default=None,
+#               help="Location for saving the training results (model artifacts and output files).")
+def main(config_file):
+    try:
+        # Read config_file
+        with open(config_file, 'r') as tc:
+            train_params = json.load(tc)
+            # if output_path is not None:
+            #     os.makedirs(output_path, exist_ok=True)
+
+        print('Params for this experiement')
+        print(train_params)
+        print()
+
+        print('Starting the training.')
+        run_experiment(**train_params)
+
+    except Exception as e:
+        trc = traceback.format_exc()
+        # Printing this causes the exception to be in the training job logs, as well.
+        print('Exception during training: ' +
+              str(e) + '\n' + trc, file=sys.stderr)
+        # A non-zero exit code causes the training job to be marked as Failed.
+        sys.exit(255)
+
+
+    
 
 if __name__ == '__main__':
-    main_run_experiments_new_labels()
+    main()
+    # main_run_experiments_new_labels()

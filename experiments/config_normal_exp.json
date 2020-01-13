@@ -1,0 +1,6 @@
+{
+  "return_views": ['methyl_rna_iso_mirna', 'methyl_rna_iso_mirna_snp_clinical','methyl_rna_mirna', 
+    'methyl_rna_mirna_snp_clinical', 'all'],
+  "nb_repetitions": [15],
+  
+}
