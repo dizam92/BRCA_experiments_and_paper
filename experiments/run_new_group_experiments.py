@@ -94,11 +94,20 @@ class LearnGroupTN(object):
         with open(self.saving_file, 'wb') as f:
             pickle.dump(self.saving_dict, f)
 
-def run_experiment(data, pathway_file, experiment_name, return_views, nb_repetitions, saving_rep=saving_repository):
+def run_experiment(return_views, pathway_file, nb_repetitions, update_method='neg_exp', prior_initialization_type='exp', 
+                   data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,  
+                   experiment_name='experiment_group_scm', saving_rep=saving_repository):
     """
     Utility function to run experiment on specific data and with specific wiew. To be called in a loop in a main
     Args:
         data: str, data path
+        update_method: str, name of the method to update the prioRules in the GroupSCM model
+                'neg_exp': p_ri = p_ri * exp( - | g_i  GR | )  update 1
+                'pos_exp': p_ri = p_ri * exp( + | g_i  GR | )  update 2
+                'neg_exp_group': p_ri = exp ( - |g_i| ) * exp( - | g_i  GR | )  update 3
+                'pos_exp_group': p_ri = exp ( - |g_i| ) * exp( + | g_i  GR | )  update 4
+        prior_initialization_type: str, type of initialization of the prior ['exp', 'normal', 'default'] 
+                                'exp': exp ( - |g_i| ); 'normal': 1 / |g_i|; 'default': 1
         pathway_file: str, path to the file containing information on the pathways
         experiment_name: str, experiment name for saving file
         return_views: str, which view to run experiment on
@@ -114,24 +123,37 @@ def run_experiment(data, pathway_file, experiment_name, return_views, nb_repetit
     features_names = [el.decode("utf-8") for el in features_names]
     random.seed(42)
     random_seeds_list = [random.randint(1, 2000) for _ in range(nb_repetitions)]
-    # ********* I ADD A HACKK HERE TO JUST DO THE BEST SEEDS FOR EACH VIEWS TO COMPARE THAT TO THE BEST SCM ***************#
-    if return_views=='methyl_rna_iso_mirna':
-        random_seeds_list = [564]
-    if return_views=='methyl_rna_iso_mirna_snp_clinical':
-        random_seeds_list = [229]
-    if return_views=='methyl_rna_mirna':
-        random_seeds_list = [1310]
-    if return_views=='methyl_rna_mirna_snp_clinical':
-        random_seeds_list = [52]
-    if return_views=='all':
-        random_seeds_list = [1310]    
-    # *********************** TO BE DELETED OR PUT IN COMMENT AFTER *********************************************#
+    # # ********* I ADD A HACKK HERE TO JUST DO THE BEST SEEDS FOR EACH VIEWS TO COMPARE THAT TO THE BEST SCM ***************#
+    # if return_views=='methyl_rna_iso_mirna':
+    #     random_seeds_list = [564]
+    # if return_views=='methyl_rna_iso_mirna_snp_clinical':
+    #     random_seeds_list = [229]
+    # if return_views=='methyl_rna_mirna':
+    #     random_seeds_list = [1310]
+    # if return_views=='methyl_rna_mirna_snp_clinical':
+    #     random_seeds_list = [52]
+    # if return_views=='all':
+    #     random_seeds_list = [1310]    
+    # # *********************** TO BE DELETED OR PUT IN COMMENT AFTER *********************************************#
     # Parameters for GROUP_SCM
     dict_biogrid_groups = pickle.load(open(pathway_file, 'rb'))
     features_to_index = {idx: name for idx, name in enumerate(features_names)}
-    prior_rules = [np.exp(- len(dict_biogrid_groups[name])) for name in features_names]
-    learner_clf = GroupSCM(features_to_index=features_to_index, prior_rules=prior_rules, groups=dict_biogrid_groups, 
-               tiebreaker='', p=1.0, model_type='conjunction', max_rules=10)
+    if prior_initialization_type == 'exp':
+        prior_rules = [np.exp(- len(dict_biogrid_groups[name])) for name in features_names]
+    elif prior_initialization_type == 'normal':
+        prior_rules = [1 / len(dict_biogrid_groups[name]) for name in features_names]
+    elif prior_initialization_type == 'default':
+        prior_rules = [1. for name in features_names]
+    else:
+        raise ValueError (f"{prior_initialization_type} must be a str and in ['exp', 'normal', 'default']")
+    learner_clf = GroupSCM(features_to_index=features_to_index, 
+                           prior_rules=prior_rules, 
+                           update_method=update_method,
+                           groups=dict_biogrid_groups,
+                           tiebreaker='', 
+                           p=1.0, 
+                           model_type='conjunction', 
+                           max_rules=10)
     try:
         os.mkdir('{}/group_best_seed_scm_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
         os.chdir('{}/group_best_seed_scm_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
@@ -190,7 +212,25 @@ def main_run_experiments_new_labels():
                     saving_rep=saving_repository)
 
 def main():
-    print()
+    parser = argparse.ArgumentParser(description="Learn Group TN Experiment")
+    parser.add_argument('-rt', '--return_views', type=str, default="all")
+    parser.add_argument('-nb_r', '--nb_repetitions', type=int, default=1)
+    parser.add_argument('-g_dict', '--groups_dict', type=str, default=f"{data_repository}/pathways_biogrid_groups.pck")
+    parser.add_argument('-u_m', '--update_method', type=str, default="neg_exp")
+    parser.add_argument('-init', '--prior_initialization_type', type=str, default="exp")
+    parser.add_argument('-data', '--data', type=str, default=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna)
+    parser.add_argument('-exp_name', '--experiment_name', type=str, default="experiment_group_scm")
+    parser.add_argument('-o', '--saving_rep', type=str, default=saving_repository)
+    args = parser.parse_args()
+    run_experiment(return_views=args.return_views, 
+                   pathway_file=args.groups_dict, 
+                   nb_repetitions=args.nb_repetitions,
+                   update_method=args.update_method, 
+                   prior_initialization_type=args.prior_initialization_type, 
+                   data=args.data,  
+                   experiment_name=args.experiment_name, 
+                   saving_rep=args.saving_rep)    
 
 if __name__ == '__main__':
-    main_run_experiments_new_labels()
+    main()
+    # main_run_experiments_new_labels()
