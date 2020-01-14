@@ -160,10 +160,11 @@ def run_experiment(return_views, pathway_file, nb_repetitions, update_method='ne
     if not exists(results_repertory): makedirs(results_repertory)
     os.chdir(f"{results_repertory}")
     existing_files_list = [fichier for fichier in glob('*.pck')]
+    seeds_already_done = None
     if len(existing_files_list) != 0:
         seeds_already_done = [int(f.split('_')[-1].split('.')[0]) for f in existing_files_list]
     for state in range(nb_repetitions):
-        if random_seeds_list[state] in seeds_already_done: continue
+        if seeds_already_done is not None and random_seeds_list[state] in seeds_already_done: continue
         clf = LearnGroupTN(parameters=parameters_group_scm,
                             learner=learner_clf,
                             saving_dict=saving_dict_scm,

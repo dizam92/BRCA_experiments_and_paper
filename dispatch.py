@@ -66,7 +66,7 @@ def launch_slurm_experiment_group(return_views, nb_repetitions, pathway_file, up
     with open(submission_path, 'w') as out_file:
         out_file.write(submission_script)
         
-    # call(["sbatch", submission_path])
+    call(["sbatch", submission_path])
     
 def main_group():
     return_views = ['methyl_rna_iso_mirna', 'methyl_rna_iso_mirna_snp_clinical',
@@ -78,14 +78,14 @@ def main_group():
     dispatch_path = join(RESULTS_PATH, "dispatch")
     if not exists(dispatch_path): makedirs(dispatch_path)
     for pathway_dict in dictionaries_paths:
-        name_pathway_file = pathway_dict.split('/')[-1]
+        name_pathway_file = pathway_dict.split('/')[-1].split('.')[0]
         print(f"Launching {pathway_dict}")
         for init_and_update_method in prior_init_and_update_method:
             print(f"Launching {init_and_update_method}")
             for view in return_views:
                 print(f"Launching {view}")
                 nb_repetitions = 5
-                exp_name = f"group_scm_{return_views}__" + f"{name_pathway_file}__" + f"{init_and_update_method[0]}__" + f"{init_and_update_method[1]}__" + f"{nb_repetitions}"
+                exp_name = f"{view}__group_scm__" + f"{name_pathway_file}__" + f"{init_and_update_method[0]}__" + f"{init_and_update_method[1]}__" + f"{nb_repetitions}"
                 launch_slurm_experiment_group(return_views=view, 
                                             nb_repetitions=nb_repetitions, 
                                             pathway_file=pathway_dict, 
