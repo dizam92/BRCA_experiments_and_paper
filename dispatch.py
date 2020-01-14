@@ -6,7 +6,7 @@ import datetime
 print(__file__)
 RESULTS_PATH = os.environ.get('', join(dirname(abspath(__file__)), "saving_repository"))
 EXPERIMENTS_PATH = os.environ.get('', join(dirname(abspath(__file__)), "experiments"))
-DATAREPOSITORY_PATH = os.environ.get('', join(dirname(abspath(__file__)), "datasets/data_repository"))
+DATAREPOSITORY_PATH = os.environ.get('', join(dirname(abspath(__file__)), "datasets/datasets_repository"))
 PROJECT_ROOT = dirname(abspath(__file__))
 
 def launch_slurm_experiment(return_views, nb_repetitions, experiment_file, experiment_name, time, dispatch_path):
