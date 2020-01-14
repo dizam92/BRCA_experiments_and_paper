@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 nb_jobs = 30
 cv_fold = KFold(n_splits=5, random_state=42)
 
+# TODO: ADD A verification to not redo the same pickle (check in the repository if the file is there: if yes pass if no do it)
 
 class LearnTN(object):
     def __init__(self, parameters, learner, saving_dict, balanced_weights, saving_file="", rs=42, nb_jobs=nb_jobs,
