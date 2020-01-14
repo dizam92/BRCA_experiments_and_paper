@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 __author__ = 'maoss2'
 from experiments.utilities import *
+from os.path import join, abspath, dirname, exists
+from os import makedirs
 from collections import defaultdict
 from learners.pyscmGroup import GroupSCM
 from sklearn.model_selection import train_test_split, GridSearchCV, KFold
@@ -154,62 +156,84 @@ def run_experiment(return_views, pathway_file, nb_repetitions, update_method='ne
                            p=1.0, 
                            model_type='conjunction', 
                            max_rules=10)
-    try:
-        os.mkdir('{}/group_best_seed_scm_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
-        os.chdir('{}/group_best_seed_scm_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
-        # os.mkdir('{}/group_scm_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
-        # os.chdir('{}/group_scm_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
-        for state in range(nb_repetitions):
-            clf = LearnGroupTN(parameters=parameters_group_scm,
-                               learner=learner_clf,
-                               saving_dict=saving_dict_scm,
-                               saving_file=experiment_name,
-                               rs=random_seeds_list[state],
-                               nb_jobs=nb_jobs,
-                               cv=cv_fold,
-                               data_path=data,
-                               return_views=return_views)
-            x_train, x_test, y_train, y_test, patients_train, patients_test = \
-                train_test_split(x, y, patients_names, train_size=0.8, random_state=random_seeds_list[state])
-            logger.info('Train set shape {}'.format(x_train.shape))
-            logger.info('Test set shape {}'.format(x_test.shape))
-            clf.learning(features_names=features_names, x_train=x_train, x_test=x_test,
-                         y_train=y_train, y_test=y_test, patients_train=patients_train,
-                         patients_test=patients_test)
-    except OSError:
-        os.chdir('{}/group_best_seed_scm_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
-        # os.chdir('{}/group_scm_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
-        for state in range(nb_repetitions):
-            clf = LearnGroupTN(parameters=parameters_group_scm,
-                               learner=learner_clf,
-                               saving_dict=saving_dict_scm,
-                               saving_file=experiment_name,
-                               rs=random_seeds_list[state],
-                               nb_jobs=nb_jobs,
-                               cv=cv_fold,
-                               data_path=data,
-                               return_views=return_views)
-            x_train, x_test, y_train, y_test, patients_train, patients_test = \
-                train_test_split(x, y, patients_names, train_size=0.8, random_state=random_seeds_list[state])
-            logger.info('Train set shape {}'.format(x_train.shape))
-            logger.info('Test set shape {}'.format(x_test.shape))
-            clf.learning(features_names=features_names, x_train=x_train, x_test=x_test,
-                         y_train=y_train, y_test=y_test, patients_train=patients_train,
-                         patients_test=patients_test)
-    # os.chdir('/home/maoss2/')
+    results_repertory = join(saving_rep, experiment_name)
+    if not exists(results_repertory): makedirs(results_repertory)
+    os.chdir(f"{results_repertory}")
+    existing_files_list = [fichier for fichier in glob('*.pck')]
+    if len(existing_files_list) != 0:
+        seeds_already_done = [int(f.split('_')[-1].split('.')[0]) for f in existing_files_list]
+    for state in range(nb_repetitions):
+        if random_seeds_list[state] in seeds_already_done: continue
+        clf = LearnGroupTN(parameters=parameters_group_scm,
+                            learner=learner_clf,
+                            saving_dict=saving_dict_scm,
+                            saving_file=experiment_name,
+                            rs=random_seeds_list[state],
+                            nb_jobs=nb_jobs,
+                            cv=cv_fold,
+                            data_path=data,
+                            return_views=return_views)
+        x_train, x_test, y_train, y_test, patients_train, patients_test = \
+            train_test_split(x, y, patients_names, train_size=0.8, random_state=random_seeds_list[state])
+        logger.info('Train set shape {}'.format(x_train.shape))
+        logger.info('Test set shape {}'.format(x_test.shape))
+        clf.learning(features_names=features_names, x_train=x_train, x_test=x_test,
+                        y_train=y_train, y_test=y_test, patients_train=patients_train,
+                        patients_test=patients_test)
+    # try:
+    #     os.mkdir(f"{saving_rep}/{experiment_name}")
+    #     os.chdir(f"{saving_rep}/{experiment_name}")
+    #     for state in range(nb_repetitions):
+    #         clf = LearnGroupTN(parameters=parameters_group_scm,
+    #                            learner=learner_clf,
+    #                            saving_dict=saving_dict_scm,
+    #                            saving_file=experiment_name,
+    #                            rs=random_seeds_list[state],
+    #                            nb_jobs=nb_jobs,
+    #                            cv=cv_fold,
+    #                            data_path=data,
+    #                            return_views=return_views)
+    #         x_train, x_test, y_train, y_test, patients_train, patients_test = \
+    #             train_test_split(x, y, patients_names, train_size=0.8, random_state=random_seeds_list[state])
+    #         logger.info('Train set shape {}'.format(x_train.shape))
+    #         logger.info('Test set shape {}'.format(x_test.shape))
+    #         clf.learning(features_names=features_names, x_train=x_train, x_test=x_test,
+    #                      y_train=y_train, y_test=y_test, patients_train=patients_train,
+    #                      patients_test=patients_test)
+    # except OSError:
+    #     os.chdir(f"{saving_rep}/{experiment_name}")
+        
+    #     for state in range(nb_repetitions):
+    #         clf = LearnGroupTN(parameters=parameters_group_scm,
+    #                            learner=learner_clf,
+    #                            saving_dict=saving_dict_scm,
+    #                            saving_file=experiment_name,
+    #                            rs=random_seeds_list[state],
+    #                            nb_jobs=nb_jobs,
+    #                            cv=cv_fold,
+    #                            data_path=data,
+    #                            return_views=return_views)
+    #         x_train, x_test, y_train, y_test, patients_train, patients_test = \
+    #             train_test_split(x, y, patients_names, train_size=0.8, random_state=random_seeds_list[state])
+    #         logger.info('Train set shape {}'.format(x_train.shape))
+    #         logger.info('Test set shape {}'.format(x_test.shape))
+    #         clf.learning(features_names=features_names, x_train=x_train, x_test=x_test,
+    #                      y_train=y_train, y_test=y_test, patients_train=patients_train,
+    #                      patients_test=patients_test)
+    # # os.chdir('/home/maoss2/')
 
 
-def main_run_experiments_new_labels():
-    for view in return_views:
-        logger.info('experiment_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna')
-        logger.info('{}'.format(view))
-        logger.info('--------------------------------------------------------')
-        run_experiment(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna, 
-                    pathway_file=data_repository.format('pathways_biogrid_groups.pck'), 
-                    experiment_name='experiment_group_scm_unbalanced_mean_biogrid', 
-                    return_views=view, 
-                    nb_repetitions=1, 
-                    saving_rep=saving_repository)
+# def main_run_experiments_new_labels():
+#     for view in return_views:
+#         logger.info('experiment_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna')
+#         logger.info('{}'.format(view))
+#         logger.info('--------------------------------------------------------')
+#         run_experiment(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna, 
+#                     pathway_file=data_repository.format('pathways_biogrid_groups.pck'), 
+#                     experiment_name='experiment_group_scm_unbalanced_mean_biogrid', 
+#                     return_views=view, 
+#                     nb_repetitions=1, 
+#                     saving_rep=saving_repository)
 
 def main():
     parser = argparse.ArgumentParser(description="Learn Group TN Experiment")

@@ -361,7 +361,11 @@ def run_experiment(return_views, nb_repetitions, data=data_tn_new_label_unbalanc
                          patients_test=patients_test)
     except OSError:
         os.chdir('{}/dt_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
+        existing_files_list = [fichier for fichier in glob('*.pck')]
+        if len(existing_files_list) != 0:
+            seeds_already_done = [int(f.split('_')[-1].split('.')[0]) for f in existing_files_list]
         for state in range(nb_repetitions):
+            if random_seeds_list[state] in seeds_already_done: continue
             clf = LearnTN(parameters=parameters_dt,
                           learner=DecisionTreeClassifier(random_state=42, class_weight=balanced_weights),
                           saving_dict=saving_dict_dt,
@@ -404,7 +408,11 @@ def run_experiment(return_views, nb_repetitions, data=data_tn_new_label_unbalanc
                          patients_test=patients_test)
     except OSError:
         os.chdir('{}/scm_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
+        existing_files_list = [fichier for fichier in glob('*.pck')]
+        if len(existing_files_list) != 0:
+            seeds_already_done = [int(f.split('_')[-1].split('.')[0]) for f in existing_files_list]
         for state in range(nb_repetitions):
+            if random_seeds_list[state] in seeds_already_done: continue
             clf = LearnTN(parameters=parameters_scm,
                           learner=Pipeline([('SCM', DecisionStumpSCMNew())]),
                           saving_dict=saving_dict_scm,
@@ -447,7 +455,11 @@ def run_experiment(return_views, nb_repetitions, data=data_tn_new_label_unbalanc
                          patients_test=patients_test)
     except OSError:
         os.chdir('{}/rf_{}_{}_{}'.format(saving_rep, experiment_name, return_views, nb_repetitions))
+        existing_files_list = [fichier for fichier in glob('*.pck')]
+        if len(existing_files_list) != 0:
+            seeds_already_done = [int(f.split('_')[-1].split('.')[0]) for f in existing_files_list]
         for state in range(nb_repetitions):
+            if random_seeds_list[state] in seeds_already_done: continue
             clf = LearnTN(parameters=parameters_rf,
                           learner=RandomForestClassifier(random_state=42, class_weight=balanced_weights),
                           saving_dict=saving_dict_rf,
