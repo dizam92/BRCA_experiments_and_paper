@@ -181,48 +181,6 @@ def run_experiment(return_views, pathway_file, nb_repetitions, update_method='ne
         clf.learning(features_names=features_names, x_train=x_train, x_test=x_test,
                         y_train=y_train, y_test=y_test, patients_train=patients_train,
                         patients_test=patients_test)
-    # try:
-    #     os.mkdir(f"{saving_rep}/{experiment_name}")
-    #     os.chdir(f"{saving_rep}/{experiment_name}")
-    #     for state in range(nb_repetitions):
-    #         clf = LearnGroupTN(parameters=parameters_group_scm,
-    #                            learner=learner_clf,
-    #                            saving_dict=saving_dict_scm,
-    #                            saving_file=experiment_name,
-    #                            rs=random_seeds_list[state],
-    #                            nb_jobs=nb_jobs,
-    #                            cv=cv_fold,
-    #                            data_path=data,
-    #                            return_views=return_views)
-    #         x_train, x_test, y_train, y_test, patients_train, patients_test = \
-    #             train_test_split(x, y, patients_names, train_size=0.8, random_state=random_seeds_list[state])
-    #         logger.info('Train set shape {}'.format(x_train.shape))
-    #         logger.info('Test set shape {}'.format(x_test.shape))
-    #         clf.learning(features_names=features_names, x_train=x_train, x_test=x_test,
-    #                      y_train=y_train, y_test=y_test, patients_train=patients_train,
-    #                      patients_test=patients_test)
-    # except OSError:
-    #     os.chdir(f"{saving_rep}/{experiment_name}")
-        
-    #     for state in range(nb_repetitions):
-    #         clf = LearnGroupTN(parameters=parameters_group_scm,
-    #                            learner=learner_clf,
-    #                            saving_dict=saving_dict_scm,
-    #                            saving_file=experiment_name,
-    #                            rs=random_seeds_list[state],
-    #                            nb_jobs=nb_jobs,
-    #                            cv=cv_fold,
-    #                            data_path=data,
-    #                            return_views=return_views)
-    #         x_train, x_test, y_train, y_test, patients_train, patients_test = \
-    #             train_test_split(x, y, patients_names, train_size=0.8, random_state=random_seeds_list[state])
-    #         logger.info('Train set shape {}'.format(x_train.shape))
-    #         logger.info('Test set shape {}'.format(x_test.shape))
-    #         clf.learning(features_names=features_names, x_train=x_train, x_test=x_test,
-    #                      y_train=y_train, y_test=y_test, patients_train=patients_train,
-    #                      patients_test=patients_test)
-    # # os.chdir('/home/maoss2/')
-
 
 # def main_run_experiments_new_labels():
 #     for view in return_views:

@@ -4,6 +4,7 @@ import random
 import os
 import h5py
 import time
+from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
 import networkx as nx
@@ -35,7 +36,7 @@ c5_pickle_dictionary = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/
 list_dict = [c2_pickle_dictionary, c5_pickle_dictionary]
 
 saving_repository = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/saving_repository'
-saving_repository_comparison_folder = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/saving_repository/comparison_folder'
+histogram_repo = f'{saving_repository}/histograms_repo'
 data_repository = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/{}'
 data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna = data_repository.format('triple_neg_new_labels_unbalanced_cpg_rna_rna_iso_mirna.h5')
 
@@ -258,7 +259,7 @@ def load_data(data, return_views='all'):
                    features_names_rna, features_names_rna_iso, features_names_mirna, features_names_clinical, patients_names
 
 
-def results_analysis(directory, output_text_file):
+def results_analysis(directory, output_text_file, recap_table_file, plot_hist=True):
     """
     An utility function to run the results analysis and output them in a readable way
     Args:
@@ -276,6 +277,7 @@ def results_analysis(directory, output_text_file):
     cnt = Counter()
     cnt_rf = Counter()
     list_fichiers = []
+    groups_features = []
     for fichier in glob("*.pck"):
         list_fichiers.append(fichier)
         f = open(fichier, 'rb')
@@ -291,6 +293,9 @@ def results_analysis(directory, output_text_file):
     precision_test = [el['precision'] for el in metrics_test]
     recall_train = [el['recall'] for el in metrics_train]
     recall_test = [el['recall'] for el in metrics_test]
+    if plot_hist:
+        generate_histogram(file_name=f"{directory}", fig_title=f'Metrics', accuracy_train=accuracy_train, accuracy_test=accuracy_test, f1_score_train=f1_score_train,
+                        f1_score_test=f1_score_test, precision_train=precision_train, precision_test=precision_test, recall_train=recall_train, recall_test=recall_test)
     # Find the best seed based on the F1-score (since the dataset is unbalanced)
     best_file = list_fichiers[np.argmax(f1_score_test)]
     if directory.find('dt') != -1:
@@ -301,7 +306,7 @@ def results_analysis(directory, output_text_file):
                     temp.append(el)
             var = ''
             for i, el in enumerate(temp):
-                var += '_{}'.format(el[3])
+                var += '&{}'.format(el[3])
                 if i == 2:
                     break
             model_comptes.append(var)
@@ -309,22 +314,35 @@ def results_analysis(directory, output_text_file):
         for model in features_retenus:
             var = ''
             for el in model[0][:3]:
-                var += '_{}'.format(el[3])
+                var += '&{}'.format(el[3])
             model_comptes.append(var)
 
         features_retenus_flatten = [el[3] for liste in features_retenus for el in liste[0][:50]]
         for el in features_retenus_flatten:
             cnt_rf[el] += 1
-    if directory.find('scm') != -1:
+    if directory.find('scm') != -1 and directory.find('group') == -1:
         for model in features_retenus:
             temp = []
             for el in model[0]:
                 temp.append(el[1])
             var = ''
             for el in temp:
-                var += '_{}'.format(el)
+                var += '&{}'.format(el)
             model_comptes.append(var)
-
+    if directory.find('scm') != -1 and directory.find('group') != -1:
+        for fichier in glob("*.pck"):
+            f = open(fichier, 'rb')
+            d = pickle.load(f)
+            groups_features.append(d['groups_rules'])
+        for model in features_retenus:
+            temp = []
+            for el in model[0]:
+                temp.append(el[1])
+            var = ''
+            for el in temp:
+                var += '&{}'.format(el)
+            model_comptes.append(var)
+            
     with open(output_text_file, 'a+') as f:
         f.write('Repository:{}\n'.format(directory))
         f.write('TRAINING RESULTS\n')
@@ -361,285 +379,167 @@ def results_analysis(directory, output_text_file):
         # print('model comptes', model_comptes)
         for el in model_comptes:
             cnt[el] += 1
-        f.write('_-------------_---------_-------_\n')
-        f.write('Most frequent model: {}\n'.format(cnt.most_common(10)))
+        most_common_model = cnt.most_common(10)
+        if most_common_model != []:
+            f.write('_-------------_---------_-------_\n')
+            f.write('Most frequent model: {}\n'.format(most_common_model))
         most_common_features = cnt_rf.most_common(50)
-        f.write('_-------------_---------_-------_\n')
-        f.write('Most frequent Features: {}\n'.format(most_common_features))
-        f.write('-'*100)
-        f.write('\n')
+        if most_common_features != []: 
+            f.write('_-------------_---------_-------_\n')
+            f.write('Most frequent Features: {}\n'.format(most_common_features))
+            f.write('-'*100)
+            f.write('\n')
         f.write('Best seed file based on f1 score (argmax): {}\n'.format(best_file))
         f.write('-'*50)
         f.write('\n')
-        f.write('-'*50)
-        f.write('\n')
-        f.write('-'*50)
-        f.write('\n')
-    # os.chdir(saving_repository)
-    os.chdir(saving_repository_comparison_folder)
+    # Write best results file of the directory to the recap file
+    d_temp = pickle.load(open(best_file, 'rb'))
+    best_acc = np.round(d_temp['metrics']['accuracy'], 4)
+    best_f1 = np.round(d_temp['metrics']['f1_score'], 4)
+    best_pre = np.round(d_temp['metrics']['precision'], 4)
+    best_rec = np.round(d_temp['metrics']['recall'], 4)
+    best_feat = d_temp['rules_str']
+    best_groups_feat = d_temp['groups_rules']
+    if directory.find('dt') != -1:
+        for model in features_retenus:
+            temp = []
+            for el in model[0]:
+                if el[2] > 0:
+                    temp.append(el)
+            var = ''
+            for i, el in enumerate(temp):
+                var += '&{}'.format(el[3])
+                if i == 2:
+                    break
+    if directory.find('rf') != -1:
+        for model in features_retenus:
+            var = ''
+            for el in model[0][:3]:
+                var += '&{}'.format(el[3])
+    if directory.find('scm') != -1:
+        for model in best_feat:
+            temp = []
+            for el in best_feat[0]:
+                temp.append(el[1])
+            var = ''
+            for el in temp:
+                var += '&{}'.format(el)
+    var_groups = ''
+    if best_groups_feat != []:
+        for el in best_groups_feat:
+            if type(el) == list:
+                for gp in el:
+                    var_groups += '&{}'.format(gp)
+    with open(recap_table_file, 'a+') as f:
+        f.write(f"{best_file}\t{best_acc}\t{best_f1}\t{best_pre}\t{best_rec}\t{var}\t{var_groups}\n")
+    os.chdir(saving_repository)
     return np.round(np.mean(accuracy_test), 4), np.round(np.mean(f1_score_test), 4), \
-           np.round(np.mean(precision_test), 4), np.round(np.mean(recall_test), 4), model_comptes
+           np.round(np.mean(precision_test), 4), np.round(np.mean(recall_test), 4), model_comptes, groups_features
 
 
-def results_analysis_groups(directory, output_text_file):
-    """
-    An utility function to run the results analysis and output them in a readable way
-    Args:
-        directory, str, path to the directory containing the pickle files
-        data_path, str, path to the data of interest to be loaded to run the analysis
-        output_text_file, str, file where to write the results to
-    Returns:
-        Write results to text file
-    """
-    os.chdir('{}'.format(directory))
-
-    for fichier in glob("*.pck"):
-        d = pickle.load(open(fichier, 'rb'))
-        metrics_train = []
-        metrics_test = []
-        features_retenus = []
-        groups_ids_features_retenus = []
-        groups_ids_weights_features_retenus = []
-        model_comptes = []
-        cnt = Counter()
-        for cle in d.keys():
-            metrics_train.append(d[cle]['train_metrics'])
-            metrics_test.append(d[cle]['test_metrics'])
-            features_retenus.append(d[cle]['rules_str'])
-            groups_ids_features_retenus.append(d[cle]['groups_ids_rules_str'])
-            groups_ids_weights_features_retenus.append(d[cle]['groups_ids_weights_rules_str'])
-            accuracy_train = [el['accuracy'] for el in metrics_train]
-            accuracy_test = [el['accuracy'] for el in metrics_test]
-            f1_score_train = [el['f1_score'] for el in metrics_train]
-            f1_score_test = [el['f1_score'] for el in metrics_test]
-            precision_train = [el['precision'] for el in metrics_train]
-            precision_test = [el['precision'] for el in metrics_test]
-            recall_train = [el['recall'] for el in metrics_train]
-            recall_test = [el['recall'] for el in metrics_test]
-            for model in features_retenus:
-                temp = []
-                for el in model:
-                    temp.append(el[1])
-                var = ''
-                for el in temp:
-                    var += '_{}'.format(el)
-                model_comptes.append(var)
-        # TODO: Print The groups ids
-        with open(output_text_file, 'a+') as f:
-            f.write('Fichier:{}\n'.format(fichier))
-            f.write('-' * 50)
-            f.write('\n')
-            f.write('TRAINING RESULTS\n')
-            f.write('-' * 50)
-            f.write('\n')
-            f.write('Training: Accuracy mean {} +/- {}; Max value: {}, Min value: {}, Median value: {}\n'.format(
-                np.round(np.mean(accuracy_train), 4), np.round(np.std(accuracy_train), 4),
-                np.round(np.max(accuracy_train), 4),
-                np.round(np.min(accuracy_train), 4), np.round(np.median(accuracy_train), 4)))
-            f.write('Training: f1_score mean {} +/- {}; Max value: {}, Min value: {}, Median value: {}\n'.format(
-                np.round(np.mean(f1_score_train), 4), np.round(np.std(f1_score_train), 4),
-                np.round(np.max(f1_score_train), 4),
-                np.round(np.min(f1_score_train), 4), np.round(np.median(f1_score_train), 4)))
-            f.write('Training: Precision mean {} +/- {}; Max value: {}, Min value: {}, Median value: {}\n'.format(
-                np.round(np.mean(precision_train), 4), np.round(np.std(precision_train), 4),
-                np.round(np.max(precision_train), 4),
-                np.round(np.min(precision_train), 4), np.round(np.median(precision_train), 4)))
-            f.write('Training: Recall mean {} +/- {}; Max value: {}, Min value: {}, Median value: {}\n'.format(
-                np.round(np.mean(recall_train), 4), np.round(np.std(recall_train), 4),
-                np.round(np.max(recall_train), 4),
-                np.round(np.min(recall_train), 4), np.round(np.median(recall_train), 4)))
-            f.write('TESTS RESULTS\n')
-            f.write('-' * 50)
-            f.write('\n')
-            f.write('Test: Accuracy mean {} +/- {}; Max value: {}, Min value: {}, Median value: {}\n'.format(
-                np.round(np.mean(accuracy_test), 4), np.round(np.std(accuracy_test), 4),
-                np.round(np.max(accuracy_test), 4),
-                np.round(np.min(accuracy_test), 4), np.round(np.median(accuracy_test), 4)))
-            f.write('Test: f1_score mean {} +/- {}; Max value: {}, Min value: {}, Median value: {}\n'.format(
-                np.round(np.mean(f1_score_test), 4), np.round(np.std(f1_score_test), 4),
-                np.round(np.max(f1_score_test), 4),
-                np.round(np.min(f1_score_test), 4), np.round(np.median(f1_score_test), 4)))
-            f.write('Test: Precision mean {} +/- {}; Max value: {}, Min value: {}, Median value: {}\n'.format(
-                np.round(np.mean(precision_test), 4), np.round(np.std(precision_test), 4),
-                np.round(np.max(precision_test), 4),
-                np.round(np.min(precision_test), 4), np.round(np.median(precision_test), 4)))
-            f.write('Test: Recall mean {} +/- {}; Max value: {}, Min value: {}, Median value: {}\n'.format(
-                np.round(np.mean(recall_test), 4), np.round(np.std(recall_test), 4), np.round(np.max(recall_test), 4),
-                np.round(np.min(recall_test), 4), np.round(np.median(recall_test), 4)))
-            # print('model comptes', model_comptes)
-            for el in model_comptes:
-                cnt[el] += 1
-            f.write('_-------------_---------_-------_\n')
-            f.write('Most frequent model: {}\n'.format(cnt.most_common(10)))
-
-
-def main_run_analysis(type_experiments='all'):
-    """ 
-    Main utility function to run the run analysis on every repository 
-    Args:
-        type_experiments, str, in ['all', 'rf', 'dt', 'scm'], which type of experiments
-    """
-    assert type_experiments in ['all', 'rf', 'dt', 'scm', 'group_scm', 'group_best_seed_scm', 'comparison'], 'Wrong experiment'
+def anaylses_resultats(type_experiment='normal', plot_hist=True):
     list_of_directories = os.listdir('./')
-    output_text_file = saving_repository + '/results_analysis.txt'
-    if type_experiments == 'all':
-        acc_test_list = []
-        f1_test_list = []
-        precis_test_list = []
-        rec_test_list = []
-        model_comptes_list = []
-        for directory in list_of_directories:
-            if directory not in ['.DS_Store', '._.DS_Store', 'results_analysis.txt', '._results_analysis.txt',
-                                 'results_analysis_groups.txt', '._results_analysis_groups.txt']:
-                acc_test, f1_test, precis_test, rec_test, model_comptes = results_analysis(directory=directory, output_text_file=output_text_file)
+    output_text_file = f"{saving_repository}/results_analysis"
+    if type_experiment == 'normal':
+        sous_experiment_types = ['rf', 'scm', 'dt']
+        for experiment in sous_experiment_types:
+            output_text_file_experiment = f"{output_text_file}__{experiment}.txt"
+            recap_text_file_experiment = f"{output_text_file}__{experiment}__recap.txt"
+            acc_test_list = []
+            f1_test_list = []
+            precis_test_list = []
+            rec_test_list = []
+            model_comptes_list = []
+            list_of_directories = os.listdir('./')
+            list_of_directories = [directory for directory in list_of_directories if directory.startswith(experiment)] 
+            for directory in list_of_directories:
+                acc_test, f1_test, precis_test, rec_test, model_comptes, _ = results_analysis(directory=directory,
+                                                                                            output_text_file=output_text_file_experiment,
+                                                                                            recap_table_file=recap_text_file_experiment,
+                                                                                            plot_hist=plot_hist)
                 acc_test_list.append(acc_test)
                 f1_test_list.append(f1_test)
                 precis_test_list.append(precis_test)
                 rec_test_list.append(rec_test)
                 model_comptes_list.append(model_comptes)
-    if type_experiments == 'rf':
-        acc_test_list = []
-        f1_test_list = []
-        precis_test_list = []
-        rec_test_list = []
-        model_comptes_list = []
-        for directory in list_of_directories:
-            if directory.startswith('rf'):
-                acc_test, f1_test, precis_test, rec_test, model_comptes = results_analysis(directory=directory,
-                                                                                           output_text_file=output_text_file)
+            with open(output_text_file_experiment, 'a+') as f:
+                f.write('-' * 50)
+                f.write('\n')
+                f.write('Best model selected based on F1 Score\n')
+                best_model_idx = np.argmax(np.asarray(f1_test_list))
+                f.write(f'Best Experiment is:{list_of_directories[best_model_idx]}\n')
+                f.write(f'Results: Acc: {acc_test_list[best_model_idx]}\t F1: {f1_test_list[best_model_idx]}\t Prec: {precis_test_list[best_model_idx]}\t Rec: {rec_test_list[best_model_idx]} \n')
+                f.write(f'Model comptes {model_comptes_list[best_model_idx]}\n')
+    if type_experiment == 'group_scm':
+        sous_experiment_types = ['methyl_rna_iso_mirna', 'methyl_rna_iso_mirna_snp_clinical', 
+                                 'methyl_rna_mirna', 'methyl_rna_mirna_snp_clinical', 'all']
+        for experiment in sous_experiment_types:
+            output_text_file_experiment = f"{output_text_file}__group_scm__{experiment}.txt"
+            recap_text_file_experiment = f"{output_text_file}__{experiment}__recap.txt"
+            acc_test_list = []
+            f1_test_list = []
+            precis_test_list = []
+            rec_test_list = []
+            model_comptes_list = [] 
+            groups_features_list = []
+            list_of_directories = os.listdir('./')
+            list_of_directories = [directory for directory in list_of_directories if directory.startswith(experiment)] 
+            for directory in list_of_directories:
+                acc_test, f1_test, precis_test, rec_test, model_comptes, groups_features = results_analysis(directory=directory,
+                                                                                            output_text_file=output_text_file_experiment,
+                                                                                            recap_table_file=recap_text_file_experiment,
+                                                                                            plot_hist=plot_hist)
                 acc_test_list.append(acc_test)
                 f1_test_list.append(f1_test)
                 precis_test_list.append(precis_test)
                 rec_test_list.append(rec_test)
                 model_comptes_list.append(model_comptes)
-    if type_experiments == 'dt':
-        acc_test_list = []
-        f1_test_list = []
-        precis_test_list = []
-        rec_test_list = []
-        model_comptes_list = []
-        for directory in list_of_directories:
-            if directory.startswith('dt'):
-                acc_test, f1_test, precis_test, rec_test, model_comptes = results_analysis(directory=directory,
-                                                                                           output_text_file=output_text_file)
-                acc_test_list.append(acc_test)
-                f1_test_list.append(f1_test)
-                precis_test_list.append(precis_test)
-                rec_test_list.append(rec_test)
-                model_comptes_list.append(model_comptes)
-    if type_experiments == 'scm':
-        acc_test_list = []
-        f1_test_list = []
-        precis_test_list = []
-        rec_test_list = []
-        model_comptes_list = []
-        for directory in list_of_directories:
-            if directory.startswith('scm'):
-                acc_test, f1_test, precis_test, rec_test, model_comptes = results_analysis(directory=directory,
-                                                                                           output_text_file=output_text_file)
-                acc_test_list.append(acc_test)
-                f1_test_list.append(f1_test)
-                precis_test_list.append(precis_test)
-                rec_test_list.append(rec_test)
-                model_comptes_list.append(model_comptes)
-    if type_experiments == 'group_scm':
-        acc_test_list = []
-        f1_test_list = []
-        precis_test_list = []
-        rec_test_list = []
-        model_comptes_list = []
-        for directory in list_of_directories:
-            if directory.startswith('group_scm'):
-                acc_test, f1_test, precis_test, rec_test, model_comptes = results_analysis(directory=directory,
-                                                                                           output_text_file=output_text_file)
-                acc_test_list.append(acc_test)
-                f1_test_list.append(f1_test)
-                precis_test_list.append(precis_test)
-                rec_test_list.append(rec_test)
-                model_comptes_list.append(model_comptes)
-    if type_experiments == 'group_best_seed_scm':
-        acc_test_list = []
-        f1_test_list = []
-        precis_test_list = []
-        rec_test_list = []
-        model_comptes_list = []
-        for directory in list_of_directories:
-            if directory.startswith('group_best_seed_scm'):
-                acc_test, f1_test, precis_test, rec_test, model_comptes = results_analysis(directory=directory,
-                                                                                           output_text_file=output_text_file)
-                acc_test_list.append(acc_test)
-                f1_test_list.append(f1_test)
-                precis_test_list.append(precis_test)
-                rec_test_list.append(rec_test)
-                model_comptes_list.append(model_comptes)
-    if type_experiments == 'comparison':
-        acc_test_list = []
-        f1_test_list = []
-        precis_test_list = []
-        rec_test_list = []
-        model_comptes_list = []
-        directory = 'comparison_folder'
-        os.chdir('{}'.format(directory))
-        list_of_directories = os.listdir('./')
-        for directory in list_of_directories:
-            if directory not in ['._.DS_Store', '.DS_Store']:
-                acc_test, f1_test, precis_test, rec_test, model_comptes = results_analysis(directory=directory,
-                                                                                            output_text_file=output_text_file)
-                acc_test_list.append(acc_test)
-                f1_test_list.append(f1_test)
-                precis_test_list.append(precis_test)
-                rec_test_list.append(rec_test)
-                model_comptes_list.append(model_comptes)           
-    with open(output_text_file, 'a+') as f:
-        f.write('-' * 50)
-        f.write('\n')
-        f.write('Best model selected based on Accuracy\n')
-        best_model_idx = np.argmax(np.asarray(acc_test_list))
-        f.write('Best Experiment is:{}\n'.format(list_of_directories[best_model_idx]))
-        f.write('Results: {} \t{} \t{} \t{} \n'.format(acc_test_list[best_model_idx],
-                                                       f1_test_list[best_model_idx],
-                                                       precis_test_list[best_model_idx],
-                                                       rec_test_list[best_model_idx]))
-        f.write('Model comptes {}\n'.format(model_comptes_list[best_model_idx]))
-
-        f.write('-' * 50)
-        f.write('\n')
-        f.write('Best model selected based on F1 Score\n')
-        best_model_idx = np.argmax(np.asarray(f1_test_list))
-        f.write('Best Experiment is:{}\n'.format(list_of_directories[best_model_idx]))
-        f.write('Results: {} \t{} \t{} \t{} \n'.format(acc_test_list[best_model_idx],
-                                                       f1_test_list[best_model_idx],
-                                                       precis_test_list[best_model_idx],
-                                                       rec_test_list[best_model_idx]))
-        f.write('Model comptes {}\n'.format(model_comptes_list[best_model_idx]))
-
-        f.write('-' * 50)
-        f.write('\n')
-        f.write('Best model selected based on Precision Score\n')
-        best_model_idx = np.argmax(np.asarray(precis_test_list))
-        f.write('Best Experiment is:{}\n'.format(list_of_directories[best_model_idx]))
-        f.write('Results: {} \t{} \t{} \t{} \n'.format(acc_test_list[best_model_idx],
-                                                       f1_test_list[best_model_idx],
-                                                       precis_test_list[best_model_idx],
-                                                       rec_test_list[best_model_idx]))
-        f.write('Model comptes {}\n'.format(model_comptes_list[best_model_idx]))
-
-        f.write('-' * 50)
-        f.write('\n')
-        f.write('Best model selected based on Recall Score\n')
-        best_model_idx = np.argmax(np.asarray(rec_test_list))
-        f.write('Best Experiment is:{}\n'.format(list_of_directories[best_model_idx]))
-        f.write('Results: {} \t{} \t{} \t{} \n'.format(acc_test_list[best_model_idx],
-                                                       f1_test_list[best_model_idx],
-                                                       precis_test_list[best_model_idx],
-                                                       rec_test_list[best_model_idx]))
-        f.write('Model comptes {}\n'.format(model_comptes_list[best_model_idx]))
-
+                groups_features_list.append(groups_features)
+            with open(output_text_file_experiment, 'a+') as f:
+                f.write('-' * 50)
+                f.write('\n')
+                f.write('Best model selected based on F1 Score\n')
+                best_model_idx = np.argmax(np.asarray(f1_test_list))
+                f.write(f'Best Experiment is:{list_of_directories[best_model_idx]}\n')
+                f.write(f'Results: Acc: {acc_test_list[best_model_idx]}\t F1: {f1_test_list[best_model_idx]}\t Prec: {precis_test_list[best_model_idx]}\t Rec: {rec_test_list[best_model_idx]} \n')
+                f.write(f'Model comptes {model_comptes_list[best_model_idx]}\n')
+                f.write(f'Groups Features Best Model {groups_features_list[best_model_idx]}\n')
+        
 
 def autolabel(rects, ax):
     for rect in rects:
         height = rect.get_height()
         ax.text(rect.get_x() + rect.get_width() / 2., 1.01 * height, "%.2f" % height, ha='center', va='bottom')
+
+
+def generate_histogram(file_name, fig_title, accuracy_train, accuracy_test, f1_score_train, f1_score_test, 
+                       precision_train, precision_test, recall_train, recall_test):
+    train_metrics = np.asarray([np.round(np.mean(accuracy_train), 4), np.round(np.mean(f1_score_train), 4),
+                               np.round(np.mean(precision_train), 4), np.round(np.mean(recall_train), 4)])
+    test_metrics = np.asarray([np.round(np.mean(accuracy_test), 4), np.round(np.mean(f1_score_test), 4),
+                               np.round(np.mean(precision_test), 4), np.round(np.mean(recall_test), 4)])
+    std_train_metrics = np.asarray([np.round(np.std(accuracy_train), 4), np.round(np.std(f1_score_train), 4),
+                               np.round(np.std(precision_train), 4), np.round(np.std(recall_train), 4)])
+    std_test_metrics = np.asarray([np.round(np.std(accuracy_test), 4), np.round(np.std(f1_score_test), 4),
+                               np.round(np.std(precision_test), 4), np.round(np.std(recall_test), 4)])
+    
+    nbResults = len(train_metrics)
+    # figKW = {"figsize": (nbResults, 8)}
+    # f, ax = plt.subplots(nrows=1, ncols=1, **figKW)
+    f, ax = plt.subplots(nrows=1, ncols=1)
+    barWidth = 0.35
+    ax.set_title(f"{fig_title}")
+    rects = ax.bar(range(nbResults), test_metrics, barWidth, color="r", yerr=std_test_metrics)
+    rect2 = ax.bar(np.arange(nbResults) + barWidth, train_metrics, barWidth, color="0.7", yerr=std_train_metrics)
+    autolabel(rects, ax)
+    autolabel(rect2, ax)
+    ax.legend((rects[0], rect2[0]), ('Test', 'Train'), loc='upper right', ncol=2, mode="expand", borderaxespad=0.)
+    ax.set_ylim(-0.1, 1.2)
+    ax.set_xticks(np.arange(nbResults) + barWidth)
+    ax.set_xticklabels(['Acc', 'F1', 'Prec', 'Rec'])
+    plt.tight_layout()
+    f.savefig(f"{histogram_repo}/{file_name}.png")
+    plt.close()
 
 
 def weighted_sample(y, y_target):
