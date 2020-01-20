@@ -37,8 +37,8 @@ list_dict = [c2_pickle_dictionary, c5_pickle_dictionary]
 
 saving_repository = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/saving_repository'
 histogram_repo = f'{saving_repository}/histograms_repo'
-data_repository = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/{}'
-data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna = data_repository.format('triple_neg_new_labels_unbalanced_cpg_rna_rna_iso_mirna.h5')
+data_repository = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository'
+data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna = f"{data_repository}/triple_neg_new_labels_unbalanced_cpg_rna_rna_iso_mirna.h5"
 
 return_views = ['methyl_rna_iso_mirna', 'methyl_rna_iso_mirna_snp_clinical',
                 'methyl_rna_mirna', 'methyl_rna_mirna_snp_clinical', 'all']
