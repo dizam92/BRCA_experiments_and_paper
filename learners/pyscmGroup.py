@@ -48,22 +48,19 @@ class GroupSetCoveringMachineClassifier(BaseSetCoveringMachine):
         """
         Fit a SCM model.
 
-        Parameters:
-        -----------
-        X: array-like, shape=[n_examples, n_features]
-            The feature of the input examples.
-        y : array-like, shape = [n_samples]
-            The labels of the input examples.
-        tiebreaker: a function defines by the user, If None, the rule that most
-            decreases the training error is selected.
-        iteration_callback: function(model)
-            A function that is called each time a rule is added to the model.
+        Args:
+            X: array-like, shape=[n_examples, n_features]
+                The feature of the input examples.
+            y : array-like, shape = [n_samples]
+                The labels of the input examples.
+            tiebreaker: a function defines by the user, If None, the rule that most
+                decreases the training error is selected.
+            iteration_callback: function(model)
+                A function that is called each time a rule is added to the model.
 
         Returns:
-        --------
-        self: object
-            Returns self.
-
+            self: object
+                Returns self.
         """
         # random_state = check_random_state(self.random_state)
 
@@ -135,7 +132,7 @@ class GroupSetCoveringMachineClassifier(BaseSetCoveringMachine):
                                                       groups=self.groups,
                                                       groups_rules=self.groups_rules,
                                                       features_weights=features_weights,
-                                                      next_rule_model_idx=self.model_.rules[-1].feature_idx if len(self.model_.rules) != 0 else None, # int or NoneType
+                                                      next_rule_model_idx=self.model_.rules[-1].feature_idx if len(self.model_.rules) != 0 else None,  # int or NoneType
                                                       **utility_function_additional_args)
             iteration_info["utility_max"] = opti_utility
             iteration_info["utility_argmax"] = opti_feat_idx
@@ -151,10 +148,10 @@ class GroupSetCoveringMachineClassifier(BaseSetCoveringMachine):
                 if tiebreaker is None:
                     training_risk_decrease = 1.0 * opti_N - opti_P_bar
                     keep_idx = np.where(training_risk_decrease == training_risk_decrease.max())[0][0]
-                else: # Tiebreaking using the argmin
+                else:  # Tiebreaking using the argmin
                     if len(self.model_.rules) == 0:
                         keep_idx = 0
-                    else: 
+                    else:
                         list_model_idx = [el.feature_idx for el in self.model_.rules]
                         rules_to_untie = [self.features_to_index[idx] for idx in list_model_idx]
                         length_groups_of_rules_to_untie = [len(self.groups[rule]) for rule in rules_to_untie]

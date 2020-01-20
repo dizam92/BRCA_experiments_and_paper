@@ -66,7 +66,7 @@ parameters_scm = {'SCM__model_type': param_model_type,
 parameters_group_scm = {'model_type': param_model_type,
                         'p': param_p,
                         'max_rules': param_max_attributes
-                  }
+                        }
 
 
 def load_data(data, return_views='all'):
@@ -1053,5 +1053,30 @@ def construction_biogrid_pathway_file(data_path=data_tn_new_label_unbalanced_cpg
         pickle.dump(dico_results, f)
 
 
+def stats_on_dictionaries(dictionnaire, fig_name='biogrid_inner_genes_distribution.png'):
+    """
+    Args:
+        dictionnaire, str, path to the dictionnary
+    Returns:
+        a file.png (histogram)
+    """
+    dico = pickle.load(open(dictionnaire, 'rb'))
+    if type(dico) == list:
+        y = [len(el) for el in dico]
+        x = np.arange(1, len(y) + 1)
+        plt.plot(x, y, 'bo')
+        plt.xlabel('Groups(Pathways): collection of genes intereacting with each other')
+        plt.ylabel('Number of elements(genes) in each pathways') 
+        plt.savefig(fig_name)
+        plt.close()
+    if type(dico) == dict:
+        y = [len(v) for k, v in dico.items()]
+        x = np.arange(1, len(dico.keys()) + 1)
+        plt.plot(x, y, 'bo')
+        plt.xlabel('Features')
+        plt.ylabel('Number of pathways a feature is linked to') 
+        plt.savefig(fig_name)
+        plt.close()
+    
 if __name__ == '__main__':
     main_construct()
