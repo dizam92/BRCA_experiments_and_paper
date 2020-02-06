@@ -122,16 +122,17 @@ def launch_slurm_experiment_group(return_views, nb_repetitions, pathway_file, up
     with open(submission_path, 'w') as out_file:
         out_file.write(submission_script)
         
-    # call(["sbatch", submission_path])
+    call(["sbatch", submission_path])
     
 def main_group():
-    return_views = ['methyl_rna_iso_mirna', 'methyl_rna_iso_mirna_snp_clinical',
-                'methyl_rna_mirna', 'methyl_rna_mirna_snp_clinical', 'all']
+    # return_views = ['methyl_rna_iso_mirna', 'methyl_rna_iso_mirna_snp_clinical',
+    #             'methyl_rna_mirna', 'methyl_rna_mirna_snp_clinical', 'all']
+    return_views = ['methyl_rna_iso_mirna']
     dictionaries_paths = [f"{DATAREPOSITORY_PATH}/pathways_biogrid_groups.pck"]
     update_method = ['neg_exp', 'pos_exp', 'neg_exp_group', 'pos_exp_group']
     random.seed(42)
-    psi_g_list = np.round(np.linspace(0, 1, 10), 3) # or np.random.choice(np.linspace(0, 1), 10) 
-    psi_r_list = np.round(np.linspace(0, 1, 10), 3) # or np.random.choice(np.linspace(0, 1), 10) 
+    psi_g_list = np.round(np.linspace(0.1, 1, 10), 3) # or np.random.choice(np.linspace(0, 1), 10) 
+    psi_r_list = np.round(np.linspace(0.1, 1, 10), 3) # or np.random.choice(np.linspace(0, 1), 10) 
     param_grid = {'view': return_views, 'update': update_method, 'psi_g': psi_g_list, 'psi_r': psi_r_list}
     dispatch_path = join(RESULTS_PATH, "dispatch")
     if not exists(dispatch_path): makedirs(dispatch_path)
@@ -150,7 +151,7 @@ def main_group():
                                             psi_r=params['psi_r'],
                                             experiment_file='run_new_group_experiments.py', 
                                             experiment_name=exp_name, 
-                                            time='3', 
+                                            time='4', 
                                             dispatch_path=dispatch_path)
     print("### DONE ###") 
 

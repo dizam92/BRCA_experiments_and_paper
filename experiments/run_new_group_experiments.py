@@ -112,13 +112,15 @@ def build_priors_rules_vector(psi_g, psi_r,
     """
     # Build PriorGroups vector, p_g
     dict_pr_group = pickle.load(open(dictionnary_for_prior_group, 'rb'))
-    prior_values_dict_pr_group = {k: np.exp(- psi_g * len(v)) for k, v in dict_pr_group.items()}
+    # prior_values_dict_pr_group = {k: np.exp(- psi_g * len(v)) for k, v in dict_pr_group.items()}
+    prior_values_dict_pr_group = {k: np.log2(psi_g * len(v)) for k, v in dict_pr_group.items()}
     dict_pr_rules = pickle.load(open(dictionnary_for_prior_rules, 'rb'))
-    prior_values_dict_pr_rules = {k: np.exp(- psi_r * np.sum([1 / prior_values_dict_pr_group[el] if prior_values_dict_pr_group[el] != 0.0 else 0 for el in v])) for k, v in dict_pr_rules.items()}
+    # prior_values_dict_pr_rules = {k: np.exp(- psi_r * np.sum([1 / prior_values_dict_pr_group[el] if prior_values_dict_pr_group[el] != 0.0 else 0 for el in v])) for k, v in dict_pr_rules.items()}
+    prior_values_dict_pr_rules = {k: np.exp(- psi_r * np.sum([1 / prior_values_dict_pr_group[el] for el in v])) for k, v in dict_pr_rules.items()}
     return prior_values_dict_pr_group, prior_values_dict_pr_rules
     
     
-def run_experiment(return_views, pathway_file, nb_repetitions, update_method='neg_exp', psi_g=0.0, psi_r=0.0, 
+def run_experiment(return_views, pathway_file, nb_repetitions, update_method='neg_exp', psi_g=0.1, psi_r=0.1, 
                    data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,  
                    experiment_name='experiment_group_scm', saving_rep=saving_repository):
     """
@@ -301,8 +303,8 @@ def main():
     parser.add_argument('-nb_r', '--nb_repetitions', type=int, default=1)
     parser.add_argument('-g_dict', '--groups_dict', type=str, default=f"{data_repository}/pathways_biogrid_groups.pck")
     parser.add_argument('-u_m', '--update_method', type=str, default="neg_exp")
-    parser.add_argument('-psi_g', '--psi_g', type=float, default=0.0)
-    parser.add_argument('-psi_r', '--psi_r', type=float, default=0.0)
+    parser.add_argument('-psi_g', '--psi_g', type=float, default=0.1)
+    parser.add_argument('-psi_r', '--psi_r', type=float, default=0.1)
     parser.add_argument('-data', '--data', type=str, default=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna)
     parser.add_argument('-exp_name', '--experiment_name', type=str, default="experiment_group_scm")
     parser.add_argument('-o', '--saving_rep', type=str, default=saving_repository)

@@ -4,6 +4,7 @@ import random
 import os
 import h5py
 import time
+import seaborn as sns
 from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
@@ -471,8 +472,9 @@ def anaylses_resultats(type_experiment='normal', plot_hist=True):
                 f.write(f'Results: Acc: {acc_test_list[best_model_idx]}\t F1: {f1_test_list[best_model_idx]}\t Prec: {precis_test_list[best_model_idx]}\t Rec: {rec_test_list[best_model_idx]} \n')
                 f.write(f'Model comptes {model_comptes_list[best_model_idx]}\n')
     if type_experiment == 'group_scm':
-        sous_experiment_types = ['methyl_rna_iso_mirna', 'methyl_rna_iso_mirna_snp_clinical', 
-                                 'methyl_rna_mirna', 'methyl_rna_mirna_snp_clinical', 'all']
+        # sous_experiment_types = ['methyl_rna_iso_mirna', 'methyl_rna_iso_mirna_snp_clinical', 
+        #                          'methyl_rna_mirna', 'methyl_rna_mirna_snp_clinical', 'all']
+        sous_experiment_types = ['methyl_rna_iso_mirna']
         for experiment in sous_experiment_types:
             output_text_file_experiment = f"{output_text_file}__group_scm__{experiment}.txt"
             recap_text_file_experiment = f"{output_text_file}__{experiment}__recap.txt"
@@ -484,6 +486,7 @@ def anaylses_resultats(type_experiment='normal', plot_hist=True):
             groups_features_list = []
             list_of_directories = os.listdir('./')
             list_of_directories = [directory for directory in list_of_directories if directory.startswith(experiment)] 
+            list_of_directories = [directory for directory in list_of_directories if directory.find('psi') != -1]
             for directory in list_of_directories:
                 acc_test, f1_test, precis_test, rec_test, model_comptes, groups_features = results_analysis(directory=directory,
                                                                                             output_text_file=output_text_file_experiment,
@@ -542,6 +545,91 @@ def generate_histogram(file_name, fig_title, accuracy_train, accuracy_test, f1_s
     plt.close()
 
 
+def generate_heatmaps(fichier_recap):
+    """
+    Utility function to build the heatmap. Load the file recap for each experiment and run the heatmap accordling 
+    to the psi_g, psi_r parameter and the update method
+    Args:
+        fichier_recap, str, path to the recap file
+    """
+    f = open(fichier_recap, 'r')
+    lines = f.readlines()
+    random.seed(42)
+    psi_g_list = np.round(np.linspace(0, 1, 10), 3) 
+    # psi_r_list = np.round(np.linspace(0, 1, 10), 3) 
+    values = np.arange(10)
+    dico_position_in_matrix = {el: values[idx] for idx, el in enumerate(psi_g_list)}
+    # update_method = ['neg_exp', 'pos_exp', 'neg_exp_group', 'pos_exp_group']
+    update_neg_exp = np.zeros((10,10))
+    update_pos_exp = np.zeros((10,10))
+    update_neg_exp_group = np.zeros((10,10))
+    update_pos_exp_group = np.zeros((10,10))
+    for line in lines: 
+        number_one_split = line.split('\t') 
+        file_name = number_one_split[0].split('_') 
+        if len(file_name) == 28 and file_name[12] == 'neg': # neg_exp_group
+            psi_g_value = float(file_name[17][1:])
+            psi_r_value = float(file_name[20][1:])
+            update_neg_exp_group[dico_position_in_matrix[psi_g_value], dico_position_in_matrix[psi_r_value]] = float(number_one_split[2])
+        if len(file_name) == 28 and file_name[12] == 'pos': # pos_exp_group
+            psi_g_value = float(file_name[17][1:])
+            psi_r_value = float(file_name[20][1:])
+            update_pos_exp_group[dico_position_in_matrix[psi_g_value], dico_position_in_matrix[psi_r_value]] = float(number_one_split[2])
+        if len(file_name) == 27 and file_name[12] == 'neg': # neg_exp
+            psi_g_value = float(file_name[16][1:])
+            psi_r_value = float(file_name[19][1:])
+            update_neg_exp[dico_position_in_matrix[psi_g_value], dico_position_in_matrix[psi_r_value]] = float(number_one_split[2])
+        if len(file_name) == 27 and file_name[12] == 'pos': # pos_exp
+            psi_g_value = float(file_name[16][1:])
+            psi_r_value = float(file_name[19][1:])
+            update_pos_exp[dico_position_in_matrix[psi_g_value], dico_position_in_matrix[psi_r_value]] = float(number_one_split[2])
+    f.close()
+    # Plot fig 1
+    f, ax = plt.subplots()
+    ax = sns.heatmap(update_neg_exp, linewidths=.5)
+    ax.set_title('update=neg_exp')
+    ax.set_xticks(values)
+    ax.set_xticklabels(psi_g_list)
+    ax.set_yticks(values)
+    ax.set_yticklabels(psi_g_list)
+    ax.set_xlabel('psi_g scores')
+    ax.set_ylabel('psi_r scores')
+    f.savefig('heatmap_psi_gVSpsi_r_update_neg_exp.png')
+    # Plot fig 2
+    f, ax = plt.subplots()
+    ax = sns.heatmap(update_pos_exp, linewidths=.5)
+    ax.set_title('update=pos_exp')
+    ax.set_xticks(values)
+    ax.set_xticklabels(psi_g_list)
+    ax.set_yticks(values)
+    ax.set_yticklabels(psi_g_list)
+    ax.set_xlabel('psi_g scores')
+    ax.set_ylabel('psi_r scores')
+    f.savefig('heatmap_psi_gVSpsi_r_update_pos_exp.png')
+    # Plot fig 3
+    f, ax = plt.subplots()
+    ax = sns.heatmap(update_neg_exp_group, linewidths=.5)
+    ax.set_title('update=neg_exp_group')
+    ax.set_xticks(values)
+    ax.set_xticklabels(psi_g_list)
+    ax.set_yticks(values)
+    ax.set_yticklabels(psi_g_list)
+    ax.set_xlabel('psi_g scores')
+    ax.set_ylabel('psi_r scores')
+    f.savefig('heatmap_psi_gVSpsi_r_update_neg_exp_group.png')
+    # Plot fig 4
+    f, ax = plt.subplots()
+    ax = sns.heatmap(update_pos_exp_group, linewidths=.5)
+    ax.set_title('update=pos_exp_group')
+    ax.set_xticks(values)
+    ax.set_xticklabels(psi_g_list)
+    ax.set_yticks(values)
+    ax.set_yticklabels(psi_g_list)
+    ax.set_xlabel('psi_g scores')
+    ax.set_ylabel('psi_r scores')
+    f.savefig('heatmap_psi_gVSpsi_r_neg_exp_group.png')
+    
+    
 def weighted_sample(y, y_target):
     """ Build a weighted sample array
     Args:
@@ -994,8 +1082,8 @@ def build_dictionnary_groups(data_path=data_tn_new_label_unbalanced_cpg_rna_rna_
         pickle.dump(biogrid_pathways, f)
     with open(output_file_name + '.pck', 'wb') as f:
         pickle.dump(dico_results, f)
-
-
+        
+        
 def construction_biogrid_pathway_file(data_path=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna, return_views='all',
                                       output_file_name=''):
     """
