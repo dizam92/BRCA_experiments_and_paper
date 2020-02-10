@@ -26,12 +26,11 @@ class GroupSetCoveringMachineClassifier(BaseSetCoveringMachine):
         """ 
         Args:
             features_to_index: a dictionnary with key= idx and value the correspondant features at place idx 
-            prior_rules : The prior or preference on the rules (pre-calculated) default value, p_ri = 1 / |g_i|
+            prior_rules : The prior or preference on the rules (pre-calculated)
             update_method: str, name of the method to update the prioRules in the GroupSCM model
-                'neg_exp': p_ri = p_ri * exp( - | g_i  GR | )  update 1
-                'pos_exp': p_ri = p_ri * exp( + | g_i  GR | )  update 2
-                'neg_exp_group': p_ri = exp ( - |g_i| ) * exp( - | g_i  GR | )  update 3
-                'pos_exp_group': p_ri = exp ( - |g_i| ) * exp( + | g_i  GR | )  update 4
+                'inner_group': p_ri = p_ri * exp(| g_i \intersection GR | )  update 1
+                'outer_group': p_ri = p_ri * exp(-| g_i \intersection GR | )  update 2
+                
             groups : g_i \in [1, G]+ is the set of groups associated with the rule r_i, 
                 where G is the total number of groups. 
                 More explicitly each rule can have multiple groups/ pathways
@@ -187,16 +186,12 @@ class GroupSetCoveringMachineClassifier(BaseSetCoveringMachine):
             g_i = self.groups[new_rule_choosed] # list
             g_i_intersection_groups_rules = len([el for el in g_i if el in self.groups_rules]) # int
             # REAL UPDATE OPERATION
-            if self.update_method == 'neg_exp':
-                features_weights[next_rule_model_idx] *= np.exp(- g_i_intersection_groups_rules)
-            elif self.update_method == 'pos_exp':
+            if self.update_method == 'inner_group':
                 features_weights[next_rule_model_idx] *= np.exp(g_i_intersection_groups_rules)
-            elif self.update_method == 'neg_exp_group':
-                features_weights[next_rule_model_idx] *= np.exp(- g_i_intersection_groups_rules) * np.exp(- len(g_i))
-            elif self.update_method == 'pos_exp_group':
-                features_weights[next_rule_model_idx] *= np.exp(g_i_intersection_groups_rules) * np.exp(- len(g_i))
+            elif self.update_method == 'outer_group':
+                features_weights[next_rule_model_idx] *= np.exp(- g_i_intersection_groups_rules)
             else:
-                 raise ValueError(f"{self.update_method} must be a str and in ['neg_exp', 'pos_exp', 'neg_exp_group', 'pos_exp_group']")
+                 raise ValueError(f"{self.update_method} must be a str and in ['inner_group', 'outer_group']")
             # UPDATE GR
             self.groups_rules.extend(self.groups[new_rule_choosed]) # Expected results: [G1, G2, ...]
             self.groups_rules = list(np.unique(self.groups_rules))

@@ -10,6 +10,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.metrics import confusion_matrix
 import argparse
 from functools import partial
+from scipy.special import cotdg
 import multiprocessing
 from multiprocessing import Pool
 import logging
@@ -96,31 +97,40 @@ class LearnGroupTN(object):
         with open(self.saving_file, 'wb') as f:
             pickle.dump(self.saving_dict, f)
 
-def build_priors_rules_vector(psi_g, psi_r, 
+
+def langevin_function(x):
+    """Compute the langevin function"""
+    return cotdg(x) - 1/x
+
+f = langevin_function
+    
+def build_priors_rules_vector(c, 
                               dictionnary_for_prior_group=f"{data_repository}/biogrid_pathways_dict.pck", 
                               dictionnary_for_prior_rules=f"{data_repository}/pathways_biogrid_groups.pck"):
     """
     Build the vector of the prior rules integreting the prior on the group/pathways 
     Args:
-        psi_g, float, hyperparameter to be in the formula calculating p_g, p_g = exp (- psi_g * |g| ) with 0 <= psi_g < 1.0
-        psi_ri, float, hyperparameter to be in the formula calculating p_ri, p_ri = exp ( - psi_r * sum_((g \in g_i) 1 / p_g)) with 0 <= psi_r < 1.0 
+        c, is the number borning the interval for the results of  f:  f(x) = c * L(x);   c \in [0, 1], c==1 ==> langevin function classical
         dictionnary_for_prior_group, str, path to the dictionnary for generating . Structure must be: d = {'Group_name1': [gen1, gen100,...],  'Group_nameX': [genXXX,...]}
         dictionnary_for_prior_rules, str, path to the dictionnary. Structure must be: d = {'Feature_name1': [Group_name1, Group_name100,...],  'Feature_nameX': [Group_nameXXX,...]}
     Return:
         prior_values_dict_pr_group, dict
         prior_values_dict_pr_rules, dict
     """
+    default_value = 1e-5 
+    # Replace the 
     # Build PriorGroups vector, p_g
     dict_pr_group = pickle.load(open(dictionnary_for_prior_group, 'rb'))
-    # prior_values_dict_pr_group = {k: np.exp(- psi_g * len(v)) for k, v in dict_pr_group.items()}
-    prior_values_dict_pr_group = {k: np.log2(psi_g * len(v)) for k, v in dict_pr_group.items()}
+    prior_values_dict_pr_group = {k: np.exp( - c * f(len(v))) for k, v in dict_pr_group.items()}
+    prior_values_dict_pr_group = {k: v if v != 0 else default_value for k, v in prior_values_dict_pr_group.items()}
+    # Build PriorRules vector, p_ri
     dict_pr_rules = pickle.load(open(dictionnary_for_prior_rules, 'rb'))
-    # prior_values_dict_pr_rules = {k: np.exp(- psi_r * np.sum([1 / prior_values_dict_pr_group[el] if prior_values_dict_pr_group[el] != 0.0 else 0 for el in v])) for k, v in dict_pr_rules.items()}
-    prior_values_dict_pr_rules = {k: np.exp(- psi_r * np.sum([1 / prior_values_dict_pr_group[el] for el in v])) for k, v in dict_pr_rules.items()}
+    prior_values_dict_pr_rules = {k: np.exp(- c * f(np.sum([prior_values_dict_pr_group[el] for el in v]))) for k, v in dict_pr_rules.items()}
+    prior_values_dict_pr_rules = {k: v if v != 0 else default_value for k, v in prior_values_dict_pr_rules.items()}
     return prior_values_dict_pr_group, prior_values_dict_pr_rules
     
     
-def run_experiment(return_views, pathway_file, nb_repetitions, update_method='neg_exp', psi_g=0.1, psi_r=0.1, 
+def run_experiment(return_views, pathway_file, nb_repetitions, update_method='inner_group', c=0.1, 
                    data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,  
                    experiment_name='experiment_group_scm', saving_rep=saving_repository):
     """
@@ -128,12 +138,9 @@ def run_experiment(return_views, pathway_file, nb_repetitions, update_method='ne
     Args:
         data: str, data path
         update_method: str, name of the method to update the prioRules in the GroupSCM model
-                'neg_exp': p_ri = p_ri * exp( - | g_i  GR | )  update 1
-                'pos_exp': p_ri = p_ri * exp( + | g_i  GR | )  update 2
-                'neg_exp_group': p_ri = exp ( - |g_i| ) * exp( - | g_i  GR | )  update 3
-                'pos_exp_group': p_ri = exp ( - |g_i| ) * exp( + | g_i  GR | )  update 4
-        psi_g, float, hyperparameter to be in the formula calculating p_g, p_g = exp (- psi_g * |g| ) with 0 <= psi_g < 1.0
-        psi_ri, float, hyperparameter to be in the formula calculating p_ri, p_ri = exp ( - psi_r * sum_((g \in g_i) 1 / p_g)) with 0 <= psi_r < 1.0 
+                'inner_group': p_ri = p_ri * exp(| g_i \intersection GR | )  update 1
+                'outer_group': p_ri = p_ri * exp(-| g_i \intersection GR | )  update 2
+        c: float, hyperparameter for the prior rules and groups
         pathway_file: str, path to the file containing information on the pathways
         experiment_name: str, experiment name for saving file
         return_views: str, which view to run experiment on
@@ -152,7 +159,7 @@ def run_experiment(return_views, pathway_file, nb_repetitions, update_method='ne
     # Parameters for GROUP_SCM
     dict_biogrid_groups = pickle.load(open(pathway_file, 'rb'))
     features_to_index = {idx: name for idx, name in enumerate(features_names)}
-    _, prior_values_dict_pr_rules = build_priors_rules_vector(psi_g=psi_g, psi_r=psi_r)
+    _, prior_values_dict_pr_rules = build_priors_rules_vector(c=c)
     prior_rules = [prior_values_dict_pr_rules[name] for name in features_names]
     learner_clf = GroupSCM(features_to_index=features_to_index, 
                            prior_rules=prior_rules, 
@@ -188,114 +195,6 @@ def run_experiment(return_views, pathway_file, nb_repetitions, update_method='ne
                         y_train=y_train, y_test=y_test, patients_train=patients_train,
                         patients_test=patients_test)
 
-
-def run_experiment_1st_algorithm(return_views, pathway_file, nb_repetitions, update_method='neg_exp', prior_initialization_type='exp', 
-                   data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,  
-                   experiment_name='experiment_group_scm', saving_rep=saving_repository):
-    """
-    Utility function to run experiment on specific data and with specific wiew. To be called in a loop in a main
-    Args:
-        data: str, data path
-        update_method: str, name of the method to update the prioRules in the GroupSCM model
-                'neg_exp': p_ri = p_ri * exp( - | g_i  GR | )  update 1
-                'pos_exp': p_ri = p_ri * exp( + | g_i  GR | )  update 2
-                'neg_exp_group': p_ri = exp ( - |g_i| ) * exp( - | g_i  GR | )  update 3
-                'pos_exp_group': p_ri = exp ( - |g_i| ) * exp( + | g_i  GR | )  update 4
-        prior_initialization_type: str, type of initialization of the prior ['exp', 'normal', 'default'] 
-                                'exp': exp ( - |g_i| ); 'normal': 1 / |g_i|; 'default': 1
-        pathway_file: str, path to the file containing information on the pathways
-        experiment_name: str, experiment name for saving file
-        return_views: str, which view to run experiment on
-        nb_repetitions: int, number of repetitions
-        saving_rep: str, saving repertory
-    Return:
-       Create a saving repertory and put the pickle results in
-    """
-    assert nb_repetitions >= 1, 'At least one split'
-    saving_dict_scm = defaultdict(dict)
-    x, y, features_names, patients_names = load_data(data=data, return_views=return_views)
-    features_names = [el.encode("utf-8") for el in features_names]
-    features_names = [el.decode("utf-8") for el in features_names]
-    random.seed(42)
-    random_seeds_list = [random.randint(1, 2000) for _ in range(nb_repetitions)]
-    # # ********* I ADD A HACKK HERE TO JUST DO THE BEST SEEDS FOR EACH VIEWS TO COMPARE THAT TO THE BEST SCM ***************#
-    # if return_views=='methyl_rna_iso_mirna':
-    #     random_seeds_list = [564]
-    # if return_views=='methyl_rna_iso_mirna_snp_clinical':
-    #     random_seeds_list = [229]
-    # if return_views=='methyl_rna_mirna':
-    #     random_seeds_list = [1310]
-    # if return_views=='methyl_rna_mirna_snp_clinical':
-    #     random_seeds_list = [52]
-    # if return_views=='all':
-    #     random_seeds_list = [1310]    
-    # # *********************** TO BE DELETED OR PUT IN COMMENT AFTER *********************************************#
-    # Parameters for GROUP_SCM
-    dict_biogrid_groups = pickle.load(open(pathway_file, 'rb'))
-    features_to_index = {idx: name for idx, name in enumerate(features_names)}
-    if prior_initialization_type == 'exp':
-        prior_rules = [np.exp(- len(dict_biogrid_groups[name])) for name in features_names]
-    elif prior_initialization_type == 'normal':
-        prior_rules = [1 / len(dict_biogrid_groups[name]) for name in features_names]
-    elif prior_initialization_type == 'default':
-        prior_rules = [1. for name in features_names]
-    else:
-        raise ValueError (f"{prior_initialization_type} must be a str and in ['exp', 'normal', 'default']")
-    learner_clf = GroupSCM(features_to_index=features_to_index, 
-                           prior_rules=prior_rules, 
-                           update_method=update_method,
-                           groups=dict_biogrid_groups,
-                           tiebreaker='', 
-                           p=1.0, 
-                           model_type='conjunction', 
-                           max_rules=10)
-    results_repertory = join(saving_rep, experiment_name)
-    if not exists(results_repertory): makedirs(results_repertory)
-    os.chdir(f"{results_repertory}")
-    existing_files_list = [fichier for fichier in glob('*.pck')]
-    seeds_already_done = None
-    if len(existing_files_list) != 0:
-        seeds_already_done = [int(f.split('_')[-1].split('.')[0]) for f in existing_files_list]
-    for state in range(nb_repetitions):
-        if seeds_already_done is not None and random_seeds_list[state] in seeds_already_done: continue
-        clf = LearnGroupTN(parameters=parameters_group_scm,
-                            learner=learner_clf,
-                            saving_dict=saving_dict_scm,
-                            saving_file=experiment_name,
-                            rs=random_seeds_list[state],
-                            nb_jobs=nb_jobs,
-                            cv=cv_fold,
-                            data_path=data,
-                            return_views=return_views)
-        x_train, x_test, y_train, y_test, patients_train, patients_test = \
-            train_test_split(x, y, patients_names, train_size=0.8, random_state=random_seeds_list[state])
-        logger.info('Train set shape {}'.format(x_train.shape))
-        logger.info('Test set shape {}'.format(x_test.shape))
-        clf.learning(features_names=features_names, x_train=x_train, x_test=x_test,
-                        y_train=y_train, y_test=y_test, patients_train=patients_train,
-                        patients_test=patients_test)
-
-
-def main_old():
-    parser = argparse.ArgumentParser(description="Learn Group TN Experiment")
-    parser.add_argument('-rt', '--return_views', type=str, default="all")
-    parser.add_argument('-nb_r', '--nb_repetitions', type=int, default=1)
-    parser.add_argument('-g_dict', '--groups_dict', type=str, default=f"{data_repository}/pathways_biogrid_groups.pck")
-    parser.add_argument('-u_m', '--update_method', type=str, default="neg_exp")
-    parser.add_argument('-init', '--prior_initialization_type', type=str, default="exp")
-    parser.add_argument('-data', '--data', type=str, default=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna)
-    parser.add_argument('-exp_name', '--experiment_name', type=str, default="experiment_group_scm")
-    parser.add_argument('-o', '--saving_rep', type=str, default=saving_repository)
-    args = parser.parse_args()
-    run_experiment_1st_algorithm(return_views=args.return_views, 
-                                pathway_file=args.groups_dict, 
-                                nb_repetitions=args.nb_repetitions,
-                                update_method=args.update_method, 
-                                prior_initialization_type=args.prior_initialization_type, 
-                                data=args.data,  
-                                experiment_name=args.experiment_name, 
-                                saving_rep=args.saving_rep)    
-    
     
 def main():
     parser = argparse.ArgumentParser(description="Learn Group TN Experiment")
@@ -303,8 +202,7 @@ def main():
     parser.add_argument('-nb_r', '--nb_repetitions', type=int, default=1)
     parser.add_argument('-g_dict', '--groups_dict', type=str, default=f"{data_repository}/pathways_biogrid_groups.pck")
     parser.add_argument('-u_m', '--update_method', type=str, default="neg_exp")
-    parser.add_argument('-psi_g', '--psi_g', type=float, default=0.1)
-    parser.add_argument('-psi_r', '--psi_r', type=float, default=0.1)
+    parser.add_argument('-c', '--c', type=float, default=0.1)
     parser.add_argument('-data', '--data', type=str, default=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna)
     parser.add_argument('-exp_name', '--experiment_name', type=str, default="experiment_group_scm")
     parser.add_argument('-o', '--saving_rep', type=str, default=saving_repository)
@@ -313,8 +211,7 @@ def main():
                    pathway_file=args.groups_dict, 
                    nb_repetitions=args.nb_repetitions,
                    update_method=args.update_method, 
-                   psi_g=args.psi_g,
-                   psi_r=args.psi_r,
+                   c=args.c,
                    data=args.data,  
                    experiment_name=args.experiment_name, 
                    saving_rep=args.saving_rep)    
@@ -322,4 +219,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    # main_old()
