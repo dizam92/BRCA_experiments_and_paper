@@ -104,6 +104,31 @@ def langevin_function(x):
 
 f = langevin_function
     
+# def build_priors_rules_vector(c, 
+#                               dictionnary_for_prior_group=f"{data_repository}/biogrid_pathways_dict.pck", 
+#                               dictionnary_for_prior_rules=f"{data_repository}/pathways_biogrid_groups.pck"):
+#     """
+#     Build the vector of the prior rules integreting the prior on the group/pathways 
+#     Args:
+#         c, is the number borning the interval for the results of  f:  f(x) = c * L(x);   c \in [0, 1], c==1 ==> langevin function classical
+#         dictionnary_for_prior_group, str, path to the dictionnary for generating . Structure must be: d = {'Group_name1': [gen1, gen100,...],  'Group_nameX': [genXXX,...]}
+#         dictionnary_for_prior_rules, str, path to the dictionnary. Structure must be: d = {'Feature_name1': [Group_name1, Group_name100,...],  'Feature_nameX': [Group_nameXXX,...]}
+#     Return:
+#         prior_values_dict_pr_group, dict
+#         prior_values_dict_pr_rules, dict
+#     """
+#     default_value = 1e-5 
+#     # Replace the 
+#     # Build PriorGroups vector, p_g
+#     dict_pr_group = pickle.load(open(dictionnary_for_prior_group, 'rb'))
+#     prior_values_dict_pr_group = {k: np.exp( - c * f(len(v))) for k, v in dict_pr_group.items()}
+#     prior_values_dict_pr_group = {k: v if v != 0 else default_value for k, v in prior_values_dict_pr_group.items()}
+#     # Build PriorRules vector, p_ri
+#     dict_pr_rules = pickle.load(open(dictionnary_for_prior_rules, 'rb'))
+#     prior_values_dict_pr_rules = {k: np.exp(- c * f(np.sum([prior_values_dict_pr_group[el] for el in v]))) for k, v in dict_pr_rules.items()}
+#     prior_values_dict_pr_rules = {k: v if v != 0 else default_value for k, v in prior_values_dict_pr_rules.items()}
+#     return prior_values_dict_pr_group, prior_values_dict_pr_rules
+    
 def build_priors_rules_vector(c, 
                               dictionnary_for_prior_group=f"{data_repository}/biogrid_pathways_dict.pck", 
                               dictionnary_for_prior_rules=f"{data_repository}/pathways_biogrid_groups.pck"):
@@ -121,14 +146,21 @@ def build_priors_rules_vector(c,
     # Replace the 
     # Build PriorGroups vector, p_g
     dict_pr_group = pickle.load(open(dictionnary_for_prior_group, 'rb'))
-    prior_values_dict_pr_group = {k: np.exp( - c * f(len(v))) for k, v in dict_pr_group.items()}
-    prior_values_dict_pr_group = {k: v if v != 0 else default_value for k, v in prior_values_dict_pr_group.items()}
+    prior_values_dict_pr_group = {k: 1 / len(v) for k, v in dict_pr_group.items()} # inversement proportionnel à la taille du groupe
     # Build PriorRules vector, p_ri
     dict_pr_rules = pickle.load(open(dictionnary_for_prior_rules, 'rb'))
-    prior_values_dict_pr_rules = {k: np.exp(- c * f(np.sum([prior_values_dict_pr_group[el] for el in v]))) for k, v in dict_pr_rules.items()}
-    prior_values_dict_pr_rules = {k: v if v != 0 else default_value for k, v in prior_values_dict_pr_rules.items()}
+    # l'idee ici est de prendre le degré du feature dans chaque pathway et mutiplié par son prio group et faire la somme
+    prior_values_dict_pr_rules = defaultdict()
+    for k, v in dict_pr_rules.items():
+        t = 0
+        for el in v: 
+            t += prior_values_dict_pr_group[el] * (len(dict_pr_group[el]) - 1) # viens de rajouter le -1 car len(el) va juste nous donner 
+        prior_values_dict_pr_rules[k] = t / 100
+    # prior_values_dict_pr_rules = {k: np.sum([prior_values_dict_pr_group[el] * len(dict_pr_group[el] for el in v]) for k, v in dict_pr_rules.items()}
+    # prior_values_dict_pr_rules = {k: np.exp(- c * f(np.sum([prior_values_dict_pr_group[el] for el in v]))) for k, v in dict_pr_rules.items()}
+    # prior_values_dict_pr_rules = {k: v if v != 0 else default_value for k, v in prior_values_dict_pr_rules.items()}
     return prior_values_dict_pr_group, prior_values_dict_pr_rules
-    
+
     
 def run_experiment(return_views, pathway_file, nb_repetitions, update_method='inner_group', c=0.1, 
                    data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,  

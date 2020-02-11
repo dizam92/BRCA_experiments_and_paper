@@ -132,7 +132,8 @@ def main_group():
     update_method = ['inner_group', 'outer_group']
     random.seed(42)
     # c_list = np.round(np.linspace(0.1, 1, 10), 3) # or np.random.choice(np.linspace(0, 1), 10) 
-    c_list = np.round(np.random.choice(np.linspace(0, 1), 10), 3)
+    # c_list = np.round(np.random.choice(np.linspace(0, 1), 10), 3)
+    c_list = [0.1]
     param_grid = {'view': return_views, 'update': update_method, 'c': c_list}
     dispatch_path = join(RESULTS_PATH, "dispatch")
     if not exists(dispatch_path): makedirs(dispatch_path)

@@ -179,23 +179,39 @@ class GroupSetCoveringMachineClassifier(BaseSetCoveringMachine):
     
     def _get_best_utility_rules(self, X, y, X_argsort_by_feature_T, example_idx, groups, groups_rules, features_weights,  next_rule_model_idx):
         if next_rule_model_idx is None:
-            return find_max_utility(self.p, X, y, X_argsort_by_feature_T, example_idx, features_weights)
+            calculated_utility = find_max_utility(self.p, X, y, X_argsort_by_feature_T, example_idx, features_weights)
+            print(f'the initial utility function is: {calculated_utility}')
+            return calculated_utility
         else:
+            print(f'the groups previously selected are: {self.groups_rules}')
             new_rule_choosed = self.features_to_index[next_rule_model_idx] # must give a feature Name
+            print(f'the index of the new choosen rule is: {new_rule_choosed}')
             # UPDATE PR
-            g_i = self.groups[new_rule_choosed] # list
+            g_i = self.groups[new_rule_choosed] # list 
+            print(f'the groups of the choosen rules are: {g_i}')
             g_i_intersection_groups_rules = len([el for el in g_i if el in self.groups_rules]) # int
+            print(f'the number of intersecrtion between the new rules and the other groups are : {g_i_intersection_groups_rules}')
             # REAL UPDATE OPERATION
             if self.update_method == 'inner_group':
+                print(f'the inner group values is: {np.exp(g_i_intersection_groups_rules)}')
+                print(f'the outer group values is: {np.exp(- g_i_intersection_groups_rules)}')
+                print(f'the features_weights at that position before the update is: {features_weights[next_rule_model_idx]}')
                 features_weights[next_rule_model_idx] *= np.exp(g_i_intersection_groups_rules)
+                print(f'the features_weights at that position after the update is: {features_weights[next_rule_model_idx]}')
             elif self.update_method == 'outer_group':
+                print(f'the inner group values is: {np.exp(g_i_intersection_groups_rules)}')
+                print(f'the outer group values is: {np.exp(- g_i_intersection_groups_rules)}')
+                print(f'the features_weights at that position before the update is: {features_weights[next_rule_model_idx]}')
                 features_weights[next_rule_model_idx] *= np.exp(- g_i_intersection_groups_rules)
+                print(f'the features_weights at that position after the update is: {features_weights[next_rule_model_idx]}')
             else:
                  raise ValueError(f"{self.update_method} must be a str and in ['inner_group', 'outer_group']")
             # UPDATE GR
             self.groups_rules.extend(self.groups[new_rule_choosed]) # Expected results: [G1, G2, ...]
             self.groups_rules = list(np.unique(self.groups_rules))
-            return find_max_utility(self.p, X, y, X_argsort_by_feature_T, example_idx, features_weights)
+            calculated_utility = find_max_utility(self.p, X, y, X_argsort_by_feature_T, example_idx, features_weights)
+            print(f'the initial utility function is: {calculated_utility}')
+            return calculated_utility
         
         
 
