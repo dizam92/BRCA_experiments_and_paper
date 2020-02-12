@@ -8,6 +8,7 @@ from learners.pyscmGroup import GroupSCM
 from sklearn.model_selection import train_test_split, GridSearchCV, KFold
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import confusion_matrix
+from sklearn.linear_model import RidgeClassifier, Lasso
 import argparse
 from functools import partial
 from scipy.special import cotdg
@@ -97,72 +98,46 @@ class LearnGroupTN(object):
         with open(self.saving_file, 'wb') as f:
             pickle.dump(self.saving_dict, f)
 
-
-def langevin_function(x):
-    """Compute the langevin function"""
-    return cotdg(x) - 1/x
-
-f = langevin_function
     
-# def build_priors_rules_vector(c, 
-#                               dictionnary_for_prior_group=f"{data_repository}/biogrid_pathways_dict.pck", 
-#                               dictionnary_for_prior_rules=f"{data_repository}/pathways_biogrid_groups.pck"):
-#     """
-#     Build the vector of the prior rules integreting the prior on the group/pathways 
-#     Args:
-#         c, is the number borning the interval for the results of  f:  f(x) = c * L(x);   c \in [0, 1], c==1 ==> langevin function classical
-#         dictionnary_for_prior_group, str, path to the dictionnary for generating . Structure must be: d = {'Group_name1': [gen1, gen100,...],  'Group_nameX': [genXXX,...]}
-#         dictionnary_for_prior_rules, str, path to the dictionnary. Structure must be: d = {'Feature_name1': [Group_name1, Group_name100,...],  'Feature_nameX': [Group_nameXXX,...]}
-#     Return:
-#         prior_values_dict_pr_group, dict
-#         prior_values_dict_pr_rules, dict
-#     """
-#     default_value = 1e-5 
-#     # Replace the 
-#     # Build PriorGroups vector, p_g
-#     dict_pr_group = pickle.load(open(dictionnary_for_prior_group, 'rb'))
-#     prior_values_dict_pr_group = {k: np.exp( - c * f(len(v))) for k, v in dict_pr_group.items()}
-#     prior_values_dict_pr_group = {k: v if v != 0 else default_value for k, v in prior_values_dict_pr_group.items()}
-#     # Build PriorRules vector, p_ri
-#     dict_pr_rules = pickle.load(open(dictionnary_for_prior_rules, 'rb'))
-#     prior_values_dict_pr_rules = {k: np.exp(- c * f(np.sum([prior_values_dict_pr_group[el] for el in v]))) for k, v in dict_pr_rules.items()}
-#     prior_values_dict_pr_rules = {k: v if v != 0 else default_value for k, v in prior_values_dict_pr_rules.items()}
-#     return prior_values_dict_pr_group, prior_values_dict_pr_rules
-    
-def build_priors_rules_vector(c, 
+def build_priors_rules_vector(c, type_of_prior, x, y, features_names, 
+                              replace_0_by_default = False, 
                               dictionnary_for_prior_group=f"{data_repository}/biogrid_pathways_dict.pck", 
                               dictionnary_for_prior_rules=f"{data_repository}/pathways_biogrid_groups.pck"):
     """
     Build the vector of the prior rules integreting the prior on the group/pathways 
     Args:
-        c, is the number borning the interval for the results of  f:  f(x) = c * L(x);   c \in [0, 1], c==1 ==> langevin function classical
+        c, an hp
+        type_of_prior, bool, can be in ['degree', 'lasso', 'ridge_reg'] for now
         dictionnary_for_prior_group, str, path to the dictionnary for generating . Structure must be: d = {'Group_name1': [gen1, gen100,...],  'Group_nameX': [genXXX,...]}
         dictionnary_for_prior_rules, str, path to the dictionnary. Structure must be: d = {'Feature_name1': [Group_name1, Group_name100,...],  'Feature_nameX': [Group_nameXXX,...]}
     Return:
         prior_values_dict_pr_group, dict
         prior_values_dict_pr_rules, dict
     """
-    default_value = 1e-5 
-    # Replace the 
-    # Build PriorGroups vector, p_g
+    default_value = 1e-10
     dict_pr_group = pickle.load(open(dictionnary_for_prior_group, 'rb'))
-    prior_values_dict_pr_group = {k: 1 / len(v) for k, v in dict_pr_group.items()} # inversement proportionnel à la taille du groupe
-    # Build PriorRules vector, p_ri
     dict_pr_rules = pickle.load(open(dictionnary_for_prior_rules, 'rb'))
-    # l'idee ici est de prendre le degré du feature dans chaque pathway et mutiplié par son prio group et faire la somme
-    prior_values_dict_pr_rules = defaultdict()
-    for k, v in dict_pr_rules.items():
-        t = 0
-        for el in v: 
-            t += prior_values_dict_pr_group[el] * (len(dict_pr_group[el]) - 1) # viens de rajouter le -1 car len(el) va juste nous donner 
-        prior_values_dict_pr_rules[k] = t / 100
-    # prior_values_dict_pr_rules = {k: np.sum([prior_values_dict_pr_group[el] * len(dict_pr_group[el] for el in v]) for k, v in dict_pr_rules.items()}
-    # prior_values_dict_pr_rules = {k: np.exp(- c * f(np.sum([prior_values_dict_pr_group[el] for el in v]))) for k, v in dict_pr_rules.items()}
-    # prior_values_dict_pr_rules = {k: v if v != 0 else default_value for k, v in prior_values_dict_pr_rules.items()}
+    prior_values_dict_pr_group = {k: 1 for k, v in dict_pr_group.items()}
+    if type_of_prior == 'degree':
+        prior_values_dict_pr_rules = {k: len(v) for k, v in dict_pr_rules.items()}
+    if type_of_prior == 'lasso':
+        clf = Lasso(alpha=c)
+        clf.fit(x, y)
+        prior_values_dict_pr_rules = {k: clf.coef_[idx] for idx, k in enumerate(features_names)}
+        if replace_0_by_default:
+            prior_values_dict_pr_rules = {k: v if v != 0 else default_value for k, v in prior_values_dict_pr_rules.items()}
+    if type_of_prior == 'ridge_reg':
+        clf = RidgeClassifier(alpha=c)
+        clf.fit(x, y)
+        prior_values_dict_pr_rules = {k: clf.coef_[idx] for idx, k in enumerate(features_names)}
+        if replace_0_by_default:
+            prior_values_dict_pr_rules = {k: v if v != 0 else default_value for k, v in prior_values_dict_pr_rules.items()}
     return prior_values_dict_pr_group, prior_values_dict_pr_rules
 
     
 def run_experiment(return_views, pathway_file, nb_repetitions, update_method='inner_group', c=0.1, 
+                   type_of_prior='degree',
+                   replace_0_by_default=False,
                    data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,  
                    experiment_name='experiment_group_scm', saving_rep=saving_repository):
     """
@@ -191,7 +166,12 @@ def run_experiment(return_views, pathway_file, nb_repetitions, update_method='in
     # Parameters for GROUP_SCM
     dict_biogrid_groups = pickle.load(open(pathway_file, 'rb'))
     features_to_index = {idx: name for idx, name in enumerate(features_names)}
-    _, prior_values_dict_pr_rules = build_priors_rules_vector(c=c)
+    _, prior_values_dict_pr_rules = build_priors_rules_vector(c=c, 
+                                                              type_of_prior=type_of_prior, 
+                                                              x=x, 
+                                                              y=y, 
+                                                              features_names=features_names,
+                                                              replace_0_by_default=replace_0_by_default)
     prior_rules = [prior_values_dict_pr_rules[name] for name in features_names]
     learner_clf = GroupSCM(features_to_index=features_to_index, 
                            prior_rules=prior_rules, 
@@ -235,6 +215,8 @@ def main():
     parser.add_argument('-g_dict', '--groups_dict', type=str, default=f"{data_repository}/pathways_biogrid_groups.pck")
     parser.add_argument('-u_m', '--update_method', type=str, default="neg_exp")
     parser.add_argument('-c', '--c', type=float, default=0.1)
+    parser.add_argument('-type_of_prior', '--type_of_prior', type=str, default="degree")
+    parser.add_argument('-replace_0_by_default', '--replace_0_by_default', type=bool, default=False)
     parser.add_argument('-data', '--data', type=str, default=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna)
     parser.add_argument('-exp_name', '--experiment_name', type=str, default="experiment_group_scm")
     parser.add_argument('-o', '--saving_rep', type=str, default=saving_repository)
@@ -244,6 +226,8 @@ def main():
                    nb_repetitions=args.nb_repetitions,
                    update_method=args.update_method, 
                    c=args.c,
+                   type_of_prior=args.type_of_prior,
+                   replace_0_by_default=args.replace_0_by_default,
                    data=args.data,  
                    experiment_name=args.experiment_name, 
                    saving_rep=args.saving_rep)    

@@ -28,8 +28,8 @@ class GroupSetCoveringMachineClassifier(BaseSetCoveringMachine):
             features_to_index: a dictionnary with key= idx and value the correspondant features at place idx 
             prior_rules : The prior or preference on the rules (pre-calculated)
             update_method: str, name of the method to update the prioRules in the GroupSCM model
-                'inner_group': p_ri = p_ri * exp(| g_i \intersection GR | )  update 1
-                'outer_group': p_ri = p_ri * exp(-| g_i \intersection GR | )  update 2
+                'add'
+                'mult'
                 
             groups : g_i \in [1, G]+ is the set of groups associated with the rule r_i, 
                 where G is the total number of groups. 
@@ -113,7 +113,9 @@ class GroupSetCoveringMachineClassifier(BaseSetCoveringMachine):
         remaining_example_idx = np.arange(len(y))
         remaining_negative_example_idx = neg_ex_idx
         
-        features_weights = self.prior_rules # Initialization of groups weights 
+        # Initialization of features weights: Everybody start at one
+        features_weights = np.ones((X.shape[1]), dtype=np.float64)
+        # features_weights = self.prior_rules # Initialization of groups weights 
         # Feature_weights is the vector used to multipled the utility function in find_max_utility (update_optimal_solution)
         while len(remaining_negative_example_idx) > 0 and len(self.model_) < self.max_rules:
             iteration_info = {"iteration_number": len(self.model_) + 1}
@@ -183,35 +185,33 @@ class GroupSetCoveringMachineClassifier(BaseSetCoveringMachine):
             print(f'the initial utility function is: {calculated_utility}')
             return calculated_utility
         else:
-            print(f'the groups previously selected are: {self.groups_rules}')
-            new_rule_choosed = self.features_to_index[next_rule_model_idx] # must give a feature Name
-            print(f'the index of the new choosen rule is: {new_rule_choosed}')
-            # UPDATE PR
-            g_i = self.groups[new_rule_choosed] # list 
-            print(f'the groups of the choosen rules are: {g_i}')
-            g_i_intersection_groups_rules = len([el for el in g_i if el in self.groups_rules]) # int
-            print(f'the number of intersecrtion between the new rules and the other groups are : {g_i_intersection_groups_rules}')
-            # REAL UPDATE OPERATION
-            if self.update_method == 'inner_group':
-                print(f'the inner group values is: {np.exp(g_i_intersection_groups_rules)}')
-                print(f'the outer group values is: {np.exp(- g_i_intersection_groups_rules)}')
-                print(f'the features_weights at that position before the update is: {features_weights[next_rule_model_idx]}')
-                features_weights[next_rule_model_idx] *= np.exp(g_i_intersection_groups_rules)
-                print(f'the features_weights at that position after the update is: {features_weights[next_rule_model_idx]}')
-            elif self.update_method == 'outer_group':
-                print(f'the inner group values is: {np.exp(g_i_intersection_groups_rules)}')
-                print(f'the outer group values is: {np.exp(- g_i_intersection_groups_rules)}')
-                print(f'the features_weights at that position before the update is: {features_weights[next_rule_model_idx]}')
-                features_weights[next_rule_model_idx] *= np.exp(- g_i_intersection_groups_rules)
-                print(f'the features_weights at that position after the update is: {features_weights[next_rule_model_idx]}')
-            else:
-                 raise ValueError(f"{self.update_method} must be a str and in ['inner_group', 'outer_group']")
+            # Update the prior aka update the features weights vector
+            previous_rule_choosed_i = self.features_to_index[next_rule_model_idx] # must give a feature Name
+            groups_previous_rule_choosed_i = self.groups[previous_rule_choosed_i] # list 
+            print(f'the groups of the choosen rules are: {groups_previous_rule_choosed_i}')
+            for feat_name, groups_list in self.groups.items():
+                for choosen_group in groups_previous_rule_choosed_i:
+                    if choosen_group in groups_list:
+                        for idx, feat_name_idx in self.features_to_index.items():
+                            if feat_name == feat_name_idx:
+                                if self.update_method == 'mult':
+                                    print(f'features weights before the update {features_weights[idx]}')
+                                    features_weights[idx] *= self.prior_rules[idx] # ici ca donne 1 * val donc val va etre notre update
+                                    print(f'features weights after the update {features_weights[idx]}')
+                                if self.update_method == 'add':
+                                    print(f'features weights before the update {features_weights[idx]}')
+                                    features_weights[idx] += self.prior_rules[idx] # ici ca donne 1 + val (probably higher that mult in the 1st run)
+                                    print(f'features weights after the update {features_weights[idx]}')
+                                else:
+                                    raise ValueError(f"{self.update_method} must be a str and in ['mult', 'add']")
             # UPDATE GR
-            self.groups_rules.extend(self.groups[new_rule_choosed]) # Expected results: [G1, G2, ...]
+            self.groups_rules.extend(groups_previous_rule_choosed_i) # Expected results: [G1, G2, ...]
             self.groups_rules = list(np.unique(self.groups_rules))
             calculated_utility = find_max_utility(self.p, X, y, X_argsort_by_feature_T, example_idx, features_weights)
-            print(f'the initial utility function is: {calculated_utility}')
+            print(f'the new utility function is: {calculated_utility}')
             return calculated_utility
+            # Note toself: l'idée est de prendre les nouveaux groupes de la nouvelle regel trouvée huh du coup J'accumule pas et je ne surpondere pas les old old goups rules
+            # on peut penser à les upgrade à chaque tour why not. Let's test this first
         
         
 
