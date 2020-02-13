@@ -101,7 +101,7 @@ def main_old_group():
     print("### DONE ###") 
 
 
-def launch_slurm_experiment_group(return_views, nb_repetitions, pathway_file, update_method, c,
+def launch_slurm_experiment_group(return_views, nb_repetitions, pathway_file, update_method, c, inverse_prior_group,
                                   experiment_file, experiment_name, time, dispatch_path):
     exp_file = join(dispatch_path, experiment_name)
     submission_script = ""
@@ -116,13 +116,13 @@ def launch_slurm_experiment_group(return_views, nb_repetitions, pathway_file, up
     submission_script += f"#SBATCH --mail-type=FAIL\n"
     submission_script += f"#SBATCH --time={time}:00:00\n" 
     submission_script += f"#SBATCH --output={exp_file + '.out'}\n\n" 
-    submission_script += f"python {EXPERIMENTS_PATH}/{experiment_file} -rt {return_views} -nb_r {nb_repetitions} -g_dict {pathway_file} -u_m {update_method} -c {c} -exp_name {experiment_name}" 
+    submission_script += f"python {EXPERIMENTS_PATH}/{experiment_file} -rt {return_views} -nb_r {nb_repetitions} -g_dict {pathway_file} -u_m {update_method} -c {c} -inverse_prior_group {inverse_prior_group} -exp_name {experiment_name}" 
     
     submission_path = exp_file + ".sh"
     with open(submission_path, 'w') as out_file:
         out_file.write(submission_script)
         
-    call(["sbatch", submission_path])
+    # call(["sbatch", submission_path])
     
 def main_group():
     # return_views = ['methyl_rna_iso_mirna', 'methyl_rna_iso_mirna_snp_clinical',
@@ -131,10 +131,10 @@ def main_group():
     dictionaries_paths = [f"{DATAREPOSITORY_PATH}/pathways_biogrid_groups.pck"]
     update_method = ['inner_group', 'outer_group']
     random.seed(42)
-    # c_list = np.round(np.linspace(0.1, 1, 10), 3) # or np.random.choice(np.linspace(0, 1), 10) 
-    c_list = np.round(np.random.choice(np.linspace(0, 1), 10), 3)
-    param_grid = {'view': return_views, 'update': update_method, 'c': c_list}
-    dispatch_path = join(RESULTS_PATH, "dispatch")
+    c_list = np.linspace(0.1, 1, 10)
+    inverse_prior_group_list = [False, True]
+    param_grid = {'view': return_views, 'update': update_method, 'c': c_list, 'inverse_prior_group': inverse_prior_group_list}
+    dispatch_path = join(RESULTS_PATH, "dispatch_f_sqrt")
     if not exists(dispatch_path): makedirs(dispatch_path)
     for pathway_dict in dictionaries_paths:
         name_pathway_file = pathway_dict.split('/')[-1].split('.')[0]
@@ -142,12 +142,13 @@ def main_group():
         for params in ParameterGrid(param_grid):
             print(f"Launching {params}")
             nb_repetitions = 5
-            exp_name = f"{params['view']}__group_scm__" + f"{name_pathway_file}__" + f"{params['update']}__" + f"c{params['c']}__" + f"{nb_repetitions}"
+            exp_name = f"{params['view']}__group_scm__" + f"{name_pathway_file}__" + f"{params['update']}__" + f"c{params['c']}__" + f"inverse_prior_group{params['inverse_prior_group']}__" + f"{nb_repetitions}"
             launch_slurm_experiment_group(return_views=params['view'], 
                                             nb_repetitions=nb_repetitions, 
                                             pathway_file=pathway_dict, 
                                             update_method=params['update'], 
                                             c=params['c'],
+                                            inverse_prior_group=params['inverse_prior_group'],
                                             experiment_file='run_new_group_experiments.py', 
                                             experiment_name=exp_name, 
                                             time='4', 

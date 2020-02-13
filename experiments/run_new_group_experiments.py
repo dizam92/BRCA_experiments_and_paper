@@ -98,39 +98,37 @@ class LearnGroupTN(object):
             pickle.dump(self.saving_dict, f)
 
 
-def langevin_function(x):
-    """Compute the langevin function"""
-    return cotdg(x) - 1/x
-
-f = langevin_function
+def f(c, x):
+    """Compute an update function"""
+    return np.sqrt(c * x)
     
-def build_priors_rules_vector(c, 
+def build_priors_rules_vector(c,
+                              inverse_prior_group = False,
                               dictionnary_for_prior_group=f"{data_repository}/biogrid_pathways_dict.pck", 
                               dictionnary_for_prior_rules=f"{data_repository}/pathways_biogrid_groups.pck"):
     """
     Build the vector of the prior rules integreting the prior on the group/pathways 
     Args:
-        c, is the number borning the interval for the results of  f:  f(x) = c * L(x);   c \in [0, 1], c==1 ==> langevin function classical
+        c, an hp
         dictionnary_for_prior_group, str, path to the dictionnary for generating . Structure must be: d = {'Group_name1': [gen1, gen100,...],  'Group_nameX': [genXXX,...]}
         dictionnary_for_prior_rules, str, path to the dictionnary. Structure must be: d = {'Feature_name1': [Group_name1, Group_name100,...],  'Feature_nameX': [Group_nameXXX,...]}
     Return:
         prior_values_dict_pr_group, dict
         prior_values_dict_pr_rules, dict
-    """
-    default_value = 1e-5 
-    # Replace the 
-    # Build PriorGroups vector, p_g
+    """   
     dict_pr_group = pickle.load(open(dictionnary_for_prior_group, 'rb'))
-    prior_values_dict_pr_group = {k: np.exp( - c * f(len(v))) for k, v in dict_pr_group.items()}
-    prior_values_dict_pr_group = {k: v if v != 0 else default_value for k, v in prior_values_dict_pr_group.items()}
-    # Build PriorRules vector, p_ri
     dict_pr_rules = pickle.load(open(dictionnary_for_prior_rules, 'rb'))
-    prior_values_dict_pr_rules = {k: np.exp(- c * f(np.sum([prior_values_dict_pr_group[el] for el in v]))) for k, v in dict_pr_rules.items()}
-    prior_values_dict_pr_rules = {k: v if v != 0 else default_value for k, v in prior_values_dict_pr_rules.items()}
+    # Build PriorGroups vector, p_g
+    prior_values_dict_pr_group = {k: f(c, len(v)) for k, v in dict_pr_group.items()} 
+    # Build PriorRules vector, p_ri
+    if inverse_prior_group:
+        prior_values_dict_pr_rules = {k: f(c, np.sum([1 / prior_values_dict_pr_group[el] for el in v])) for k, v in dict_pr_rules.items()}
+    else:
+        prior_values_dict_pr_rules = {k: f(c, np.sum([prior_values_dict_pr_group[el] for el in v])) for k, v in dict_pr_rules.items()}
     return prior_values_dict_pr_group, prior_values_dict_pr_rules
     
     
-def run_experiment(return_views, pathway_file, nb_repetitions, update_method='inner_group', c=0.1, 
+def run_experiment(return_views, pathway_file, nb_repetitions, update_method='inner_group', c=0.1, inverse_prior_group=False,
                    data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,  
                    experiment_name='experiment_group_scm', saving_rep=saving_repository):
     """
@@ -159,7 +157,7 @@ def run_experiment(return_views, pathway_file, nb_repetitions, update_method='in
     # Parameters for GROUP_SCM
     dict_biogrid_groups = pickle.load(open(pathway_file, 'rb'))
     features_to_index = {idx: name for idx, name in enumerate(features_names)}
-    _, prior_values_dict_pr_rules = build_priors_rules_vector(c=c)
+    _, prior_values_dict_pr_rules = build_priors_rules_vector(c=c, inverse_prior_group=inverse_prior_group)
     prior_rules = [prior_values_dict_pr_rules[name] for name in features_names]
     learner_clf = GroupSCM(features_to_index=features_to_index, 
                            prior_rules=prior_rules, 
@@ -202,7 +200,8 @@ def main():
     parser.add_argument('-nb_r', '--nb_repetitions', type=int, default=1)
     parser.add_argument('-g_dict', '--groups_dict', type=str, default=f"{data_repository}/pathways_biogrid_groups.pck")
     parser.add_argument('-u_m', '--update_method', type=str, default="neg_exp")
-    parser.add_argument('-c', '--c', type=float, default=0.1)
+    parser.add_argument('-c', '--c', type=float, default=0.1) 
+    parser.add_argument('-inverse_prior_group', '--inverse_prior_group', type=bool, default=False)
     parser.add_argument('-data', '--data', type=str, default=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna)
     parser.add_argument('-exp_name', '--experiment_name', type=str, default="experiment_group_scm")
     parser.add_argument('-o', '--saving_rep', type=str, default=saving_repository)
@@ -212,6 +211,7 @@ def main():
                    nb_repetitions=args.nb_repetitions,
                    update_method=args.update_method, 
                    c=args.c,
+                   inverse_prior_group=args.inverse_prior_group,
                    data=args.data,  
                    experiment_name=args.experiment_name, 
                    saving_rep=args.saving_rep)    
