@@ -134,7 +134,7 @@ def main_group():
     # c_list = np.round(np.linspace(0.1, 1, 10), 3) # or np.random.choice(np.linspace(0, 1), 10) 
     # c_list = np.round(np.random.choice(np.linspace(0.1, 1), 10), 3)
     c_list = np.round(np.random.choice(np.linspace(0.1, 1), 10), 3)
-    type_of_prior_list = ['degree', 'lasso', 'ridge_reg'] 
+    type_of_prior_list = ['degree', 'invert_degree', 'lasso', 'ridge_reg'] 
     replace_0_by_default_list = [False, True]
     param_grid = {'view': return_views, 'update': update_method, 'c': c_list, 'type_of_prior': type_of_prior_list, 'replace_0_by_default': replace_0_by_default_list}
     dispatch_path = join(RESULTS_PATH, "dispatch")

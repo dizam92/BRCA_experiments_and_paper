@@ -107,7 +107,7 @@ def build_priors_rules_vector(c, type_of_prior, x, y, features_names,
     Build the vector of the prior rules integreting the prior on the group/pathways 
     Args:
         c, an hp
-        type_of_prior, bool, can be in ['degree', 'lasso', 'ridge_reg'] for now
+        type_of_prior, bool, can be in ['degree', 'invert_degree', lasso', 'ridge_reg'] for now
         dictionnary_for_prior_group, str, path to the dictionnary for generating . Structure must be: d = {'Group_name1': [gen1, gen100,...],  'Group_nameX': [genXXX,...]}
         dictionnary_for_prior_rules, str, path to the dictionnary. Structure must be: d = {'Feature_name1': [Group_name1, Group_name100,...],  'Feature_nameX': [Group_nameXXX,...]}
     Return:
@@ -120,6 +120,8 @@ def build_priors_rules_vector(c, type_of_prior, x, y, features_names,
     prior_values_dict_pr_group = {k: 1 for k, v in dict_pr_group.items()}
     if type_of_prior == 'degree':
         prior_values_dict_pr_rules = {k: len(v) for k, v in dict_pr_rules.items()}
+    if type_of_prior == 'invert_degree':
+        prior_values_dict_pr_rules = {k: 1/len(v) for k, v in dict_pr_rules.items()}
     if type_of_prior == 'lasso':
         clf = Lasso(alpha=c)
         clf.fit(x, y)
