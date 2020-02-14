@@ -193,7 +193,7 @@ class GroupSetCoveringMachineClassifier(BaseSetCoveringMachine):
             if self.update_method == 'inner_group':
                 for idx, feat_name_idx in self.features_to_index.items():
                     features_weights[idx] *= np.exp(dict_intersection_groups_rules[feat_name_idx])
-            if self.update_method == 'outer_group':
+            elif self.update_method == 'outer_group':
                 for idx, feat_name_idx in self.features_to_index.items():
                     features_weights[idx] *= np.exp(- dict_intersection_groups_rules[feat_name_idx])    
             else:
