@@ -192,10 +192,12 @@ class GroupSetCoveringMachineClassifier(BaseSetCoveringMachine):
             dict_intersection_groups_rules = {feat_name: len([el for el in groups_previous_rule_choosed_i if el in groups_list]) for feat_name, groups_list in self.groups.items()}
             if self.update_method == 'inner_group':
                 for idx, feat_name_idx in self.features_to_index.items():
-                    features_weights[idx] *= np.exp(dict_intersection_groups_rules[feat_name_idx])
+                    if idx != next_rule_model_idx: # pas la peine de reponderer la meme regle quoi
+                        features_weights[idx] *= np.exp(dict_intersection_groups_rules[feat_name_idx])
             elif self.update_method == 'outer_group':
                 for idx, feat_name_idx in self.features_to_index.items():
-                    features_weights[idx] *= np.exp(- dict_intersection_groups_rules[feat_name_idx])    
+                    if idx != next_rule_model_idx: # pas la peine de reponderer la meme regle quoi
+                        features_weights[idx] *= np.exp(- dict_intersection_groups_rules[feat_name_idx])    
             else:
                  raise ValueError(f"{self.update_method} must be a str and in ['inner_group', 'outer_group']")
             # UPDATE GR
