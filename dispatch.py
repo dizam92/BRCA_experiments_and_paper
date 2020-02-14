@@ -122,7 +122,7 @@ def launch_slurm_experiment_group(return_views, nb_repetitions, pathway_file, up
     with open(submission_path, 'w') as out_file:
         out_file.write(submission_script)
         
-    # call(["sbatch", submission_path])
+    call(["sbatch", submission_path])
     
 def main_group():
     # return_views = ['methyl_rna_iso_mirna', 'methyl_rna_iso_mirna_snp_clinical',
