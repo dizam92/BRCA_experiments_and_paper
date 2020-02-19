@@ -180,14 +180,14 @@ class GroupSetCoveringMachineClassifier(BaseSetCoveringMachine):
     
     def _get_best_utility_rules(self, X, y, X_argsort_by_feature_T, example_idx, groups, groups_rules, features_weights,  next_rule_model_idx):
         if next_rule_model_idx is None:
-            calculated_utility = find_max_utility(self.p, X, y, X_argsort_by_feature_T, example_idx, features_weights)
-            print(f'the initial utility function is: {calculated_utility}')
-            return calculated_utility
+            # calculated_utility = find_max_utility(self.p, X, y, X_argsort_by_feature_T, example_idx, features_weights)
+            # print(f'the initial utility function is: {calculated_utility}')
+            return find_max_utility(self.p, X, y, X_argsort_by_feature_T, example_idx, features_weights)
         else:
             previous_rule_choosed_i = self.features_to_index[next_rule_model_idx] # must give a feature Name
             # UPDATE PRI FOR ALL THE RULES HAVING AT LEAST ONE OF THE GROUPS OF THE PREVIOUS RULES
             groups_previous_rule_choosed_i = self.groups[previous_rule_choosed_i] # list 
-            print(f'the groups of the choosen rules are: {groups_previous_rule_choosed_i}')
+            # print(f'the groups of the choosen rules are: {groups_previous_rule_choosed_i}')
             # retrieve the intersection for each rules candidates/features: dict of keys: features_name, values: int
             dict_intersection_groups_rules = {feat_name: len([el for el in groups_previous_rule_choosed_i if el in groups_list]) for feat_name, groups_list in self.groups.items()}
             if self.update_method == 'inner_group':
@@ -201,11 +201,11 @@ class GroupSetCoveringMachineClassifier(BaseSetCoveringMachine):
             else:
                  raise ValueError(f"{self.update_method} must be a str and in ['inner_group', 'outer_group']")
             # UPDATE GR
-            self.groups_rules.extend(groups_previous_rule_choosed_i) # Expected results: [G1, G2, ...]
-            self.groups_rules = list(np.unique(self.groups_rules))
-            calculated_utility = find_max_utility(self.p, X, y, X_argsort_by_feature_T, example_idx, features_weights)
-            print(f'the new utility function is: {calculated_utility}')
-            return calculated_utility
+            # self.groups_rules.extend(groups_previous_rule_choosed_i) # Expected results: [G1, G2, ...]
+            # self.groups_rules = list(np.unique(self.groups_rules))
+            # calculated_utility = find_max_utility(self.p, X, y, X_argsort_by_feature_T, example_idx, features_weights)
+            # print(f'the new utility function is: {calculated_utility}')
+            return find_max_utility(self.p, X, y, X_argsort_by_feature_T, example_idx, features_weights)
         
         
 

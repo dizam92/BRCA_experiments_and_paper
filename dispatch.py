@@ -131,10 +131,10 @@ def main_group():
     dictionaries_paths = [f"{DATAREPOSITORY_PATH}/pathways_biogrid_groups.pck"]
     update_method = ['inner_group', 'outer_group']
     random.seed(42)
-    c_list = np.linspace(0.1, 1, 10)
+    c_list = np.round(np.linspace(0.1, 1, 10), 3)
     inverse_prior_group_list = [False, True]
     param_grid = {'view': return_views, 'update': update_method, 'c': c_list, 'inverse_prior_group': inverse_prior_group_list}
-    dispatch_path = join(RESULTS_PATH, "dispatch_f_sqrt")
+    dispatch_path = join(RESULTS_PATH, "dispatch_f_exp")
     if not exists(dispatch_path): makedirs(dispatch_path)
     for pathway_dict in dictionaries_paths:
         name_pathway_file = pathway_dict.split('/')[-1].split('.')[0]

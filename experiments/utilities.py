@@ -18,6 +18,8 @@ from copy import deepcopy
 from collections import defaultdict
 from glob import glob
 from collections import Counter
+from os.path import join, abspath, dirname, exists
+from os import makedirs
 goa_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/goa_human_isoform_valid.gaf'
 biogrid_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/BIOGRID-ORGANISM-Homo_sapiens-3.5.178.tab.txt'
 genesID_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/Results_genes.txt'
@@ -295,7 +297,8 @@ def results_analysis(directory, output_text_file, recap_table_file, plot_hist=Tr
     recall_train = [el['recall'] for el in metrics_train]
     recall_test = [el['recall'] for el in metrics_test]
     if plot_hist:
-        generate_histogram(file_name=f"{directory}", fig_title=f'Metrics', accuracy_train=accuracy_train, accuracy_test=accuracy_test, f1_score_train=f1_score_train,
+        if not exists(histogram_repo): makedirs(histogram_repo)
+        generate_histogram(file_name=f"{directory}", fig_title='Metrics', accuracy_train=accuracy_train, accuracy_test=accuracy_test, f1_score_train=f1_score_train,
                         f1_score_test=f1_score_test, precision_train=precision_train, precision_test=precision_test, recall_train=recall_train, recall_test=recall_test)
     # Find the best seed based on the F1-score (since the dataset is unbalanced)
     best_file = list_fichiers[np.argmax(f1_score_test)]
@@ -486,7 +489,7 @@ def anaylses_resultats(type_experiment='normal', plot_hist=True):
             groups_features_list = []
             list_of_directories = os.listdir('./')
             list_of_directories = [directory for directory in list_of_directories if directory.startswith(experiment)] 
-            list_of_directories = [directory for directory in list_of_directories if directory.find('psi') != -1]
+            # list_of_directories = [directory for directory in list_of_directories if directory.find('psi') != -1]
             for directory in list_of_directories:
                 acc_test, f1_test, precis_test, rec_test, model_comptes, groups_features = results_analysis(directory=directory,
                                                                                             output_text_file=output_text_file_experiment,
@@ -543,6 +546,7 @@ def generate_histogram(file_name, fig_title, accuracy_train, accuracy_test, f1_s
     plt.tight_layout()
     f.savefig(f"{histogram_repo}/{file_name}.png")
     plt.close()
+
 
 
 def generate_heatmaps(fichier_recap):

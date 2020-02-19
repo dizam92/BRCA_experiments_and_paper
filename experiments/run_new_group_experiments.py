@@ -101,7 +101,11 @@ class LearnGroupTN(object):
 def f(c, x):
     """Compute an update function"""
     return np.sqrt(c * x)
-    
+
+def f_1(c, x):
+    """Compute an update function"""
+    return np.exp( -c * x) 
+
 def build_priors_rules_vector(c,
                               inverse_prior_group = False,
                               dictionnary_for_prior_group=f"{data_repository}/biogrid_pathways_dict.pck", 
@@ -119,12 +123,12 @@ def build_priors_rules_vector(c,
     dict_pr_group = pickle.load(open(dictionnary_for_prior_group, 'rb'))
     dict_pr_rules = pickle.load(open(dictionnary_for_prior_rules, 'rb'))
     # Build PriorGroups vector, p_g
-    prior_values_dict_pr_group = {k: f(c, len(v)) for k, v in dict_pr_group.items()} 
+    prior_values_dict_pr_group = {k: f_1(c, len(v)) for k, v in dict_pr_group.items()} 
     # Build PriorRules vector, p_ri
     if inverse_prior_group:
-        prior_values_dict_pr_rules = {k: f(c, np.sum([1 / prior_values_dict_pr_group[el] for el in v])) for k, v in dict_pr_rules.items()}
+        prior_values_dict_pr_rules = {k: f_1(c, np.sum([1 / prior_values_dict_pr_group[el] for el in v])) for k, v in dict_pr_rules.items()}
     else:
-        prior_values_dict_pr_rules = {k: f(c, np.sum([prior_values_dict_pr_group[el] for el in v])) for k, v in dict_pr_rules.items()}
+        prior_values_dict_pr_rules = {k: f_1(c, np.sum([prior_values_dict_pr_group[el] for el in v])) for k, v in dict_pr_rules.items()}
     return prior_values_dict_pr_group, prior_values_dict_pr_rules
     
     
