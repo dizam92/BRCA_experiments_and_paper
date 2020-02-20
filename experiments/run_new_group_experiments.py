@@ -108,8 +108,8 @@ def f_1(c, x):
 
 def build_priors_rules_vector(c,
                               inverse_prior_group = False,
-                              dictionnary_for_prior_group=f"{data_repository}/biogrid_pathways_dict.pck", 
-                              dictionnary_for_prior_rules=f"{data_repository}/pathways_biogrid_groups.pck"):
+                              dictionnary_for_prior_group=f"{data_repository}/string_pathways_dict.pck", 
+                              dictionnary_for_prior_rules=f"{data_repository}/pathways_string_groups.pck"):
     """
     Build the vector of the prior rules integreting the prior on the group/pathways 
     Args:

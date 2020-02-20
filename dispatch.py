@@ -128,7 +128,8 @@ def main_group():
     # return_views = ['methyl_rna_iso_mirna', 'methyl_rna_iso_mirna_snp_clinical',
     #             'methyl_rna_mirna', 'methyl_rna_mirna_snp_clinical', 'all']
     return_views = ['methyl_rna_iso_mirna']
-    dictionaries_paths = [f"{DATAREPOSITORY_PATH}/pathways_biogrid_groups.pck"]
+    # dictionaries_paths = [f"{DATAREPOSITORY_PATH}/pathways_biogrid_groups.pck"]
+    dictionaries_paths = [f"{DATAREPOSITORY_PATH}/pathways_string_groups.pck"]
     update_method = ['inner_group', 'outer_group']
     random.seed(42)
     c_list = np.round(np.linspace(0.1, 1, 10), 3)
