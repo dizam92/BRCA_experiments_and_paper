@@ -272,7 +272,7 @@ def results_analysis(directory, output_text_file, recap_table_file, plot_hist=Tr
     Returns:
         Write results to text file
     """
-    os.chdir('{}'.format(directory))
+    os.chdir(f'{directory}')
     metrics_train = []
     metrics_test = []
     features_retenus = []
@@ -548,7 +548,150 @@ def generate_histogram(file_name, fig_title, accuracy_train, accuracy_test, f1_s
     plt.close()
 
 
+def parcours_one_directory(directory):
+    os.chdir(f'{directory}')
+    metrics_train = []
+    metrics_test = []
+    features_retenus = []
+    list_fichiers = []
+    for fichier in glob("*.pck"):
+        list_fichiers.append(fichier)
+        f = open(fichier, 'rb')
+        d = pickle.load(f)
+        metrics_train.append(d['train_metrics'])
+        metrics_test.append(d['metrics'])
+        features_retenus.append(d['rules_str'])
+    accuracy_train = [el['accuracy'] for el in metrics_train]
+    accuracy_test = [el['accuracy'] for el in metrics_test]
+    f1_score_train = [el['f1_score'] for el in metrics_train]
+    f1_score_test = [el['f1_score'] for el in metrics_test]
+    precision_train = [el['precision'] for el in metrics_train]
+    precision_test = [el['precision'] for el in metrics_test]
+    recall_train = [el['recall'] for el in metrics_train]
+    recall_test = [el['recall'] for el in metrics_test]
+    best_file_idx = np.argmax(f1_score_test)
+    train_metrics = np.asarray([np.round(np.mean(accuracy_train), 4), np.round(np.mean(f1_score_train), 4),
+                               np.round(np.mean(precision_train), 4), np.round(np.mean(recall_train), 4)])
+    test_metrics = np.asarray([np.round(np.mean(accuracy_test), 4), np.round(np.mean(f1_score_test), 4),
+                               np.round(np.mean(precision_test), 4), np.round(np.mean(recall_test), 4)])
+    std_train_metrics = np.asarray([np.round(np.std(accuracy_train), 4), np.round(np.std(f1_score_train), 4),
+                               np.round(np.std(precision_train), 4), np.round(np.std(recall_train), 4)])
+    std_test_metrics = np.asarray([np.round(np.std(accuracy_test), 4), np.round(np.std(f1_score_test), 4),
+                               np.round(np.std(precision_test), 4), np.round(np.std(recall_test), 4)])
+    train_metrics_best_file = np.asarray([np.round(accuracy_train[best_file_idx], 4), np.round(f1_score_train[best_file_idx], 4),
+                                          np.round(precision_train[best_file_idx], 4), np.round(recall_train[best_file_idx], 4)])
+    test_metrics_best_file = np.asarray([np.round(accuracy_test[best_file_idx], 4), np.round(f1_score_test[best_file_idx], 4),
+                                          np.round(precision_test[best_file_idx], 4), np.round(recall_test[best_file_idx], 4)])
+    os.chdir('../')
+    return train_metrics, test_metrics, std_train_metrics, std_test_metrics, train_metrics_best_file, test_metrics_best_file, features_retenus
 
+
+def generate_figures_mean_results(directory, experiment, f='exp', type_of_update='inner', inverse_group='False'):
+    x = np.round(np.linspace(0.1, 1, 10), 3)
+    os.chdir(f"{directory}")
+    list_of_directories = os.listdir('./')
+    list_of_directories = [directory for directory in list_of_directories if directory.startswith(experiment)] 
+    list_of_directories = [directory for directory in list_of_directories if directory.find(f'{type_of_update}') != -1]
+    list_of_directories = [directory for directory in list_of_directories if directory.find(f'{inverse_group}') != -1]
+    list_of_directories = list(np.sort(list_of_directories)) # garantie que ca va de 0.1 à 1.0 ici (sinon tjrs de min a max value de c)
+    train_metrics_list = []; test_metrics_list = []; std_train_metrics_list = []; std_test_metrics_list = []
+    for directory in list_of_directories:
+        train_metrics, test_metrics, std_train_metrics, std_test_metrics, _, _, _ = parcours_one_directory(directory=directory)
+        train_metrics_list.append(train_metrics)
+        test_metrics_list.append(test_metrics)
+        std_train_metrics_list.append(std_train_metrics)
+        std_test_metrics_list.append(std_test_metrics)
+    train_metrics_list = np.asarray(train_metrics_list)
+    test_metrics_list = np.asarray(test_metrics_list)
+    std_train_metrics_list = np.asarray(std_train_metrics_list)
+    std_test_metrics_list = np.asarray(std_test_metrics_list)
+    # Plot the train fig
+    fig_title_train = f'Train mean metrics: Update Function:{f} {type_of_update}_groups inverse_group: {inverse_group}'
+    fig_name_train = f'{f}_train_mean_metrics_c_values_of_{type_of_update}_groups_inverse_group_{inverse_group}.png'
+    f_train, ax_train = plt.subplots(nrows=1, ncols=1)
+    ax_train.set_title(f"{fig_title_train}")
+    ax_train.set_xlabel('c values')
+    ax_train.set_ylabel('Metrics values')
+    # ax.set_ylim(-0.1, 1.2)
+    ax_train.plot(x, train_metrics_list[:, 0], 'bo-', label='Acc', linewidth=2)
+    ax_train.plot(x, train_metrics_list[:, 1], 'ro-', label='F1 ', linewidth=2)
+    ax_train.plot(x, train_metrics_list[:, 2], 'go-', label='Prec', linewidth=2)
+    ax_train.plot(x, train_metrics_list[:, 3], 'ko-', label='Rec', linewidth=2)
+    ax_train.legend()
+    plt.tight_layout()
+    f_train.savefig(f"{saving_repository}/{fig_name_train}")
+    plt.close()
+    
+    # Plot the Test fig
+    fig_title_test = f'Test mean metrics: {type_of_update}_groups inverse_group: {inverse_group}'
+    fig_name_test = f'{f}_test_mean_metrics_c_values_of_{type_of_update}_groups_inverse_group_{inverse_group}.png'
+    f_test, ax_test = plt.subplots(nrows=1, ncols=1)
+    ax_test.set_title(f"{fig_title_test}")
+    ax_test.set_xlabel('c values')
+    ax_test.set_ylabel('Metrics values')
+    # ax.set_ylim(-0.1, 1.2)
+    ax_test.plot(x, test_metrics_list[:, 0], 'bo-', label='Acc', linewidth=2)
+    ax_test.plot(x, test_metrics_list[:, 1], 'ro-', label='F1 ', linewidth=2)
+    ax_test.plot(x, test_metrics_list[:, 2], 'go-', label='Prec', linewidth=2)
+    ax_test.plot(x, test_metrics_list[:, 3], 'ko-', label='Rec', linewidth=2)
+    ax_test.legend()
+    plt.tight_layout()
+    f_test.savefig(f"{saving_repository}/{fig_name_test}")
+    plt.close()
+    os.chdir(f'{saving_repository}')
+    
+    
+def generate_figures_best_results(directory, experiment, f='exp', type_of_update='inner', inverse_group='False'):
+    x = np.round(np.linspace(0.1, 1, 10), 3)
+    os.chdir(f"{directory}")
+    list_of_directories = os.listdir('./')
+    list_of_directories = [directory for directory in list_of_directories if directory.startswith(experiment)] 
+    list_of_directories = [directory for directory in list_of_directories if directory.find(f'{type_of_update}') != -1]
+    list_of_directories = [directory for directory in list_of_directories if directory.find(f'{inverse_group}') != -1]
+    list_of_directories = list(np.sort(list_of_directories)) # garantie que ca va de 0.1 à 1.0 ici (sinon tjrs de min a max value de c)
+    train_metrics_list = []; test_metrics_list = []
+    for directory in list_of_directories:
+        _, _, _, _, train_metrics_best_file, test_metrics_best_file, _ = parcours_one_directory(directory=directory)
+        train_metrics_list.append(train_metrics_best_file)
+        test_metrics_list.append(test_metrics_best_file)
+    train_metrics_list = np.asarray(train_metrics_list)
+    test_metrics_list = np.asarray(test_metrics_list)
+    # Plot the train fig
+    fig_title_train = f'Train best metrics: Update Function:{f} {type_of_update}_groups inverse_group: {inverse_group}'
+    fig_name_train = f'{f}_train_best_metrics_c_values_of_{type_of_update}_groups_inverse_group_{inverse_group}.png'
+    f_train, ax_train = plt.subplots(nrows=1, ncols=1)
+    ax_train.set_title(f"{fig_title_train}")
+    ax_train.set_xlabel('c values')
+    ax_train.set_ylabel('Metrics values')
+    # ax.set_ylim(-0.1, 1.2)
+    ax_train.plot(x, train_metrics_list[:, 0], 'bo-', label='Acc', linewidth=2)
+    ax_train.plot(x, train_metrics_list[:, 1], 'ro-', label='F1 ', linewidth=2)
+    ax_train.plot(x, train_metrics_list[:, 2], 'go-', label='Prec', linewidth=2)
+    ax_train.plot(x, train_metrics_list[:, 3], 'ko-', label='Rec', linewidth=2)
+    ax_train.legend()
+    plt.tight_layout()
+    f_train.savefig(f"{saving_repository}/{fig_name_train}")
+    plt.close()
+    
+    # Plot the Test fig
+    fig_title_test = f'Test best metrics: {type_of_update}_groups inverse_group: {inverse_group}'
+    fig_name_test = f'{f}_test_best_metrics_c_values_of_{type_of_update}_groups_inverse_group_{inverse_group}.png'
+    f_test, ax_test = plt.subplots(nrows=1, ncols=1)
+    ax_test.set_title(f"{fig_title_test}")
+    ax_test.set_xlabel('c values')
+    ax_test.set_ylabel('Metrics values')
+    # ax.set_ylim(-0.1, 1.2)
+    ax_test.plot(x, test_metrics_list[:, 0], 'bo-', label='Acc', linewidth=2)
+    ax_test.plot(x, test_metrics_list[:, 1], 'ro-', label='F1 ', linewidth=2)
+    ax_test.plot(x, test_metrics_list[:, 2], 'go-', label='Prec', linewidth=2)
+    ax_test.plot(x, test_metrics_list[:, 3], 'ko-', label='Rec', linewidth=2)
+    ax_test.legend()
+    plt.tight_layout()
+    f_test.savefig(f"{saving_repository}/{fig_name_test}")
+    plt.close()
+    os.chdir(f'{saving_repository}')
+ 
+    
 def generate_heatmaps(fichier_recap):
     """
     Utility function to build the heatmap. Load the file recap for each experiment and run the heatmap accordling 
