@@ -262,6 +262,85 @@ def load_data(data, return_views='all'):
                    features_names_rna, features_names_rna_iso, features_names_mirna, features_names_clinical, patients_names
 
 
+def load_baptiste_data(dataset=data, subsampling=False):
+    """
+    Load the dataset
+    Ideal cible: label 1vs2 i.e multi_clustered vs EMF
+    Args: 
+        dataset, str path to the dataset
+        subsampling, bool if true, make a subsampling else do nothing
+    Return:
+        view_0, view_0_name, view_1, view_1_name, view_2, view_2_name, view_3, view_3_name, 
+        view_4, view_4_name, view_5, view_5_name, view_6, view_6_name, view_7, view_7_name, 
+        view_8, view_8_name, view_9, view_9_name, view_10, view_10_name, view_11, view_11_name, 
+        view_12, view_12_name, view_13, view_13_name, all_data, groups_ids, y, proteins_ids, features_names
+    """
+    d = h5py.File(dataset, 'r')
+    labels = d['Labels'][()]
+    labels_emf_idx = np.where(labels == 2)[0] # EMF
+    labels_multi_c_idx = np.where(labels == 1)[0] # multi_clustered
+    labels_mono_c_idx = np.where(labels == 0)[0] # mono_clustered
+    random_state = np.random.RandomState(42)
+    if subsampling:
+        labels_multi_c_idx = random_state.choice(labels_multi_c_idx, labels_emf_idx.shape[0]*mult, replace=False)
+    proteins_ids = d["Metadata"]["example_ids"][()]
+    proteins_ids_pos = proteins_ids[labels_emf_idx]
+    proteins_ids_neg = proteins_ids[labels_multi_c_idx]
+    proteins_ids = np.hstack((proteins_ids_pos, proteins_ids_neg))
+    view_0 = d["View0"][()];  view_0_name = d["View0"].attrs["name"] # PPInetwork_topology
+    view_1 = d["View1"][()];  view_1_name = d["View1"].attrs["name"] # Subcell_Location
+    view_2 = d["View2"][()];  view_2_name = d["View2"].attrs["name"] # Tissue_Expression
+    view_3 = d["View3"][()];  view_3_name = d["View3"].attrs["name"] # SDNE_PPInetwork
+    view_4 = d["View4"][()];  view_4_name = d["View4"].attrs["name"] # Gene_Ontology_BP
+    view_5 = d["View5"][()];  view_5_name = d["View5"].attrs["name"] # Gene_Ontology_CC
+    view_6 = d["View6"][()];  view_6_name = d["View6"].attrs["name"] # Gene_Ontology_MF
+    view_7 = d["View7"][()];  view_7_name = d["View7"].attrs["name"] # BP_PPInetwork_embed
+    view_8 = d["View8"][()];  view_8_name = d["View8"].attrs["name"] # CC_PPInetwork_embed
+    view_9 = d["View9"][()];  view_9_name = d["View9"].attrs["name"] # Phenotype_Ontology
+    view_10 = d["View10"][()];  view_10_name = d["View10"].attrs["name"] # Protein_Domains
+    view_11 = d["View11"][()];  view_11_name = d["View11"].attrs["name"] # PTM
+    view_12 = d["View12"][()];  view_12_name = d["View12"].attrs["name"] # 3UTR_Complexes
+    view_13 = d["View13"][()];  view_13_name = d["View13"].attrs["name"] # Linear_Motifs
+
+    view_0_pos = view_0[labels_emf_idx]; view_0_neg = view_0[labels_multi_c_idx]
+    view_1_pos = view_1[labels_emf_idx]; view_1_neg = view_1[labels_multi_c_idx]
+    view_2_pos = view_2[labels_emf_idx]; view_2_neg = view_2[labels_multi_c_idx]
+    view_3_pos = view_3[labels_emf_idx]; view_3_neg = view_3[labels_multi_c_idx]
+    view_4_pos = view_4[labels_emf_idx]; view_4_neg = view_4[labels_multi_c_idx]
+    view_5_pos = view_5[labels_emf_idx]; view_5_neg = view_5[labels_multi_c_idx]
+    view_6_pos = view_6[labels_emf_idx]; view_6_neg = view_6[labels_multi_c_idx]
+    view_7_pos = view_7[labels_emf_idx]; view_7_neg = view_7[labels_multi_c_idx]
+    view_8_pos = view_8[labels_emf_idx]; view_8_neg = view_8[labels_multi_c_idx]
+    view_9_pos = view_9[labels_emf_idx]; view_9_neg = view_9[labels_multi_c_idx]
+    view_10_pos = view_10[labels_emf_idx]; view_10_neg = view_10[labels_multi_c_idx]
+    view_11_pos = view_11[labels_emf_idx]; view_11_neg = view_11[labels_multi_c_idx]
+    view_12_pos = view_12[labels_emf_idx]; view_12_neg = view_12[labels_multi_c_idx]
+    view_13_pos = view_13[labels_emf_idx]; view_13_neg = view_13[labels_multi_c_idx]
+    y_pos = np.ones(labels_emf_idx.shape); y_neg = np.ones(labels_multi_c_idx.shape) * -1
+    
+    view_0 = np.vstack((view_0_pos, view_0_neg)); groups_0 = ['ppi' for _ in range(view_0.shape[1])]
+    view_1 = np.vstack((view_1_pos, view_1_neg)); groups_1 = ['subcell' for _ in range(view_1.shape[1])]
+    view_2 = np.vstack((view_2_pos, view_2_neg)); groups_2 = ['tissue_expression' for _ in range(view_2.shape[1])]
+    view_3 = np.vstack((view_3_pos, view_3_neg)); groups_3 = ['sdne_ppi' for _ in range(view_3.shape[1])]
+    view_4 = np.vstack((view_4_pos, view_4_neg)); groups_4 = ['go_BP' for _ in range(view_4.shape[1])]
+    view_5 = np.vstack((view_5_pos, view_5_neg)); groups_5 = ['go_CC' for _ in range(view_5.shape[1])]
+    view_6 = np.vstack((view_6_pos, view_6_neg)); groups_6 = ['go_MF' for _ in range(view_6.shape[1])]
+    view_7 = np.vstack((view_7_pos, view_7_neg)); groups_7 = ['BP_ppi' for _ in range(view_7.shape[1])]
+    view_8 = np.vstack((view_8_pos, view_8_neg)); groups_8 = ['CC_ppi' for _ in range(view_8.shape[1])]
+    view_9 = np.vstack((view_9_pos, view_9_neg)); groups_9 = ['phenotype_ontology' for _ in range(view_9.shape[1])]
+    view_10 = np.vstack((view_10_pos, view_10_neg)); groups_10 = ['Protein_Domains' for _ in range(view_10.shape[1])]
+    view_11 = np.vstack((view_11_pos, view_11_neg)); groups_11 = ['PTM' for _ in range(view_11.shape[1])]
+    view_12 = np.vstack((view_12_pos, view_12_neg)); groups_12 = ['3UTR_Complexes' for _ in range(view_12.shape[1])]
+    view_13 = np.vstack((view_13_pos, view_13_neg)); groups_13 = ['Linear_Motifs' for _ in range(view_13.shape[1])]
+    
+    all_data = np.hstack((view_0, view_1, view_2, view_3, view_4, view_5, view_6, view_7, view_8, view_9, view_10, view_11, view_12, view_13)) 
+    # (2370, 37325)
+    groups_ids = groups_0 + groups_1 + groups_2 + groups_3 + groups_4 + groups_5 + groups_6 + groups_7 + groups_8 + groups_9 + groups_10 + groups_11 + groups_12 + groups_13
+    y = np.hstack((y_pos, y_neg))
+    features_names = [f'feature_{idx}' for idx in range(all_data.shape[1])]
+    return view_0, view_0_name, view_1, view_1_name, view_2, view_2_name, view_3, view_3_name, view_4, view_4_name, view_5, view_5_name, view_6, view_6_name, view_7, view_7_name, view_8, view_8_name, view_9, view_9_name, view_10, view_10_name, view_11, view_11_name, view_12, view_12_name, view_13, view_13_name, all_data, groups_ids, y, proteins_ids, features_names
+  
+ 
 def results_analysis(directory, output_text_file, recap_table_file, plot_hist=True):
     """
     An utility function to run the results analysis and output them in a readable way
