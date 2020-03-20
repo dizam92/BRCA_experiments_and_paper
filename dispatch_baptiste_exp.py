@@ -45,7 +45,7 @@ def main():
                                 saving_file='experiments', 
                                 subsampling=subs, 
                                 nb_repetitions=15, 
-                                time='1',
+                                time='5',
                                 dispatch_path=dispatch_path)
     print("### DONE ###")   
       

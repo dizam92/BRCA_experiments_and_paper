@@ -24,9 +24,9 @@ logger = logging.getLogger(__name__)
 nb_jobs = 30
 cv_fold = KFold(n_splits=5, random_state=42)
 
-data_path_graham = '/home/maoss2/project/maoss2/Baptiste_Dataset'
-saving_rep = '/home/maoss2/project/maoss2/Baptiste_Dataset'
-dataset_baptiste = f'{data_path_graham}/lives_14view_EMF.hdf5'
+project_path = '/home/maoss2/project/maoss2/'
+saving_rep = '/home/maoss2/project/maoss2/'
+dataset_baptiste = f'{project_path}/lives_14view_EMF.hdf5'
 
 
 class LearnMultiViewData(object):
@@ -131,7 +131,8 @@ def run_experiment(nb_repetitions, subsampling=False, data=dataset_baptiste, exp
     saving_dict_rf = defaultdict(dict)
     saving_dict_dt = defaultdict(dict)
     saving_dict_scm = defaultdict(dict)
-    _,_, _,_, _,_, _,_, _,_, _,_, _,_, _,_, _,_, _,_, _,_, _,_, _,_, _,_, x, _, y, proteins_ids, features_names = load_baptiste_data(dataset=data, subsampling=subsampling) 
+    _,_, _,_, _,_, _,_, _,_, _,_, _,_, _,_, _,_, _,_, _,_, _,_, _,_, _,_, x, _, y, proteins_ids, features_names = load_baptiste_data(dataset=dataset_baptiste, 
+                                                                                                                                     subsampling=subsampling) 
     balanced_weights = weighted_sample(y=y, y_target=y)
     balanced_weights = np.unique(balanced_weights)
     balanced_weights = {1: balanced_weights.max() * x.shape[0], -1: balanced_weights.min() * x.shape[0]}
@@ -160,10 +161,11 @@ def run_experiment(nb_repetitions, subsampling=False, data=dataset_baptiste, exp
     except OSError:
         os.chdir(f'{saving_rep}/{experiment_name}_dt_subsampling_{subsampling}_nb_repetitions_{nb_repetitions}')
         existing_files_list = [fichier for fichier in glob('*.pck')]
+        seeds_already_done = None
         if len(existing_files_list) != 0:
             seeds_already_done = [int(f.split('_')[-1].split('.')[0]) for f in existing_files_list]
         for state in range(nb_repetitions):
-            if random_seeds_list[state] in seeds_already_done: continue
+            if seeds_already_done is not None and random_seeds_list[state] in seeds_already_done: continue
             clf = LearnMultiViewData(parameters=parameters_dt, 
                                      learner=DecisionTreeClassifier(random_state=42, class_weight=balanced_weights), 
                                      saving_dict=saving_dict_dt, 
@@ -205,10 +207,11 @@ def run_experiment(nb_repetitions, subsampling=False, data=dataset_baptiste, exp
     except OSError:
         os.chdir(f'{saving_rep}/{experiment_name}_scm_subsampling_{subsampling}_nb_repetitions_{nb_repetitions}')
         existing_files_list = [fichier for fichier in glob('*.pck')]
+        seeds_already_done = None
         if len(existing_files_list) != 0:
             seeds_already_done = [int(f.split('_')[-1].split('.')[0]) for f in existing_files_list]
         for state in range(nb_repetitions):
-            if random_seeds_list[state] in seeds_already_done: continue
+            if seeds_already_done is not None and random_seeds_list[state] in seeds_already_done: continue
             clf = LearnMultiViewData(parameters=parameters_scm, 
                                 learner=Pipeline([('SCM', DecisionStumpSCMNew())]),
                                 saving_dict=saving_dict_scm, 
@@ -250,10 +253,11 @@ def run_experiment(nb_repetitions, subsampling=False, data=dataset_baptiste, exp
     except OSError:
         os.chdir(f'{saving_rep}/{experiment_name}_rf_subsampling_{subsampling}_nb_repetitions_{nb_repetitions}')
         existing_files_list = [fichier for fichier in glob('*.pck')]
+        seeds_already_done = None
         if len(existing_files_list) != 0:
             seeds_already_done = [int(f.split('_')[-1].split('.')[0]) for f in existing_files_list]
         for state in range(nb_repetitions):
-            if random_seeds_list[state] in seeds_already_done: continue
+            if seeds_already_done is not None and random_seeds_list[state] in seeds_already_done: continue
             clf = LearnMultiViewData(parameters=parameters_rf, 
                                     learner=RandomForestClassifier(random_state=42, class_weight=balanced_weights),
                                     saving_dict=saving_dict_rf,
@@ -275,7 +279,7 @@ def run_experiment(nb_repetitions, subsampling=False, data=dataset_baptiste, exp
 
 def main():
     parser = argparse.ArgumentParser(description="Learn Baptiste Experiment")
-    parser.add_argument('-subs', '--subsampling', type=bool, default="False")
+    parser.add_argument('-subs', '--subsampling', type=bool, default=False)
     parser.add_argument('-nb_r', '--nb_repetitions', type=int, default=1)
     parser.add_argument('-exp_name', '--experiment_name', type=str, default="experiments")
     args = parser.parse_args()

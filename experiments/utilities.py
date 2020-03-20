@@ -262,7 +262,9 @@ def load_data(data, return_views='all'):
                    features_names_rna, features_names_rna_iso, features_names_mirna, features_names_clinical, patients_names
 
 
-def load_baptiste_data(dataset=data, subsampling=False):
+# Facteur de rebalancement : si mult = 1 on aura 1 négatif pour chaque positif, si mult = 2, on aura 2 négtifs pour chaque positif
+mult = 1
+def load_baptiste_data(dataset, subsampling=False):
     """
     Load the dataset
     Ideal cible: label 1vs2 i.e multi_clustered vs EMF
