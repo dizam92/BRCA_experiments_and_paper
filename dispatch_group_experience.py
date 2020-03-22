@@ -1,11 +1,13 @@
+import datetime
 import os
 import random
+from os import makedirs
+from os.path import abspath, dirname, exists, join
+from subprocess import call
+
 import numpy as np
 from sklearn.model_selection import ParameterGrid
-from os.path import join, abspath, dirname, exists
-from os import makedirs
-from subprocess import call
-import datetime
+
 print(__file__)
 RESULTS_PATH = os.environ.get('', join(dirname(abspath(__file__)), "saving_repository"))
 EXPERIMENTS_PATH = os.environ.get('', join(dirname(abspath(__file__)), "experiments"))

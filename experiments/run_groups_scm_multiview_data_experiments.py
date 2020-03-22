@@ -1,18 +1,21 @@
 # -*- coding: utf-8 -*-
 __author__ = 'maoss2'
-from experiments.utilities import *
-from os.path import join, abspath, dirname, exists
-from os import makedirs
-from collections import defaultdict
-from learners.pyscmGroup import GroupSCM
-from sklearn.model_selection import train_test_split, GridSearchCV, KFold
-from sklearn.pipeline import Pipeline
-from sklearn.metrics import confusion_matrix
 import argparse
-from functools import partial
-import multiprocessing
-from multiprocessing import Pool
 import logging
+import multiprocessing
+from collections import defaultdict
+from functools import partial
+from multiprocessing import Pool
+from os import makedirs
+from os.path import abspath, dirname, exists, join
+
+from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import GridSearchCV, KFold, train_test_split
+from sklearn.pipeline import Pipeline
+
+from experiments.utilities import *
+from learners.pyscmGroup import GroupSCM
+
 logging.getLogger('parso.python.diff').disabled = True
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -121,11 +124,15 @@ def build_priors_rules_vector(c,
     dict_pr_rules = pickle.load(open(dictionnary_for_prior_rules, 'rb'))
     # Build PriorGroups vector, p_g
     prior_values_dict_pr_group = {k: f_1(c, len(v)) for k, v in dict_pr_group.items()} 
+    for k, v in prior_values_dict_pr_group.items():
+        if v == 0.0:
+            prior_values_dict_pr_group[k]= 1e-10
+    
     # Build PriorRules vector, p_ri
     if inverse_prior_group:
-        prior_values_dict_pr_rules = {k: f_1(c, np.sum([1 / prior_values_dict_pr_group[el] for el in v])) for k, v in dict_pr_rules.items()}
+        prior_values_dict_pr_rules = {k: f_1(c, 1 / prior_values_dict_pr_group[v]) for k, v in dict_pr_rules.items()}
     else:
-        prior_values_dict_pr_rules = {k: f_1(c, np.sum([prior_values_dict_pr_group[el] for el in v])) for k, v in dict_pr_rules.items()}
+        prior_values_dict_pr_rules = {k: f_1(c, prior_values_dict_pr_group[v]) for k, v in dict_pr_rules.items()}
     return prior_values_dict_pr_group, prior_values_dict_pr_rules
     
     

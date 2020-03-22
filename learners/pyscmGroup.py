@@ -1,17 +1,20 @@
 # -*- coding: utf-8 -*-
 from __future__ import division
-__author__ = 'maoss2'
+
 import logging
+
 import numpy as np
-
-from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.utils.validation import check_X_y, check_random_state
 from future.utils import iteritems
-
-from pyscm.scm import BaseSetCoveringMachine
 from pyscm._scm_utility import find_max as find_max_utility  # cpp extensions
 from pyscm.model import ConjunctionModel, DisjunctionModel
 from pyscm.rules import DecisionStump
+from pyscm.scm import BaseSetCoveringMachine
+from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.utils.validation import check_random_state, check_X_y
+
+__author__ = 'maoss2'
+
+
 
 # logging.basicConfig(level=logging.DEBUG)
 # logging.basicConfig(filename='pyscm_group.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')

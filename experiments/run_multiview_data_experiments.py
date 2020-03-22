@@ -1,23 +1,26 @@
 # -*- coding: utf-8 -*-
 __author__ = 'maoss2'
-from experiments.utilities import *
-from collections import defaultdict
-from learners.decisionStumpSCM_learner import DecisionStumpSCMNew
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split, GridSearchCV, KFold
-from sklearn.pipeline import Pipeline
-from sklearn.metrics import confusion_matrix
-import logging
-import click
-import time
-import json
-import hashlib
-import subprocess
 import argparse
+import hashlib
+import json
+import logging
+import subprocess
 import sys
+import time
 import traceback
+from collections import defaultdict
 from pathlib import Path
+
+import click
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import GridSearchCV, KFold, train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.tree import DecisionTreeClassifier
+
+from experiments.utilities import *
+from learners.decisionStumpSCM_learner import DecisionStumpSCMNew
+
 logging.getLogger('parso.python.diff').disabled = True
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

@@ -1,25 +1,27 @@
 # -*- coding: utf-8 -*-
 __author__ = 'maoss2'
-import random
 import os
-import h5py
+import pickle
+import random
+import re
 import time
-import seaborn as sns
-from matplotlib import pyplot as plt
+from collections import Counter, defaultdict
+from copy import deepcopy
+from glob import glob
+from itertools import combinations
+from os import makedirs
+from os.path import abspath, dirname, exists, join
+
+import h5py
+import networkx as nx
 import numpy as np
 import pandas as pd
-import networkx as nx
-import re
-import pickle
+import seaborn as sns
+from matplotlib import pyplot as plt
+from sklearn.metrics import (accuracy_score, f1_score, precision_score,
+                             recall_score)
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
-from itertools import combinations
-from copy import deepcopy
-from collections import defaultdict
-from glob import glob
-from collections import Counter
-from os.path import join, abspath, dirname, exists
-from os import makedirs
+
 goa_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/goa_human_isoform_valid.gaf'
 biogrid_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/BIOGRID-ORGANISM-Homo_sapiens-3.5.178.tab.txt'
 genesID_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/Results_genes.txt'
