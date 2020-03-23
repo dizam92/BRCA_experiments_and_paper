@@ -44,7 +44,7 @@ def main():
     for subs in subsampling_state:
         print(f"Launching Subsampling {subs}")
         launch_slurm_experiment(experiment_file='run_multiview_data_experiments.py', 
-                                saving_file='experiments', 
+                                saving_file='experiments_scm_removed', 
                                 subsampling=subs, 
                                 nb_repetitions=15, 
                                 time='5',

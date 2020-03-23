@@ -345,6 +345,22 @@ def load_baptiste_data(dataset, subsampling=False):
     return view_0, view_0_name, view_1, view_1_name, view_2, view_2_name, view_3, view_3_name, view_4, view_4_name, view_5, view_5_name, view_6, view_6_name, view_7, view_7_name, view_8, view_8_name, view_9, view_9_name, view_10, view_10_name, view_11, view_11_name, view_12, view_12_name, view_13, view_13_name, all_data, groups_ids, y, proteins_ids, features_names
   
  
+def eliminate_features_for_scm(x, y, features_names, features_to_be_excluded):
+    """ Objectif, enlever les features significatifs obtenus d'une execution du SCM afin de le rerouler.
+    Args:
+        x, dataset
+        y, label (on fait rien avec)
+        features_names, features names
+        features_to_be_excluded, liste de features (string) à exclure
+    Return:
+        x, y, features_names
+    """
+    assert type(features_to_be_excluded) == list, 'Must be a list of string'
+    idx_features_retained = [i for i, el in enumerate(features_names) if el not in features_to_be_excluded]
+    x = x[:, idx_features_retained]
+    return x, y, features_names
+
+
 def results_analysis(directory, output_text_file, recap_table_file, plot_hist=True):
     """
     An utility function to run the results analysis and output them in a readable way

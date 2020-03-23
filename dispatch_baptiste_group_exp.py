@@ -35,7 +35,7 @@ def launch_slurm_experiment_group(subsampling, nb_repetitions, pathway_file, upd
     with open(submission_path, 'w') as out_file:
         out_file.write(submission_script)
         
-    # call(["sbatch", submission_path])
+    call(["sbatch", submission_path])
     
 def main_group():
     dictionaries_paths = [f"{DATAREPOSITORY_PATH}/pathways_multiview_groups.pck"]

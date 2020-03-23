@@ -92,6 +92,7 @@ class LearnGroupMultiViewData(object):
         self.saving_dict['importances'] = []
         self.saving_dict['rules_str'] = []
         self.saving_dict['rules'] = []
+        self.saving_dict['groups_rules'] = []
         self.save_features_selected(classifier=self.gs_clf, parameters=self.parameters,
                                     features_names=features_names, dictionary=self.saving_dict)
         self.saving_file = self.saving_file + '_{}_{}.pck'.format(self.subsampling, str(self.rs))

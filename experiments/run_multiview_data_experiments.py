@@ -280,17 +280,94 @@ def run_experiment(nb_repetitions, subsampling=False, data=dataset_baptiste, exp
     os.chdir('/home/maoss2/')
 
 
+def run_experiment_excluded_view(nb_repetitions, features_to_be_excluded, subsampling=False, data=dataset_baptiste, experiment_name='experiment', saving_rep=saving_rep):
+    """
+    Utility function to run experiment on specific data and with specific wiew. To be called in a loop in a main
+    Args:
+        data: str, data path
+        subsampling: bool, to subsample or not the data
+        experiment_name: str, experiment name for saving file
+        return_views: str, which view to run experiment on
+        nb_repetitions: int, number of repetitions
+        saving_rep: str, saving repertory
+    Return:
+       Create a saving repertory and put the pickle results in
+    """
+    assert nb_repetitions >= 1, 'At least one split'
+    saving_dict_scm = defaultdict(dict)
+    _,_, _,_, _,_, _,_, _,_, _,_, _,_, _,_, _,_, _,_, _,_, _,_, _,_, _,_, x, _, y, proteins_ids, features_names = load_baptiste_data(dataset=dataset_baptiste, 
+                                                                                                                                     subsampling=subsampling) 
+    x, y, features_names = eliminate_features_for_scm(x=x, y=y, features_names=features_names, features_to_be_excluded=features_to_be_excluded)
+    balanced_weights = weighted_sample(y=y, y_target=y)
+    balanced_weights = np.unique(balanced_weights)
+    balanced_weights = {1: balanced_weights.max() * x.shape[0], -1: balanced_weights.min() * x.shape[0]}
+    random.seed(42)
+    random_seeds_list = [random.randint(1, 2000) for _ in range(nb_repetitions)]
+   
+    try:
+        os.mkdir(f'{saving_rep}/{experiment_name}_scm_subsampling_{subsampling}_nb_repetitions_{nb_repetitions}')
+        os.chdir(f'{saving_rep}/{experiment_name}_scm_subsampling_{subsampling}_nb_repetitions_{nb_repetitions}')
+        for state in range(nb_repetitions):
+            clf = LearnMultiViewData(parameters=parameters_scm, 
+                                    learner=Pipeline([('SCM', DecisionStumpSCMNew())]),
+                                    saving_dict=saving_dict_scm, 
+                                    balanced_weights=balanced_weights,
+                                    saving_file=experiment_name, 
+                                    subsampling=subsampling, 
+                                    rs=random_seeds_list[state], 
+                                    nb_jobs=nb_jobs, 
+                                    cv=cv_fold, 
+                                    data_path=dataset_baptiste)  
+            x_train, x_test, y_train, y_test, proteins_ids_train, proteins_ids_test = \
+                train_test_split(x, y, proteins_ids, train_size=0.8, random_state=random_seeds_list[state])
+            logger.info('Train set shape {}'.format(x_train.shape))
+            logger.info('Test set shape {}'.format(x_test.shape))
+            clf.learning(features_names=features_names, x_train=x_train, x_test=x_test,
+                         y_train=y_train, y_test=y_test, proteins_ids_train=proteins_ids_train, proteins_ids_test=proteins_ids_test)
+    except OSError:
+        os.chdir(f'{saving_rep}/{experiment_name}_scm_subsampling_{subsampling}_nb_repetitions_{nb_repetitions}')
+        existing_files_list = [fichier for fichier in glob('*.pck')]
+        seeds_already_done = None
+        if len(existing_files_list) != 0:
+            seeds_already_done = [int(f.split('_')[-1].split('.')[0]) for f in existing_files_list]
+        for state in range(nb_repetitions):
+            if seeds_already_done is not None and random_seeds_list[state] in seeds_already_done: continue
+            clf = LearnMultiViewData(parameters=parameters_scm, 
+                                learner=Pipeline([('SCM', DecisionStumpSCMNew())]),
+                                saving_dict=saving_dict_scm, 
+                                balanced_weights=balanced_weights,
+                                saving_file=experiment_name, 
+                                subsampling=subsampling, 
+                                rs=random_seeds_list[state], 
+                                nb_jobs=nb_jobs, 
+                                cv=cv_fold, 
+                                data_path=dataset_baptiste)
+            x_train, x_test, y_train, y_test, proteins_ids_train, proteins_ids_test = \
+                train_test_split(x, y, proteins_ids, train_size=0.8, random_state=random_seeds_list[state])
+            logger.info('Train set shape {}'.format(x_train.shape))
+            logger.info('Test set shape {}'.format(x_test.shape))
+            clf.learning(features_names=features_names, x_train=x_train, x_test=x_test,
+                         y_train=y_train, y_test=y_test, proteins_ids_train=proteins_ids_train, proteins_ids_test=proteins_ids_test)
+    os.chdir('/home/maoss2/')
+
+
+
 def main():
     parser = argparse.ArgumentParser(description="Learn Baptiste Experiment")
     parser.add_argument('-subs', '--subsampling', type=bool, default=False)
     parser.add_argument('-nb_r', '--nb_repetitions', type=int, default=1)
     parser.add_argument('-exp_name', '--experiment_name', type=str, default="experiments")
     args = parser.parse_args()
-    run_experiment(nb_repetitions=args.nb_repetitions,
-                   subsampling=args.subsampling, 
-                   data=dataset_baptiste, 
-                   experiment_name=args.experiment_name, 
-                   saving_rep=saving_rep)
-    
+    # run_experiment(nb_repetitions=args.nb_repetitions,
+    #                subsampling=args.subsampling, 
+    #                data=dataset_baptiste, 
+    #                experiment_name=args.experiment_name, 
+    #                saving_rep=saving_rep)
+    run_experiment_excluded_view(nb_repetitions=args.nb_repetitions,
+                                features_to_be_excluded=['feature_17939', 'feature_179'], # Best feature du meilleur scm from scm no subsampling experiment 'experiments_False_286.pck', F1score: 0.54
+                                subsampling=args.subsampling, 
+                                data=dataset_baptiste, 
+                                experiment_name=args.experiment_name, 
+                                saving_rep=saving_rep)
 if __name__ == "__main__":
     main()
