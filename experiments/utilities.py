@@ -577,6 +577,7 @@ def anaylses_resultats(type_experiment='normal', plot_hist=True):
         # sous_experiment_types = ['methyl_rna_iso_mirna', 'methyl_rna_iso_mirna_snp_clinical', 
         #                          'methyl_rna_mirna', 'methyl_rna_mirna_snp_clinical', 'all']
         sous_experiment_types = ['methyl_rna_iso_mirna']
+        # sous_experiment_types = ['True__group_scm', 'False__group_scm']
         for experiment in sous_experiment_types:
             output_text_file_experiment = f"{output_text_file}__group_scm__{experiment}.txt"
             recap_text_file_experiment = f"{output_text_file}__{experiment}__recap.txt"
