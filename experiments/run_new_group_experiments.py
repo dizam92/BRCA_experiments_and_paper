@@ -126,8 +126,10 @@ def build_priors_rules_vector(c,
     # Build PriorRules vector, p_ri
     if random_weights:
         random.seed(42)
+        np.random.seed(42)
         values_randomly_generated = np.random.rand(len(dict_pr_group.items()))
         prior_values_dict_pr_group = {k: f_1(c, values_randomly_generated[idx]) for idx, k in enumerate(dict_pr_group.keys())}
+        prior_values_dict_pr_rules = {k: f_1(c, np.sum([prior_values_dict_pr_group[el] for el in v])) for k, v in dict_pr_rules.items()}
     else:
         prior_values_dict_pr_rules = {k: f_1(c, np.sum([prior_values_dict_pr_group[el] for el in v])) for k, v in dict_pr_rules.items()}
     return prior_values_dict_pr_group, prior_values_dict_pr_rules
