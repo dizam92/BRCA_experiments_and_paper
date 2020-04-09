@@ -225,8 +225,8 @@ def main():
                    c=args.c,
                    random_weights=args.random_weights,
                    data=args.data,  
-                   dictionnary_for_prior_group=args.dictionnary_for_prior_group,
-                   dictionnary_for_prior_rules=args.dictionnary_for_prior_rules,
+                   dictionnary_for_prior_group=args.prior_dict_groups,
+                   dictionnary_for_prior_rules=args.prior_dict_rules,
                    experiment_name=args.experiment_name, 
                    saving_rep=args.saving_rep)    
 

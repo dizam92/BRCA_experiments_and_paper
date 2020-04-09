@@ -23,7 +23,7 @@ def launch_slurm_experiment(return_views, nb_repetitions, experiment_file, exper
     submission_script += f"#SBATCH --nodes=1\n" 
     submission_script += f"#SBATCH --ntasks-per-node=8\n" 
     submission_script += f"#SBATCH --mem=128000M\n" 
-    submission_script += f"#SBATCH --account=rpp-corbeilj\n"
+    submission_script += f"#SBATCH --account=rrg-corbeilj-ac\n"
     submission_script += f"#SBATCH --mail-user=mazid-abiodoun.osseni.1@ulaval.ca\n"
     submission_script += f"#SBATCH --mail-type=BEGIN\n"
     submission_script += f"#SBATCH --mail-type=END\n"
