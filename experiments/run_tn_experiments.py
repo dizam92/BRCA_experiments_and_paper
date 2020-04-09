@@ -27,8 +27,6 @@ logger = logging.getLogger(__name__)
 nb_jobs = 30
 cv_fold = KFold(n_splits=5, random_state=42)
 
-# TODO: ADD A verification to not redo the same pickle (check in the repository if the file is there: if yes pass if no do it)
-
 class LearnTN(object):
     def __init__(self, parameters, learner, saving_dict, balanced_weights, saving_file="", rs=42, nb_jobs=nb_jobs,
                  cv=cv_fold, data_path=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna, return_views='all'):
@@ -483,16 +481,6 @@ def run_experiment(return_views, nb_repetitions, data=data_tn_new_label_unbalanc
     os.chdir('/home/maoss2/')
 
 
-# def main_run_experiments_new_labels():
-#     for view in return_views:
-#         logger.info('experiment_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna')
-#         logger.info('--------------------------------------------------------')
-#         run_experiment(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
-#                         experiment_name='experiment_tn_new_label_unbalanced',
-#                         return_views=view,
-#                         nb_repetitions=15,
-#                         saving_rep=saving_repository)
-
 def main():
     parser = argparse.ArgumentParser(description="Learn TN Experiment")
     parser.add_argument('-rt', '--return_views', type=str, default="all")
@@ -502,12 +490,11 @@ def main():
     parser.add_argument('-o', '--saving_rep', type=str, default=saving_repository)
     args = parser.parse_args()
     run_experiment(data=args.data,
-                experiment_name=args.experiment_name,
-                return_views=args.return_views,
-                nb_repetitions=args.nb_repetitions,
-                saving_rep=args.saving_rep)
+                   experiment_name=args.experiment_name,
+                   return_views=args.return_views,
+                   nb_repetitions=args.nb_repetitions,
+                   saving_rep=args.saving_rep)
     
 
 if __name__ == '__main__':
     main()
-    # main_run_experiments_new_labels()
