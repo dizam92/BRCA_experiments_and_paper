@@ -43,14 +43,15 @@ def main_group():
     # return_views = ['methyl_rna_iso_mirna', 'methyl_rna_iso_mirna_snp_clinical',
     #             'methyl_rna_mirna', 'methyl_rna_mirna_snp_clinical', 'all']
     return_views = ['methyl_rna_iso_mirna_snp_clinical']
-    dictionaries_paths = [f"{DATAREPOSITORY_PATH}/pathways_biogrid_groups.pck"]
-    # dictionaries_paths = [f"{DATAREPOSITORY_PATH}/pathways_string_groups.pck"]
+    # dictionaries_paths = [f"{DATAREPOSITORY_PATH}/pathways_biogrid_groups.pck"]
+    dictionaries_paths = [f"{DATAREPOSITORY_PATH}/pathways_string_groups.pck"]
     update_method = ['inner_group', 'outer_group']
     random.seed(42)
     c_list = np.round(np.linspace(0.1, 1, 10), 3)
-    random_weights_list = [False, True]
+    # random_weights_list = [False, True]
+    random_weights_list = [False]
     param_grid = {'view': return_views, 'update': update_method, 'c': c_list, 'random_weights': random_weights_list}
-    dispatch_path = join(RESULTS_PATH, "dispatch_f_exp")
+    dispatch_path = join(RESULTS_PATH, "dispatch_f_exp_string")
     if not exists(dispatch_path): makedirs(dispatch_path)
     for pathway_dict in dictionaries_paths:
         name_pathway_file = pathway_dict.split('/')[-1].split('.')[0]
@@ -65,11 +66,11 @@ def main_group():
                                             update_method=params['update'], 
                                             c=params['c'],
                                             random_weights=params['random_weights'],
-                                            prior_dict_groups=f"{data_repository}/biogrid_pathways_dict.pck",
-                                            prior_dict_rules=f"{data_repository}/pathways_biogrid_groups.pck",
+                                            prior_dict_groups=f"{data_repository}/string_pathways_dict.pck",
+                                            prior_dict_rules=f"{data_repository}/pathways_string_groups.pck",
                                             experiment_file='run_new_group_experiments.py', 
                                             experiment_name=exp_name, 
-                                            time='10', 
+                                            time='20', 
                                             dispatch_path=dispatch_path)
     print("### DONE ###") 
 

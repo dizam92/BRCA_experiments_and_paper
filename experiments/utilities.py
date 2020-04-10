@@ -40,7 +40,8 @@ c2_pickle_dictionary = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/
 c5_pickle_dictionary = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/c5_curated_genes.pck'
 list_dict = [c2_pickle_dictionary, c5_pickle_dictionary]
 
-saving_repository = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/saving_repository'
+# saving_repository = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/saving_repository'
+saving_repository = '/home/maoss2/project/maoss2/saving_repository_article/'
 histogram_repo = f'{saving_repository}/histograms_repo'
 data_repository = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository'
 data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna = f"{data_repository}/triple_neg_new_labels_unbalanced_cpg_rna_rna_iso_mirna.h5"
@@ -576,7 +577,7 @@ def anaylses_resultats(type_experiment='normal', plot_hist=True):
     if type_experiment == 'group_scm':
         # sous_experiment_types = ['methyl_rna_iso_mirna', 'methyl_rna_iso_mirna_snp_clinical', 
         #                          'methyl_rna_mirna', 'methyl_rna_mirna_snp_clinical', 'all']
-        sous_experiment_types = ['methyl_rna_iso_mirna']
+        sous_experiment_types = ['methyl_rna_iso_mirna_snp_clinical']
         # sous_experiment_types = ['True__group_scm', 'False__group_scm']
         for experiment in sous_experiment_types:
             output_text_file_experiment = f"{output_text_file}__group_scm__{experiment}.txt"
@@ -686,13 +687,13 @@ def parcours_one_directory(directory):
     return train_metrics, test_metrics, std_train_metrics, std_test_metrics, train_metrics_best_file, test_metrics_best_file, features_retenus
 
 
-def generate_figures_mean_results(directory, experiment, f='exp', type_of_update='inner', inverse_group='False'):
+def generate_figures_mean_results(directory, experiment, f='exp', type_of_update='inner', random_weights='False'):
     x = np.round(np.linspace(0.1, 1, 10), 3)
     os.chdir(f"{directory}")
     list_of_directories = os.listdir('./')
     list_of_directories = [directory for directory in list_of_directories if directory.startswith(experiment)] 
     list_of_directories = [directory for directory in list_of_directories if directory.find(f'{type_of_update}') != -1]
-    list_of_directories = [directory for directory in list_of_directories if directory.find(f'{inverse_group}') != -1]
+    list_of_directories = [directory for directory in list_of_directories if directory.find(f'{random_weights}') != -1]
     list_of_directories = list(np.sort(list_of_directories)) # garantie que ca va de 0.1 à 1.0 ici (sinon tjrs de min a max value de c)
     train_metrics_list = []; test_metrics_list = []; std_train_metrics_list = []; std_test_metrics_list = []
     for directory in list_of_directories:
@@ -706,8 +707,8 @@ def generate_figures_mean_results(directory, experiment, f='exp', type_of_update
     std_train_metrics_list = np.asarray(std_train_metrics_list)
     std_test_metrics_list = np.asarray(std_test_metrics_list)
     # Plot the train fig
-    fig_title_train = f'Train mean metrics: Update Function:{f} {type_of_update}_groups inverse_group: {inverse_group}'
-    fig_name_train = f'{f}_train_mean_metrics_c_values_of_{type_of_update}_groups_inverse_group_{inverse_group}.png'
+    fig_title_train = f'Train mean metrics: Update Function:{f} {type_of_update}_groups random_weights: {random_weights}'
+    fig_name_train = f'{f}_train_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
     f_train, ax_train = plt.subplots(nrows=1, ncols=1)
     ax_train.set_title(f"{fig_title_train}")
     ax_train.set_xlabel('c values')
@@ -723,8 +724,8 @@ def generate_figures_mean_results(directory, experiment, f='exp', type_of_update
     plt.close()
     
     # Plot the Test fig
-    fig_title_test = f'Test mean metrics: {type_of_update}_groups inverse_group: {inverse_group}'
-    fig_name_test = f'{f}_test_mean_metrics_c_values_of_{type_of_update}_groups_inverse_group_{inverse_group}.png'
+    fig_title_test = f'Test mean metrics: {type_of_update}_groups random_weights: {random_weights}'
+    fig_name_test = f'{f}_test_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
     f_test, ax_test = plt.subplots(nrows=1, ncols=1)
     ax_test.set_title(f"{fig_title_test}")
     ax_test.set_xlabel('c values')
@@ -741,13 +742,13 @@ def generate_figures_mean_results(directory, experiment, f='exp', type_of_update
     os.chdir(f'{saving_repository}')
     
     
-def generate_figures_best_results(directory, experiment, f='exp', type_of_update='inner', inverse_group='False'):
+def generate_figures_best_results(directory, experiment, f='exp', type_of_update='inner', random_weights='False'):
     x = np.round(np.linspace(0.1, 1, 10), 3)
     os.chdir(f"{directory}")
     list_of_directories = os.listdir('./')
     list_of_directories = [directory for directory in list_of_directories if directory.startswith(experiment)] 
     list_of_directories = [directory for directory in list_of_directories if directory.find(f'{type_of_update}') != -1]
-    list_of_directories = [directory for directory in list_of_directories if directory.find(f'{inverse_group}') != -1]
+    list_of_directories = [directory for directory in list_of_directories if directory.find(f'{random_weights}') != -1]
     list_of_directories = list(np.sort(list_of_directories)) # garantie que ca va de 0.1 à 1.0 ici (sinon tjrs de min a max value de c)
     train_metrics_list = []; test_metrics_list = []
     for directory in list_of_directories:
@@ -757,8 +758,8 @@ def generate_figures_best_results(directory, experiment, f='exp', type_of_update
     train_metrics_list = np.asarray(train_metrics_list)
     test_metrics_list = np.asarray(test_metrics_list)
     # Plot the train fig
-    fig_title_train = f'Train best metrics: Update Function:{f} {type_of_update}_groups inverse_group: {inverse_group}'
-    fig_name_train = f'{f}_train_best_metrics_c_values_of_{type_of_update}_groups_inverse_group_{inverse_group}.png'
+    fig_title_train = f'Train best metrics: Update Function:{f} {type_of_update}_groups random_weights: {random_weights}'
+    fig_name_train = f'{f}_train_best_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
     f_train, ax_train = plt.subplots(nrows=1, ncols=1)
     ax_train.set_title(f"{fig_title_train}")
     ax_train.set_xlabel('c values')
@@ -774,8 +775,8 @@ def generate_figures_best_results(directory, experiment, f='exp', type_of_update
     plt.close()
     
     # Plot the Test fig
-    fig_title_test = f'Test best metrics: {type_of_update}_groups inverse_group: {inverse_group}'
-    fig_name_test = f'{f}_test_best_metrics_c_values_of_{type_of_update}_groups_inverse_group_{inverse_group}.png'
+    fig_title_test = f'Test best metrics: {type_of_update}_groups random_weights: {random_weights}'
+    fig_name_test = f'{f}_test_best_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
     f_test, ax_test = plt.subplots(nrows=1, ncols=1)
     ax_test.set_title(f"{fig_title_test}")
     ax_test.set_xlabel('c values')
