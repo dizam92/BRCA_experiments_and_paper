@@ -13,6 +13,7 @@ __pycache__
 *.toc
 *.dat
 *.zip
+*.png
 # Jupyter Notebook
 .ipynb_checkpoints
 *.xlsx
