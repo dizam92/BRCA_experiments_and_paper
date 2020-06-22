@@ -10,10 +10,11 @@ from sklearn.model_selection import ParameterGrid
 from experiments.experiments_utilities import saving_repository, data_prad, data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna
 
 RESULTS_PATH = os.environ.get('', join(dirname(abspath(__file__)), "saving_repository"))
-EXPERIMENTS_PATH = os.environ.get('', join(dirname(abspath(__file__)), "experiments"))
+# EXPERIMENTS_PATH = os.environ.get('', join(dirname(abspath(__file__)), "experiments"))
+EXPERIMENTS_PATH = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/experiments'
 DATAREPOSITORY_PATH = os.environ.get('', join(dirname(abspath(__file__)), "datasets/datasets_repository"))
 PROJECT_ROOT = dirname(abspath(__file__))
-saving_repository = f'{saving_repository}/normal_experiments'
+saving_repository = f'{saving_repository}normal_experiments'
 # SAVING_REPO = '/home/maoss2/project/maoss2/saving_repository_article/normal_experiments'
 
 def launch_slurm_experiment(return_views, dataset, nb_repetitions, experiment_file, experiment_name, time, dispatch_path):
