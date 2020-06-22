@@ -95,9 +95,9 @@ def boxplot_figures(data, return_views, saving_repo, features_cibles):
     
 if __name__ == "__main__":
     boxplot_figures(data='/Users/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/triple_neg_new_labels_unbalanced_cpg_rna_rna_iso_mirna.h5',
-                    return_views='methyl_rna_iso_mirna', 
+                    return_views='methyl_rna_iso_mirna_snp_clinical', 
                     saving_repo='/Users/maoss2/PycharmProjects/BRCA_experiments_and_paper', 
-                    features_cibles=['uc002vwt.2_MLPH', 'hsa-mir-218-2'])
+                    features_cibles=['uc002vwt.2_MLPH', 'uc002hul.3_RARA', 'cg00347904_SCUBE3', 'uc003jqp.2_INEXISTANT', 'cg06784466_FPR3'])
     exit()
     barplot_figures(file_name='DT_metrics_bar_plots', 
                     fig_title='metrics', 

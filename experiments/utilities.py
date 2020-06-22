@@ -265,6 +265,88 @@ def load_data(data, return_views='all'):
                    features_names_rna, features_names_rna_iso, features_names_mirna, features_names_clinical, patients_names
 
 
+def load_prad_data(data, return_views='all'):
+    """
+    Load the triple neg datasets
+    Args:
+        data, str, path to the .h5py dataset
+        return_views, str, the type of the x we want to return, default 'all'
+                - 'cna'
+                - 'mrna'
+                - 'majority_vote' for the majority vote experiments
+    Returns:
+        x, y, features_names, patients_names
+    """
+    assert return_views in ['cna', 'mrna', 'all', 'majority_vote']
+    d = h5py.File(data, 'r')
+    x = d['data'][()]
+    y = d['target'][()]
+    features_names = d['features_names'][()]
+    features_names = np.asarray([el.decode("utf-8") for el in features_names])
+    patients_names = d['patients_ids'][()]
+    patients_names = np.asarray([el.decode("utf-8") for el in patients_names])
+    random.seed(42)
+    data_x_y_patients_names = list(zip(x, y, patients_names))
+    random.shuffle(data_x_y_patients_names)
+    x = [el[0] for el in data_x_y_patients_names]
+    y = [el[1] for el in data_x_y_patients_names]
+    patients_names = [el[2] for el in data_x_y_patients_names]
+    x = np.asarray(x)
+    y = np.asarray(y)
+    patients_names = np.asarray(patients_names)
+    # Indices retrieving
+    merge_liste = []
+    index_cna = [idx for idx, el in enumerate(features_names) if el.startswith('cna')]
+    index_rna = [idx for idx, el in enumerate(features_names) if el.startswith('rna')]
+    merge_liste.extend(index_cna)
+    merge_liste.extend(index_rna)
+    # CNA
+    x_cna = x[:, index_cna]
+    features_names_cna = features_names[index_cna]
+    # RNA
+    x_rna = x[:, index_rna]
+    features_names_rna = features_names[index_rna]
+    # Normalization
+    # x_rna = StandardScaler().fit_transform(x_rna)
+    if return_views == 'cna':
+        x = x_cna
+        features_names = features_names_cna
+        data_x_names = list(zip(x, features_names))
+        random.seed(42)
+        random.shuffle(data_x_names)
+        x = [el[0] for el in data_x_names]
+        features_names = [el[1] for el in data_x_names]
+        x = np.asarray(x)
+        features_names = np.asarray(features_names)
+        return x, y, features_names, patients_names
+
+    if return_views == 'mrna':
+        x = x_rna
+        features_names = features_names_rna
+        data_x_names = list(zip(x, features_names))
+        random.seed(42)
+        random.shuffle(data_x_names)
+        x = [el[0] for el in data_x_names]
+        features_names = [el[1] for el in data_x_names]
+        x = np.asarray(x)
+        features_names = np.asarray(features_names)
+        return x, y, features_names, patients_names
+
+    if return_views == 'all':
+        data_x_names = list(zip(x, features_names))
+        random.seed(42)
+        random.shuffle(data_x_names)
+        x = [el[0] for el in data_x_names]
+        features_names = [el[1] for el in data_x_names]
+        x = np.asarray(x)
+        features_names = np.asarray(features_names)
+        return x, y, features_names, patients_names
+
+    if return_views == 'majority_vote':
+        return x, x_cna, x_rna, y, features_names, features_names_cna, features_names_rna, patients_names
+
+
+
 # Facteur de rebalancement : si mult = 1 on aura 1 négatif pour chaque positif, si mult = 2, on aura 2 négtifs pour chaque positif
 mult = 1
 def load_baptiste_data(dataset, subsampling=False):
