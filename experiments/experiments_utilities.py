@@ -45,6 +45,7 @@ saving_repository = '/home/maoss2/project/maoss2/saving_repository_article/'
 histogram_repo = f'{saving_repository}/histograms_repo'
 data_repository = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository'
 data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna = f"{data_repository}/triple_neg_new_labels_unbalanced_cpg_rna_rna_iso_mirna.h5"
+data_prad = f"{data_repository}/triple_neg_new_labels_unbalanced_cpg_rna_rna_iso_mirna.h5"
 
 return_views = ['methyl_rna_iso_mirna', 'methyl_rna_iso_mirna_snp_clinical',
                 'methyl_rna_mirna', 'methyl_rna_mirna_snp_clinical', 'all']
@@ -344,7 +345,6 @@ def load_prad_data(data, return_views='all'):
 
     if return_views == 'majority_vote':
         return x, x_cna, x_rna, y, features_names, features_names_cna, features_names_rna, patients_names
-
 
 
 # Facteur de rebalancement : si mult = 1 on aura 1 négatif pour chaque positif, si mult = 2, on aura 2 négtifs pour chaque positif

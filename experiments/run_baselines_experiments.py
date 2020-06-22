@@ -18,7 +18,7 @@ from sklearn.model_selection import GridSearchCV, KFold, train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.tree import DecisionTreeClassifier
 
-from experiments.utilities import *
+from experiments.experiments_utilities import *
 from learners.decisionStumpSCM_learner import DecisionStumpSCMNew
 
 logging.getLogger('parso.python.diff').disabled = True
@@ -314,7 +314,7 @@ class LearnTN(object):
             pickle.dump(self.saving_dict, f)
 
 
-def run_experiment(return_views, nb_repetitions, data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna, 
+def run_experiment(return_views, nb_repetitions, which_expe='brca', data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna, 
                    experiment_name='experiment_tn_new_label_unbalanced', saving_rep=saving_repository):
     """
     Utility function to run experiment on specific data and with specific wiew. To be called in a loop in a main
@@ -331,12 +331,20 @@ def run_experiment(return_views, nb_repetitions, data=data_tn_new_label_unbalanc
     saving_dict_rf = defaultdict(dict)
     saving_dict_dt = defaultdict(dict)
     saving_dict_scm = defaultdict(dict)
-    x, y, features_names, patients_names = load_data(data=data, return_views=return_views)
-    features_names = [el.encode("utf-8") for el in features_names]
-    features_names = [el.decode("utf-8") for el in features_names]
-    balanced_weights = weighted_sample(y=y, y_target=y)
-    balanced_weights = np.unique(balanced_weights)
-    balanced_weights = {1: balanced_weights.max() * x.shape[0], -1: balanced_weights.min() * x.shape[0]}
+    if which_expe == 'brca':
+        x, y, features_names, patients_names = load_data(data=data, return_views=return_views)
+        features_names = [el.encode("utf-8") for el in features_names]
+        features_names = [el.decode("utf-8") for el in features_names]
+        balanced_weights = weighted_sample(y=y, y_target=y)
+        balanced_weights = np.unique(balanced_weights)
+        balanced_weights = {1: balanced_weights.max() * x.shape[0], -1: balanced_weights.min() * x.shape[0]}
+    elif which_expe == 'prad':
+        x, y, features_names, patients_names = load_prad_data(data=data, return_views=return_views)
+        features_names = [el.encode("utf-8") for el in features_names]
+        features_names = [el.decode("utf-8") for el in features_names]
+        balanced_weights = {1: 1, -1: 1} # same weights and just to not change the LearnTN format
+    else:
+        raise ValueError(f'{which_expe}: ValueError exception thrown')
     random.seed(42)
     random_seeds_list = [random.randint(1, 2000) for _ in range(nb_repetitions)]
     try:
