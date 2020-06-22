@@ -7,13 +7,14 @@ from subprocess import call
 
 import numpy as np
 from sklearn.model_selection import ParameterGrid
-from experiments.experiments_utilities import *
+from experiments.experiments_utilities import saving_repository, data_prad, data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna
 
 RESULTS_PATH = os.environ.get('', join(dirname(abspath(__file__)), "saving_repository"))
 EXPERIMENTS_PATH = os.environ.get('', join(dirname(abspath(__file__)), "experiments"))
 DATAREPOSITORY_PATH = os.environ.get('', join(dirname(abspath(__file__)), "datasets/datasets_repository"))
 PROJECT_ROOT = dirname(abspath(__file__))
-SAVING_REPO = '/home/maoss2/project/maoss2/saving_repository_article/normal_experiments'
+saving_repository = f'{saving_repository}/normal_experiments'
+# SAVING_REPO = '/home/maoss2/project/maoss2/saving_repository_article/normal_experiments'
 
 def launch_slurm_experiment(return_views, dataset, nb_repetitions, experiment_file, experiment_name, time, dispatch_path):
     exp_file = join(dispatch_path, f"{return_views}__" + f"{experiment_name}__" + f"{nb_repetitions}")
@@ -30,7 +31,7 @@ def launch_slurm_experiment(return_views, dataset, nb_repetitions, experiment_fi
     submission_script += f"#SBATCH --mail-type=FAIL\n"
     submission_script += f"#SBATCH --time={time}:00:00\n" 
     submission_script += f"#SBATCH --output={exp_file + '.out'}\n\n" 
-    submission_script += f"python {EXPERIMENTS_PATH}/{experiment_file} -rt {return_views} -nb_r {nb_repetitions} -data {dataset} -o {SAVING_REPO}"
+    submission_script += f"python {EXPERIMENTS_PATH}/{experiment_file} -rt {return_views} -nb_r {nb_repetitions} -data {dataset} -o {saving_repository}"
 
     submission_path = exp_file + ".sh"
     with open(submission_path, 'w') as out_file:
@@ -44,6 +45,7 @@ def main_brca():
     return_views = ['methyl_rna_iso_mirna_snp_clinical']
     dispatch_path = join(RESULTS_PATH, "dispatch")
     if not exists(dispatch_path): makedirs(dispatch_path)
+    if not exists(saving_repository): makedirs(saving_repository)
     for view in return_views:
         print(f"Launching {view}")
         launch_slurm_experiment(return_views=view, dataset=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna, 
@@ -55,6 +57,7 @@ def main_prad():
     return_views = ['all']
     dispatch_path = join(RESULTS_PATH, "dispatch")
     if not exists(dispatch_path): makedirs(dispatch_path)
+    if not exists(saving_repository): makedirs(saving_repository)
     for view in return_views:
         print(f"Launching {view}")
         launch_slurm_experiment(return_views=view, dataset=data_prad, 
