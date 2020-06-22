@@ -43,7 +43,7 @@ def main_brca():
     # return_views = ['methyl_rna_iso_mirna', 'methyl_rna_iso_mirna_snp_clinical',
     #             'methyl_rna_mirna', 'methyl_rna_mirna_snp_clinical', 'all']
     return_views = ['methyl_rna_iso_mirna_snp_clinical']
-    dispatch_path = join(RESULTS_PATH, "dispatch")
+    dispatch_path = join(RESULTS_PATH, "dispatch_normal_exp_brca")
     if not exists(dispatch_path): makedirs(dispatch_path)
     if not exists(saving_repository): makedirs(saving_repository)
     for view in return_views:
@@ -55,7 +55,7 @@ def main_brca():
 
 def main_prad():
     return_views = ['all']
-    dispatch_path = join(RESULTS_PATH, "dispatch")
+    dispatch_path = join(RESULTS_PATH, "dispatch_normal_exp_prad")
     if not exists(dispatch_path): makedirs(dispatch_path)
     if not exists(saving_repository): makedirs(saving_repository)
     for view in return_views:
