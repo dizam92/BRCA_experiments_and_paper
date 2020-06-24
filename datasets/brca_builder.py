@@ -446,7 +446,8 @@ def main_brca_dataset_builder():
                                          mirna_file=mirna_file,
                                          clinical_file=new_clinical_file,
                                          balanced_dataset=balanced,
-                                         methyl_rna_mirna_snp=boolean)
+                                         methyl_rna_mirna_snp=boolean,
+                                         feature_mad_selection=mad_selection)
             if boolean is True:
                 if mad_selection is True:
                     dataset_name = 'BRCA_triple_neg_new_labels_unbalanced_all_views.h5'
