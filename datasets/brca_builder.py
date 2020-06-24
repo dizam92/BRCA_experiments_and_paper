@@ -215,7 +215,8 @@ def build_brca_dataset_for_graalpy(dataset='',
                                    output_path='./',
                                    methyl_example_file='/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/files_to_build_datasets/jhu-usc.edu_BRCA.HumanMethylation27.4.lvl-3.TCGA-E2-A15M-11A-22D-A12E-05.txt',
                                    genes_example_file='/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/files_to_build_datasets/unc.edu.ffd6c7c5-d4c4-4ead-9e55-de8f6aa62182.2248604.rsem.genes.results',
-                                   snp_data_file='/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/files_to_build_datasets/genome.wustl.edu__IlluminaGA_curated_DNA_sequencing_level2.maf'):
+                                   snp_data_file='/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/files_to_build_datasets/genome.wustl.edu__IlluminaGA_curated_DNA_sequencing_level2.maf',
+                                   feature_mad_selection=True):
     """ Transform the raw dataset to the view we explicitly want to be loaded. Get the dataset loader ready
     Args:
         dataset, str, path to raw dataset, .h5
@@ -224,6 +225,9 @@ def build_brca_dataset_for_graalpy(dataset='',
         methyl_example_file, a sample example file to build the right feature names for methyl view
         genes_example_file, a sample example file to build the right feature names for genes view
         snp_data_file, a sample example file to build the right feature names for snp view
+        feature_mad_selection, bool for the features mad distribution,. Default: True. 
+        # PK j'ai pris 2000 pour methyl parce que ca chute vite on rentre dans des valeurs tres petites du coup pas vraiment
+        # de variance dans le feature (entre exemple)
     Returns:
             New dataset loader ready  with keys, data, target, features_names, patients_ids
     """
@@ -231,11 +235,10 @@ def build_brca_dataset_for_graalpy(dataset='',
     x_methyl_fusion = data['methylation_fusion/block0_values'][()]
     features_names_methyl_fusion = data['methylation_fusion/block0_items'][()]
     features_names_methyl_fusion = np.asarray([el.decode('utf8') for el in features_names_methyl_fusion])
-    indices_mad_selected = select_features_based_on_mad(x=x_methyl_fusion, nb_features=2000)
-    # PK j'ai pris 2000 pour methyl parce que ca chute vite on rentre dans des valeurs tres petites du coup pas vraiment
-    # de variance dans le feature (entre exemple)
-    x_methyl_fusion = x_methyl_fusion[:, indices_mad_selected]
-    features_names_methyl_fusion = features_names_methyl_fusion[indices_mad_selected]
+    if feature_mad_selection:
+        indices_mad_selected = select_features_based_on_mad(x=x_methyl_fusion, nb_features=2000)
+        x_methyl_fusion = x_methyl_fusion[:, indices_mad_selected]
+        features_names_methyl_fusion = features_names_methyl_fusion[indices_mad_selected]
 
     # linked the methyl_name to the genes_name
     d = pd.read_table(methyl_example_file, skiprows=[0], header='infer')
@@ -244,27 +247,40 @@ def build_brca_dataset_for_graalpy(dataset='',
                                                           d['Gene_Symbol'].values[i])
                                            for i in range(d.shape[0]) if d['Composite Element REF'].values[i] in
                                            features_names_methyl_fusion]
+    features_inexistant = [el.split('_')[0] for el in features_names_methyl_fusion_linked if el.find('INEXISTANT') != -1]
+    features_inexistant_idx = [idx for idx, el in enumerate(features_names_methyl_fusion_linked) if el.find('INEXISTANT') != -1]
+    d_second_methyl_file = pd.read_csv('/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/files_to_build_datasets/methyl_to_genes_name_file_from_mmc3.csv')
+    second_methyl_file_features_methyl = d_second_methyl_file['features_methyl'].values
+    second_methyl_file_genes = d_second_methyl_file['genes_names'].values
+    idx_position = [np.where(second_methyl_file_features_methyl==el)[0][0] for el in features_inexistant] 
+    second_methyl_file_genes_names = list(second_methyl_file_genes[idx_position])
+    new_methyl_names = [f'{el}_{second_methyl_file_genes_names[idx]}' for idx, el in enumerate(features_inexistant)] 
     features_names_methyl_fusion_linked = np.asarray(features_names_methyl_fusion_linked)
+    features_names_methyl_fusion_linked[features_inexistant_idx] = new_methyl_names
+    
     x_mirna = data['mirna/block0_values'][()]
     features_names_mirna = data['mirna/block0_items'][()]
     features_names_mirna = np.asarray([el.decode('utf8') for el in features_names_mirna])
-    indices_mad_selected = select_features_based_on_mad(x=x_mirna, nb_features=250)
-    x_mirna = x_mirna[:, indices_mad_selected]
-    features_names_mirna = features_names_mirna[indices_mad_selected]
+    if feature_mad_selection:
+        indices_mad_selected = select_features_based_on_mad(x=x_mirna, nb_features=250)
+        x_mirna = x_mirna[:, indices_mad_selected]
+        features_names_mirna = features_names_mirna[indices_mad_selected]
 
     x_rna_isoforms = data['rnaseq_isoforms/block0_values'][()]
     features_names_rna_isoforms = data['rnaseq_isoforms/block0_items'][()]
     features_names_rna_isoforms = np.asarray([el.decode('utf8') for el in features_names_rna_isoforms])
-    indices_mad_selected = select_features_based_on_mad(x=x_rna_isoforms, nb_features=2000)
-    x_rna_isoforms = x_rna_isoforms[:, indices_mad_selected]
-    features_names_rna_isoforms = features_names_rna_isoforms[indices_mad_selected]
+    if feature_mad_selection:
+        indices_mad_selected = select_features_based_on_mad(x=x_rna_isoforms, nb_features=2000)
+        x_rna_isoforms = x_rna_isoforms[:, indices_mad_selected]
+        features_names_rna_isoforms = features_names_rna_isoforms[indices_mad_selected]
 
     x_rna = data['rnaseq_genes/block0_values'][()]
     features_names_rna = data['rnaseq_genes/block0_items'][()]
     features_names_rna = np.asarray([el.decode('utf8') for el in features_names_rna])
-    indices_mad_selected = select_features_based_on_mad(x=x_rna, nb_features=2000)
-    x_rna = x_rna[:, indices_mad_selected]
-    features_names_rna = features_names_rna[indices_mad_selected]
+    if feature_mad_selection:
+        indices_mad_selected = select_features_based_on_mad(x=x_rna, nb_features=2000)
+        x_rna = x_rna[:, indices_mad_selected]
+        features_names_rna = features_names_rna[indices_mad_selected]
 
     # linked the rna isoforms name to the genes names
     d = pd.read_table(genes_example_file)
@@ -292,6 +308,20 @@ def build_brca_dataset_for_graalpy(dataset='',
                 0]  # recuperer la position ou l'élément est
             features_names_rna_isoforms_linked[i] = temp_features_names_rna_isoforms_linked[
                 index_el]  # remplacer par le nouveau nom
+    features_inexistant = [el.split('_')[0] for el in features_names_rna_isoforms_linked if el.find('INEXISTANT') != -1]
+    features_inexistant_idx = [idx for idx, el in enumerate(features_names_rna_isoforms_linked) if el.find('INEXISTANT') != -1]
+    d_second_genes_file = pd.read_csv('/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/files_to_build_datasets/hg19.geneSymbolMap.txt', sep='\t')
+    second_methyl_file_features_isoforms = d_second_genes_file['isoforms'].values
+    second_methyl_file_genes = d_second_genes_file['genes_names'].values
+    idx_position = [np.where(second_methyl_file_features_isoforms==el)[0][0] if el in second_methyl_file_features_isoforms else 500000 for el in features_inexistant] 
+    # len(idx_position) == 6229
+    # au total on a encore 4299 inexistant huh
+    # np.where(np.asarray(idx_position)==500000)[0].shape (4299,)
+    second_methyl_file_genes_names = [second_methyl_file_genes[idx] if idx != 500000 else 'INEXISTANT' for idx in idx_position]
+    new_isoforms_names = [f'{el}_{second_methyl_file_genes_names[idx]}' for idx, el in enumerate(features_inexistant)] 
+    features_names_rna_isoforms_linked = np.asarray(features_names_rna_isoforms_linked)
+    features_names_rna_isoforms_linked[features_inexistant_idx] = new_isoforms_names
+    # Pour les 4299 restant j'ai pas pu trouvé et ca me prends trop de temps du coup je vais skip et esperer que mon mad selection facilite l'affaire :) 
     try:
         x_snps = data['snp/block0_values'][()]
         features_names_snps = data['snp/block0_items'][()]
@@ -389,11 +419,12 @@ def select_features_based_on_mad(x, axe=0, nb_features=5000):
 
 
 def main_brca_dataset_builder():
-    # for filling in ['mean', 'median', 'zero']:
+    # for boolean in [True, False]:
     #     for label_file in [new_label_file, label_file_triple_all]:
+    #         for balanced in [False, True]:
     for boolean in [True, False]:
-        for label_file in [new_label_file, label_file_triple_all]:
-            for balanced in [False, True]:
+        for label_file in [new_label_file]:
+            for balanced in [False]:
                 brca_builder = BuildBrcaDatasets(cancer_name='BRCA',
                                                  label_file=label_file,
                                                  methyl_path_450=project_path_on_is2 + "BRCA/brca_methylome/DNA_Methylation/JHU_USC__HumanMethylation450/Level_3",
