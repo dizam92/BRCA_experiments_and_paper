@@ -259,7 +259,7 @@ def construction_pathway_file(data_path=data_tn_new_label_unbalanced_cpg_rna_rna
             f.write('{}\t{}\n'.format('unknown_group', feature_restant))
 
         
-def construction_biogrid_pathway_file(data_path=data_to_extract_features_from, return_views='all', output_file_name=''):
+def construction_biogrid_pathway_file(data_path=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna, return_views='all', output_file_name=''):
     """
     Utility function to build pathway file of the groups to be loaded in LearnFromBiogridGroup
     Args:
