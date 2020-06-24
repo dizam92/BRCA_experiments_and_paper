@@ -682,42 +682,6 @@ def anaylses_resultats(type_experiment='normal', plot_hist=True):
                 f.write(f'Groups Features Best Model {groups_features_list[best_model_idx]}\n')
         
 
-def autolabel(rects, ax):
-    for rect in rects:
-        height = rect.get_height()
-        ax.text(rect.get_x() + rect.get_width() / 2., 1.01 * height, "%.2f" % height, ha='center', va='bottom')
-
-
-def generate_histogram(file_name, fig_title, accuracy_train, accuracy_test, f1_score_train, f1_score_test, 
-                       precision_train, precision_test, recall_train, recall_test):
-    train_metrics = np.asarray([np.round(np.mean(accuracy_train), 4), np.round(np.mean(f1_score_train), 4),
-                               np.round(np.mean(precision_train), 4), np.round(np.mean(recall_train), 4)])
-    test_metrics = np.asarray([np.round(np.mean(accuracy_test), 4), np.round(np.mean(f1_score_test), 4),
-                               np.round(np.mean(precision_test), 4), np.round(np.mean(recall_test), 4)])
-    std_train_metrics = np.asarray([np.round(np.std(accuracy_train), 4), np.round(np.std(f1_score_train), 4),
-                               np.round(np.std(precision_train), 4), np.round(np.std(recall_train), 4)])
-    std_test_metrics = np.asarray([np.round(np.std(accuracy_test), 4), np.round(np.std(f1_score_test), 4),
-                               np.round(np.std(precision_test), 4), np.round(np.std(recall_test), 4)])
-    
-    nbResults = len(train_metrics)
-    # figKW = {"figsize": (nbResults, 8)}
-    # f, ax = plt.subplots(nrows=1, ncols=1, **figKW)
-    f, ax = plt.subplots(nrows=1, ncols=1)
-    barWidth = 0.35
-    ax.set_title(f"{fig_title}")
-    rects = ax.bar(range(nbResults), test_metrics, barWidth, color="r", yerr=std_test_metrics)
-    rect2 = ax.bar(np.arange(nbResults) + barWidth, train_metrics, barWidth, color="0.7", yerr=std_train_metrics)
-    autolabel(rects, ax)
-    autolabel(rect2, ax)
-    ax.legend((rects[0], rect2[0]), ('Test', 'Train'), loc='upper right', ncol=2, mode="expand", borderaxespad=0.)
-    ax.set_ylim(-0.1, 1.2)
-    ax.set_xticks(np.arange(nbResults) + barWidth)
-    ax.set_xticklabels(['Acc', 'F1', 'Prec', 'Rec'])
-    plt.tight_layout()
-    f.savefig(f"{histogram_repo}/{file_name}.png")
-    plt.close()
-
-
 def parcours_one_directory(directory):
     os.chdir(f'{directory}')
     metrics_train = []
@@ -862,90 +826,6 @@ def generate_figures_best_results(directory, experiment, f='exp', type_of_update
     os.chdir(f'{saving_repository}')
  
     
-def generate_heatmaps(fichier_recap):
-    """
-    Utility function to build the heatmap. Load the file recap for each experiment and run the heatmap accordling 
-    to the psi_g, psi_r parameter and the update method
-    Args:
-        fichier_recap, str, path to the recap file
-    """
-    f = open(fichier_recap, 'r')
-    lines = f.readlines()
-    random.seed(42)
-    psi_g_list = np.round(np.linspace(0, 1, 10), 3) 
-    # psi_r_list = np.round(np.linspace(0, 1, 10), 3) 
-    values = np.arange(10)
-    dico_position_in_matrix = {el: values[idx] for idx, el in enumerate(psi_g_list)}
-    # update_method = ['neg_exp', 'pos_exp', 'neg_exp_group', 'pos_exp_group']
-    update_neg_exp = np.zeros((10,10))
-    update_pos_exp = np.zeros((10,10))
-    update_neg_exp_group = np.zeros((10,10))
-    update_pos_exp_group = np.zeros((10,10))
-    for line in lines: 
-        number_one_split = line.split('\t') 
-        file_name = number_one_split[0].split('_') 
-        if len(file_name) == 28 and file_name[12] == 'neg': # neg_exp_group
-            psi_g_value = float(file_name[17][1:])
-            psi_r_value = float(file_name[20][1:])
-            update_neg_exp_group[dico_position_in_matrix[psi_g_value], dico_position_in_matrix[psi_r_value]] = float(number_one_split[2])
-        if len(file_name) == 28 and file_name[12] == 'pos': # pos_exp_group
-            psi_g_value = float(file_name[17][1:])
-            psi_r_value = float(file_name[20][1:])
-            update_pos_exp_group[dico_position_in_matrix[psi_g_value], dico_position_in_matrix[psi_r_value]] = float(number_one_split[2])
-        if len(file_name) == 27 and file_name[12] == 'neg': # neg_exp
-            psi_g_value = float(file_name[16][1:])
-            psi_r_value = float(file_name[19][1:])
-            update_neg_exp[dico_position_in_matrix[psi_g_value], dico_position_in_matrix[psi_r_value]] = float(number_one_split[2])
-        if len(file_name) == 27 and file_name[12] == 'pos': # pos_exp
-            psi_g_value = float(file_name[16][1:])
-            psi_r_value = float(file_name[19][1:])
-            update_pos_exp[dico_position_in_matrix[psi_g_value], dico_position_in_matrix[psi_r_value]] = float(number_one_split[2])
-    f.close()
-    # Plot fig 1
-    f, ax = plt.subplots()
-    ax = sns.heatmap(update_neg_exp, linewidths=.5)
-    ax.set_title('update=neg_exp')
-    ax.set_xticks(values)
-    ax.set_xticklabels(psi_g_list)
-    ax.set_yticks(values)
-    ax.set_yticklabels(psi_g_list)
-    ax.set_xlabel('psi_g scores')
-    ax.set_ylabel('psi_r scores')
-    f.savefig('heatmap_psi_gVSpsi_r_update_neg_exp.png')
-    # Plot fig 2
-    f, ax = plt.subplots()
-    ax = sns.heatmap(update_pos_exp, linewidths=.5)
-    ax.set_title('update=pos_exp')
-    ax.set_xticks(values)
-    ax.set_xticklabels(psi_g_list)
-    ax.set_yticks(values)
-    ax.set_yticklabels(psi_g_list)
-    ax.set_xlabel('psi_g scores')
-    ax.set_ylabel('psi_r scores')
-    f.savefig('heatmap_psi_gVSpsi_r_update_pos_exp.png')
-    # Plot fig 3
-    f, ax = plt.subplots()
-    ax = sns.heatmap(update_neg_exp_group, linewidths=.5)
-    ax.set_title('update=neg_exp_group')
-    ax.set_xticks(values)
-    ax.set_xticklabels(psi_g_list)
-    ax.set_yticks(values)
-    ax.set_yticklabels(psi_g_list)
-    ax.set_xlabel('psi_g scores')
-    ax.set_ylabel('psi_r scores')
-    f.savefig('heatmap_psi_gVSpsi_r_update_neg_exp_group.png')
-    # Plot fig 4
-    f, ax = plt.subplots()
-    ax = sns.heatmap(update_pos_exp_group, linewidths=.5)
-    ax.set_title('update=pos_exp_group')
-    ax.set_xticks(values)
-    ax.set_xticklabels(psi_g_list)
-    ax.set_yticks(values)
-    ax.set_yticklabels(psi_g_list)
-    ax.set_xlabel('psi_g scores')
-    ax.set_ylabel('psi_r scores')
-    f.savefig('heatmap_psi_gVSpsi_r_neg_exp_group.png')
-    
     
 def weighted_sample(y, y_target):
     """ Build a weighted sample array
@@ -1020,6 +900,3 @@ def zero_one_loss_imbalanced(y_target, y_estimate, sample_weight):
     assert len(sample_weight) == len(y_target) == len(y_estimate), 'Sample weight and y_target must have the same shape'
     return np.mean(np.dot((y_target != y_estimate).astype(np.int), sample_weight))
 
- 
-if __name__ == '__main__':
-    main_construct()

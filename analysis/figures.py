@@ -3,8 +3,34 @@ import numpy as np
 import pandas as pd 
 import h5py
 import scipy
-from experiments.utilities import autolabel, load_data
+from experiments.experiments_utilities import load_data, histogram_repo
 from sklearn.model_selection import train_test_split
+
+def plot_stats_on_biogrid_distribution(dictionnaire, fig_name='biogrid_inner_genes_distribution.png'):
+    """
+    Args:
+        dictionnaire, str, path to the dictionnary
+    Returns:
+        an histogram picture of the distribution on the biogrid groups pattern
+    """
+    dico = pickle.load(open(dictionnaire, 'rb'))
+    if type(dico) == list:
+        y = [len(el) for el in dico]
+        x = np.arange(1, len(y) + 1)
+        plt.plot(x, y, 'bo')
+        plt.xlabel('Groups(Pathways): collection of genes intereacting with each other')
+        plt.ylabel('Number of elements(genes) in each pathways') 
+        plt.savefig(fig_name)
+        plt.close()
+    if type(dico) == dict:
+        y = [len(v) for k, v in dico.items()]
+        x = np.arange(1, len(dico.keys()) + 1)
+        plt.plot(x, y, 'bo')
+        plt.xlabel('Features')
+        plt.ylabel('Number of pathways a feature is linked to') 
+        plt.savefig(fig_name)
+        plt.close()
+        
 
 def barplot_figures(file_name, fig_title, saving_repo, train_metrics, test_metrics, std_train_metrics, std_test_metrics,
                     metrics_list=['Acc', 'F1', 'Prec', 'Rec']):
@@ -31,6 +57,7 @@ def barplot_figures(file_name, fig_title, saving_repo, train_metrics, test_metri
     f.savefig(f"{saving_repo}/{file_name}.png")
     plt.show()
     
+
 def stars(p):
     """ Small function find on the internet to plot the importance of the p value """
     if p < 0.0001:
@@ -44,6 +71,7 @@ def stars(p):
     else:
         return "-"
     
+
 def boxplot_figures(data, return_views, saving_repo, features_cibles):
     """ 
     Args:  
@@ -92,7 +120,42 @@ def boxplot_figures(data, return_views, saving_repo, features_cibles):
         plt.close()
 
     
+def autolabel(rects, ax):
+    for rect in rects:
+        height = rect.get_height()
+        ax.text(rect.get_x() + rect.get_width() / 2., 1.01 * height, "%.2f" % height, ha='center', va='bottom')
+
+
+def generate_histogram(file_name, fig_title, accuracy_train, accuracy_test, f1_score_train, f1_score_test, 
+                       precision_train, precision_test, recall_train, recall_test):
+    train_metrics = np.asarray([np.round(np.mean(accuracy_train), 4), np.round(np.mean(f1_score_train), 4),
+                               np.round(np.mean(precision_train), 4), np.round(np.mean(recall_train), 4)])
+    test_metrics = np.asarray([np.round(np.mean(accuracy_test), 4), np.round(np.mean(f1_score_test), 4),
+                               np.round(np.mean(precision_test), 4), np.round(np.mean(recall_test), 4)])
+    std_train_metrics = np.asarray([np.round(np.std(accuracy_train), 4), np.round(np.std(f1_score_train), 4),
+                               np.round(np.std(precision_train), 4), np.round(np.std(recall_train), 4)])
+    std_test_metrics = np.asarray([np.round(np.std(accuracy_test), 4), np.round(np.std(f1_score_test), 4),
+                               np.round(np.std(precision_test), 4), np.round(np.std(recall_test), 4)])
     
+    nbResults = len(train_metrics)
+    # figKW = {"figsize": (nbResults, 8)}
+    # f, ax = plt.subplots(nrows=1, ncols=1, **figKW)
+    f, ax = plt.subplots(nrows=1, ncols=1)
+    barWidth = 0.35
+    ax.set_title(f"{fig_title}")
+    rects = ax.bar(range(nbResults), test_metrics, barWidth, color="r", yerr=std_test_metrics)
+    rect2 = ax.bar(np.arange(nbResults) + barWidth, train_metrics, barWidth, color="0.7", yerr=std_train_metrics)
+    autolabel(rects, ax)
+    autolabel(rect2, ax)
+    ax.legend((rects[0], rect2[0]), ('Test', 'Train'), loc='upper right', ncol=2, mode="expand", borderaxespad=0.)
+    ax.set_ylim(-0.1, 1.2)
+    ax.set_xticks(np.arange(nbResults) + barWidth)
+    ax.set_xticklabels(['Acc', 'F1', 'Prec', 'Rec'])
+    plt.tight_layout()
+    f.savefig(f"{histogram_repo}/{file_name}.png")
+    plt.close()
+
+
 if __name__ == "__main__":
     boxplot_figures(data='/Users/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/triple_neg_new_labels_unbalanced_cpg_rna_rna_iso_mirna.h5',
                     return_views='methyl_rna_iso_mirna_snp_clinical', 
