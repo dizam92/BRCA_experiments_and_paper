@@ -33,7 +33,8 @@ class BuildBrcaDatasets(BuildOmicsDatasets):
                         mirna_file=mirna_file,
                         clinical_file=new_clinical_file,
                         balanced_dataset=False,
-                        methyl_rna_mirna_snp=False):
+                        methyl_rna_mirna_snp=False,
+                        feature_mad_selection=True):
         """
         Combine all the .tsv files to build the dataset
         Args: methyl_450_file, str, path to methyl 450 file,
@@ -56,9 +57,15 @@ class BuildBrcaDatasets(BuildOmicsDatasets):
                 name = '{}_balanced_{}.h5'.format(file_name, 'cpg_rna_rna_iso_mirna')
         else:
             if methyl_rna_mirna_snp:
-                name = '{}_unbalanced_{}.h5'.format(file_name, 'all_views')
+                if feature_mad_selection:
+                    name = '{}_unbalanced_{}.h5'.format(file_name, 'all_views')
+                else:
+                    name = '{}_unbalanced_{}.h5'.format(file_name, 'all_views_complet')
             else:
-                name = '{}_unbalanced_{}.h5'.format(file_name, 'cpg_rna_rna_iso_mirna')
+                if feature_mad_selection:
+                    name = '{}_unbalanced_{}.h5'.format(file_name, 'cpg_rna_rna_iso_mirna')
+                else:
+                    name = '{}_unbalanced_{}.h5'.format(file_name, 'cpg_rna_rna_iso_mirna_complet')
         try:
             labels = pd.read_csv('{}'.format(self.labels_file), index_col="example_id", sep="\t")
             running_on_new_labelisation = False
