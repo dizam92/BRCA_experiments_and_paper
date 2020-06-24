@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from sklearn.preprocessing import StandardScaler
-from experiments.experiments_utilities import data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna, load_data, data_repository
+from experiments.experiments_utilities import data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna, load_data, load_prad_data, data_repository, data_prad
 goa_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/goa_human_isoform_valid.gaf'
 biogrid_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/BIOGRID-ORGANISM-Homo_sapiens-3.5.178.tab.txt'
 genesID_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/Results_genes.txt'
@@ -467,11 +467,22 @@ def build_dictionnary_groups(data_path=data_to_extract_features_from, return_vie
             dico_results[cle].append(biogrid_pathways[20172])
     # with open('biogrid_pathways_list.pck', 'wb') as f:
     #     pickle.dump(biogrid_pathways, f)
-    with open('groups2genes_biogrid.pck', 'wb') as f: # Dict: {'G_number': []} # 
+    with open(f'{data_repository}/groups2genes_biogrid.pck', 'wb') as f: # Dict: {'G_number': []} # 
         dict_results = {f'G_{idx}': [el] for idx, el in enumerate(biogrid_pathways)}
         pickle.dump(dict_results, f)
-    with open(output_file_name, 'wb') as f:
+    with open(f'{data_repository}/{output_file_name}, 'wb') as f:
         pickle.dump(dico_results, f)
-        
+
+def build_dictionnary_groups_prad(data_path=data_prad, return_views='all', output_file_name=''):
+    graph, _ = load_biogrid_network()
+    _, _, features_names, _ = load_prad_data(data=data_path, return_views=return_views)
+    features_names = list(features_names)
+    adjacency_matrix = np.asarray(list(graph.adjacency()))
+    # nodes = np.asarray(list(graph.nodes))
+    dico_results = {feature: [] for feature in features_names}
+    # noeud + et toutes leurs interactions; 
+    # el[0] is always the node and list(el[1].keys()) the genes whose are interacting with the node
+    biogrid_pathways = [list(el[1].keys()) + [el[0]] for el in adjacency_matrix] # Obtention des pathways de biogrids
+    
 if __name__ == "__main__":
     build_dictionnary_groups(data_path=data_to_extract_features_from, return_views='all', output_file_name='groups2pathwaysTN_biogrid.pck')

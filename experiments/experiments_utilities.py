@@ -32,7 +32,7 @@ saving_repository = '/home/maoss2/project/maoss2/saving_repository_article/'
 histogram_repo = f'{saving_repository}/histograms_repo'
 data_repository = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository'
 data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna = f"{data_repository}/triple_neg_new_labels_unbalanced_cpg_rna_rna_iso_mirna.h5"
-data_prad = f"{data_repository}/triple_neg_new_labels_unbalanced_cpg_rna_rna_iso_mirna.h5"
+data_prad = f"{data_repository}/prad_cancer_metastase_vs_non_metastase.h5"
 
 return_views = ['methyl_rna_iso_mirna', 'methyl_rna_iso_mirna_snp_clinical',
                 'methyl_rna_mirna', 'methyl_rna_mirna_snp_clinical', 'all']
@@ -299,34 +299,40 @@ def load_prad_data(data, return_views='all'):
     if return_views == 'cna':
         x = x_cna
         features_names = features_names_cna
+        x = x.T 
         data_x_names = list(zip(x, features_names))
         random.seed(42)
         random.shuffle(data_x_names)
         x = [el[0] for el in data_x_names]
         features_names = [el[1] for el in data_x_names]
         x = np.asarray(x)
+        x = x.T 
         features_names = np.asarray(features_names)
         return x, y, features_names, patients_names
 
     if return_views == 'mrna':
         x = x_rna
         features_names = features_names_rna
+        x = x.T 
         data_x_names = list(zip(x, features_names))
         random.seed(42)
         random.shuffle(data_x_names)
         x = [el[0] for el in data_x_names]
         features_names = [el[1] for el in data_x_names]
         x = np.asarray(x)
+        x = x.T 
         features_names = np.asarray(features_names)
         return x, y, features_names, patients_names
 
     if return_views == 'all':
+        x = x.T 
         data_x_names = list(zip(x, features_names))
         random.seed(42)
         random.shuffle(data_x_names)
         x = [el[0] for el in data_x_names]
         features_names = [el[1] for el in data_x_names]
         x = np.asarray(x)
+        x = x.T
         features_names = np.asarray(features_names)
         return x, y, features_names, patients_names
 
