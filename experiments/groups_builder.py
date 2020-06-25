@@ -470,7 +470,7 @@ def build_dictionnary_groups(data_path=data_to_extract_features_from, return_vie
     with open(f'{data_repository}/groups2genes_biogrid.pck', 'wb') as f: # Dict: {'G_number': []} # 
         dict_results = {f'G_{idx}': [el] for idx, el in enumerate(biogrid_pathways)}
         pickle.dump(dict_results, f)
-    with open(f'{data_repository}/{output_file_name}, 'wb') as f:
+    with open(f'{data_repository}/{output_file_name}', 'wb') as f:
         pickle.dump(dico_results, f)
 
 def build_dictionnary_groups_prad(data_path=data_prad, return_views='all', output_file_name=''):
@@ -478,11 +478,18 @@ def build_dictionnary_groups_prad(data_path=data_prad, return_views='all', outpu
     _, _, features_names, _ = load_prad_data(data=data_path, return_views=return_views)
     features_names = list(features_names)
     adjacency_matrix = np.asarray(list(graph.adjacency()))
-    # nodes = np.asarray(list(graph.nodes))
     dico_results = {feature: [] for feature in features_names}
-    # noeud + et toutes leurs interactions; 
-    # el[0] is always the node and list(el[1].keys()) the genes whose are interacting with the node
     biogrid_pathways = [list(el[1].keys()) + [el[0]] for el in adjacency_matrix] # Obtention des pathways de biogrids
-    
+    for feature in features_names:
+        split_results = feature.split('_')
+        gene_cible = split_results[-1].lower()
+        for idx, pathway_in_biogrid in enumerate(biogrid_pathways):
+            if gene_cible in pathway_in_biogrid:
+                dico_results[feature].append('G_{}'.format(idx))
+    with open(f'{data_repository}/{output_file_name}', 'wb') as f:
+        pickle.dump(dico_results, f)   
+                
 if __name__ == "__main__":
     build_dictionnary_groups(data_path=data_to_extract_features_from, return_views='all', output_file_name='groups2pathwaysTN_biogrid.pck')
+    #TODO: Run this
+    build_dictionnary_groups_prad(data_path=data_prad, return_views='all', output_file_name='groups2pathwaysPRAD_biogrid.pck'):
