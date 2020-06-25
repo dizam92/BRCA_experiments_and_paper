@@ -9,8 +9,9 @@ import numpy as np
 from sklearn.model_selection import ParameterGrid
 from experiments.experiments_utilities import saving_repository, data_prad, data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna
 
-RESULTS_PATH = os.environ.get('', join(dirname(abspath(__file__)), "saving_repository"))
+# RESULTS_PATH = os.environ.get('', join(dirname(abspath(__file__)), "saving_repository"))
 # EXPERIMENTS_PATH = os.environ.get('', join(dirname(abspath(__file__)), "experiments"))
+RESULTS_PATH = os.environ.get('', join(dirname(abspath(__file__))))
 EXPERIMENTS_PATH = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/experiments'
 DATAREPOSITORY_PATH = os.environ.get('', join(dirname(abspath(__file__)), "datasets/datasets_repository"))
 PROJECT_ROOT = dirname(abspath(__file__))
