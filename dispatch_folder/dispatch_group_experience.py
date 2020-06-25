@@ -80,7 +80,7 @@ def main_group_TN():
 
 
 def main_group_PRAD():
-    return_views = ['methyl_rna_iso_mirna_snp_clinical']
+    return_views = ['all']
     dictionaries_paths = [f"{DATAREPOSITORY_PATH}/groups2pathwaysPRAD_biogrid.pck"]
     update_method = ['inner_group', 'outer_group']
     random.seed(42)
