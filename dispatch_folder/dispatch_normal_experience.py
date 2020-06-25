@@ -50,7 +50,7 @@ def main_brca():
     for view in return_views:
         print(f"Launching {view}")
         launch_slurm_experiment(return_views=view, dataset=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna, 
-                                nb_repetitions=15, experiment_file='run_tn_experiments.py', 
+                                nb_repetitions=15, experiment_file='run_baselines_experiments.py', 
                                 experiment_name='normal_experiments_brca', time='1', dispatch_path=dispatch_path)
     print("### DONE ###")   
 
@@ -62,7 +62,7 @@ def main_prad():
     for view in return_views:
         print(f"Launching {view}")
         launch_slurm_experiment(return_views=view, dataset=data_prad, 
-                                nb_repetitions=15, experiment_file='run_tn_experiments.py', 
+                                nb_repetitions=15, experiment_file='run_baselines_experiments.py', 
                                 experiment_name='normal_experiments_prad', time='1', dispatch_path=dispatch_path)
     print("### DONE ###")   
     

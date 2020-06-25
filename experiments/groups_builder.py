@@ -491,5 +491,4 @@ def build_dictionnary_groups_prad(data_path=data_prad, return_views='all', outpu
                 
 if __name__ == "__main__":
     build_dictionnary_groups(data_path=data_to_extract_features_from, return_views='all', output_file_name='groups2pathwaysTN_biogrid.pck')
-    #TODO: Run this
-    build_dictionnary_groups_prad(data_path=data_prad, return_views='all', output_file_name='groups2pathwaysPRAD_biogrid.pck'):
+    build_dictionnary_groups_prad(data_path=data_prad, return_views='all', output_file_name='groups2pathwaysPRAD_biogrid.pck')

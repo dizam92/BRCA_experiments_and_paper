@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 __author__ = 'maoss2'
-from experiments.utilities import *
+from experiments.experiments_utilities import *
 from os.path import join, abspath, dirname, exists
 from os import makedirs
 from collections import defaultdict
@@ -106,9 +106,10 @@ def f_1(c, x):
     return np.exp( -c * x) 
 
 def build_priors_rules_vector(c,
+                              activation_function=f_1,
                               random_weights = False,
-                              dictionnary_for_prior_group=f"{data_repository}/biogrid_pathways_dict.pck", 
-                              dictionnary_for_prior_rules=f"{data_repository}/pathways_biogrid_groups.pck"):
+                              dictionnary_for_prior_group=f"{data_repository}/groups2genes_biogrid.pck", 
+                              dictionnary_for_prior_rules=f"{data_repository}/groups2pathwaysTN_biogrid.pck"):
     """
     Build the vector of the prior rules integreting the prior on the group/pathways 
     Args:
@@ -128,17 +129,17 @@ def build_priors_rules_vector(c,
         random.seed(42)
         np.random.seed(42)
         values_randomly_generated = np.random.rand(len(dict_pr_group.items()))
-        prior_values_dict_pr_group = {k: f_1(c, values_randomly_generated[idx]) for idx, k in enumerate(dict_pr_group.keys())}
-        prior_values_dict_pr_rules = {k: f_1(c, np.sum([prior_values_dict_pr_group[el] for el in v])) for k, v in dict_pr_rules.items()}
+        prior_values_dict_pr_group = {k: activation_function(c, values_randomly_generated[idx]) for idx, k in enumerate(dict_pr_group.keys())}
+        prior_values_dict_pr_rules = {k: activation_function(c, np.sum([prior_values_dict_pr_group[el] for el in v])) for k, v in dict_pr_rules.items()}
     else:
-        prior_values_dict_pr_rules = {k: f_1(c, np.sum([prior_values_dict_pr_group[el] for el in v])) for k, v in dict_pr_rules.items()}
+        prior_values_dict_pr_rules = {k: activation_function(c, np.sum([prior_values_dict_pr_group[el] for el in v])) for k, v in dict_pr_rules.items()}
     return prior_values_dict_pr_group, prior_values_dict_pr_rules
     
     
-def run_experiment(return_views, pathway_file, nb_repetitions, update_method='inner_group', c=0.1, random_weights=False,
+def run_experiment(return_views, pathway_file, nb_repetitions, cancer_expe='brca', activation_function=f_1, update_method='inner_group', c=0.1, random_weights=False,
                    data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna, 
-                   dictionnary_for_prior_group=f"{data_repository}/biogrid_pathways_dict.pck", 
-                   dictionnary_for_prior_rules=f"{data_repository}/pathways_biogrid_groups.pck",
+                   dictionnary_for_prior_group=f"{data_repository}/groups2genes_biogrid.pck", 
+                   dictionnary_for_prior_rules=f"{data_repository}/groups2pathwaysTN_biogrid.pck",
                    experiment_name='experiment_group_scm', saving_rep=saving_repository):
     """
     Utility function to run experiment on specific data and with specific wiew. To be called in a loop in a main
@@ -158,7 +159,12 @@ def run_experiment(return_views, pathway_file, nb_repetitions, update_method='in
     """
     assert nb_repetitions >= 1, 'At least one split'
     saving_dict_scm = defaultdict(dict)
-    x, y, features_names, patients_names = load_data(data=data, return_views=return_views)
+    if cancer_expe == 'brca':
+        x, y, features_names, patients_names = load_data(data=data, return_views=return_views)
+    elif cancer_expe == 'prad':
+        x, y, features_names, patients_names = load_prad_data(data=data, return_views=return_views)
+    else:
+        raise ValueError(f'{cancer_expe} is not supported yet')
     features_names = [el.encode("utf-8") for el in features_names]
     features_names = [el.decode("utf-8") for el in features_names]
     random.seed(42)
@@ -166,7 +172,8 @@ def run_experiment(return_views, pathway_file, nb_repetitions, update_method='in
     # Parameters for GROUP_SCM
     dict_biogrid_groups = pickle.load(open(pathway_file, 'rb'))
     features_to_index = {idx: name for idx, name in enumerate(features_names)}
-    _, prior_values_dict_pr_rules = build_priors_rules_vector(c=c, 
+    _, prior_values_dict_pr_rules = build_priors_rules_vector(c=c,
+                                                              activation_function=activation_function,
                                                               random_weights=random_weights, 
                                                               dictionnary_for_prior_group=dictionnary_for_prior_group, 
                                                               dictionnary_for_prior_rules=dictionnary_for_prior_rules)
@@ -210,13 +217,13 @@ def main():
     parser = argparse.ArgumentParser(description="Learn Group TN Experiment")
     parser.add_argument('-rt', '--return_views', type=str, default="all")
     parser.add_argument('-nb_r', '--nb_repetitions', type=int, default=1)
-    parser.add_argument('-g_dict', '--groups_dict', type=str, default=f"{data_repository}/pathways_biogrid_groups.pck")
+    parser.add_argument('-g_dict', '--groups_dict', type=str, default=f"{data_repository}/groups2pathwaysTN_biogrid.pck")
     parser.add_argument('-u_m', '--update_method', type=str, default="inner_group")
     parser.add_argument('-c', '--c', type=float, default=0.1) 
     parser.add_argument('-random_weights', '--random_weights', type=bool, default=False)
     parser.add_argument('-data', '--data', type=str, default=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna)
-    parser.add_argument('-prior_dict_groups', '--prior_dict_groups', type=str, default=f"{data_repository}/biogrid_pathways_dict.pck")
-    parser.add_argument('-prior_dict_rules', '--prior_dict_rules', type=str, default=f"{data_repository}/pathways_biogrid_groups.pck")
+    parser.add_argument('-prior_dict_groups', '--prior_dict_groups', type=str, default=f"{data_repository}/groups2genes_biogrid.pck")
+    parser.add_argument('-prior_dict_rules', '--prior_dict_rules', type=str, default=f"{data_repository}/groups2pathwaysTN_biogrid.pck")
     parser.add_argument('-exp_name', '--experiment_name', type=str, default="experiment_group_scm")
     parser.add_argument('-o', '--saving_rep', type=str, default=saving_repository)
     args = parser.parse_args()
