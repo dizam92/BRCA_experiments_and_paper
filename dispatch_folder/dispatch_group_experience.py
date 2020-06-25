@@ -57,7 +57,7 @@ def main_group_TN():
     param_grid = {'view': return_views, 'update': update_method, 'c': c_list, 'random_weights': random_weights_list}
     dispatch_path = join(RESULTS_PATH, "dispatch_f_exp_group_TN_biogrid")
     if not exists(dispatch_path): makedirs(dispatch_path)
-    if not exists(saving_repository): makedirs(saving_repository)
+    if not exists(saving_repository_tn): makedirs(saving_repository_tn)
     for pathway_dict in dictionaries_paths:
         name_pathway_file = pathway_dict.split('/')[-1].split('.')[0]
         print(f"Launching {pathway_dict}")
@@ -92,7 +92,7 @@ def main_group_PRAD():
     param_grid = {'view': return_views, 'update': update_method, 'c': c_list, 'random_weights': random_weights_list}
     dispatch_path = join(RESULTS_PATH, "dispatch_f_exp_group_PRAD_biogrid")
     if not exists(dispatch_path): makedirs(dispatch_path)
-    if not exists(saving_repository): makedirs(saving_repository)
+    if not exists(saving_repository_prad): makedirs(saving_repository_prad)
     for pathway_dict in dictionaries_paths:
         name_pathway_file = pathway_dict.split('/')[-1].split('.')[0]
         print(f"Launching {pathway_dict}")
