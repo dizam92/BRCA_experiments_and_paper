@@ -459,16 +459,16 @@ def build_dictionnary_groups(data_path=data_to_extract_features_from, return_vie
                 if gene_cible in pathway_in_biogrid:
                     dico_results[feature].append('G_{}'.format(idx))
         elif feature.startswith('hsa'):  # MiRNA View: faire le traitement directement
-            dico_results[feature].append(biogrid_pathways[20170])
+            dico_results[feature].append('G_20170')
         else:
-            dico_results[feature].append(biogrid_pathways[20171])
+            dico_results[feature].append('G_20171')
     for cle, valeur in dico_results.items():
         if valeur == []:
-            dico_results[cle].append(biogrid_pathways[20172])
+            dico_results[cle].append('G_20172')
     # with open('biogrid_pathways_list.pck', 'wb') as f:
     #     pickle.dump(biogrid_pathways, f)
     with open(f'{data_repository}/groups2genes_biogrid.pck', 'wb') as f: # Dict: {'G_number': []} # 
-        dict_results = {f'G_{idx}': [el] for idx, el in enumerate(biogrid_pathways)}
+        dict_results = {f'G_{idx}': el for idx, el in enumerate(biogrid_pathways)}
         pickle.dump(dict_results, f)
     with open(f'{data_repository}/{output_file_name}', 'wb') as f:
         pickle.dump(dico_results, f)
@@ -486,6 +486,9 @@ def build_dictionnary_groups_prad(data_path=data_prad, return_views='all', outpu
         for idx, pathway_in_biogrid in enumerate(biogrid_pathways):
             if gene_cible in pathway_in_biogrid:
                 dico_results[feature].append('G_{}'.format(idx))
+    for cle, valeur in dico_results.items():
+        if valeur == []:
+            dico_results[cle].append('G_20172') # unknown
     with open(f'{data_repository}/{output_file_name}', 'wb') as f:
         pickle.dump(dico_results, f)   
                 

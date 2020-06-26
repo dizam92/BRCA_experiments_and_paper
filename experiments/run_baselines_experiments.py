@@ -493,11 +493,13 @@ def main():
     parser = argparse.ArgumentParser(description="Learn TN Experiment")
     parser.add_argument('-rt', '--return_views', type=str, default="all")
     parser.add_argument('-nb_r', '--nb_repetitions', type=int, default=1)
+    parser.add_argument('-which_expe', '--which_expe', type=str, default="brca")
     parser.add_argument('-data', '--data', type=str, default=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna)
     parser.add_argument('-exp_name', '--experiment_name', type=str, default="experiment_tn_new_label_unbalanced")
     parser.add_argument('-o', '--saving_rep', type=str, default=saving_repository)
     args = parser.parse_args()
     run_experiment(data=args.data,
+                   which_expe=args.which_expe,
                    experiment_name=args.experiment_name,
                    return_views=args.return_views,
                    nb_repetitions=args.nb_repetitions,
