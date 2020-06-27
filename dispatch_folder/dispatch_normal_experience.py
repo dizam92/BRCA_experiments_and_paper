@@ -79,4 +79,4 @@ def main_prad():
     
 if __name__ == '__main__':
     main_prad()
-    #main_brca()
+    main_brca()

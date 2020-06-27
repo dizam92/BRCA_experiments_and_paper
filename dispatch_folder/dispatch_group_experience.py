@@ -21,7 +21,7 @@ SAVING_REPO = '/home/maoss2/project/maoss2/saving_repository_article/'
 saving_repository_tn = f'{saving_repository}groups_TN_experiments'
 saving_repository_prad = f'{saving_repository}groups_PRAD_experiments'
 
-def launch_slurm_experiment_group(return_views, dataset, nb_repetitions, pathway_file, update_method, c, random_weights, 
+def launch_slurm_experiment_group(return_views, dataset, cancer_expe, nb_repetitions, pathway_file, update_method, c, random_weights, 
                                   prior_dict_groups, prior_dict_rules, experiment_file, experiment_name, time, dispatch_path, saving_repo):
     exp_file = join(dispatch_path, experiment_name)
     submission_script = ""
@@ -36,7 +36,7 @@ def launch_slurm_experiment_group(return_views, dataset, nb_repetitions, pathway
     submission_script += f"#SBATCH --mail-type=FAIL\n"
     submission_script += f"#SBATCH --time={time}:00:00\n" 
     submission_script += f"#SBATCH --output={exp_file + '.out'}\n\n" 
-    submission_script += f"python {EXPERIMENTS_PATH}/{experiment_file} -data {dataset} -rt {return_views} -nb_r {nb_repetitions} -g_dict {pathway_file} -u_m {update_method} -c {c} -random_weights {random_weights} -prior_dict_groups {prior_dict_groups} -prior_dict_rules {prior_dict_rules} -exp_name {experiment_name} -o {saving_repo}" 
+    submission_script += f"python {EXPERIMENTS_PATH}/{experiment_file} -data {dataset} -cancer_expe {cancer_expe} -rt {return_views} -nb_r {nb_repetitions} -g_dict {pathway_file} -u_m {update_method} -c {c} -random_weights {random_weights} -prior_dict_groups {prior_dict_groups} -prior_dict_rules {prior_dict_rules} -exp_name {experiment_name} -o {saving_repo}" 
     
     submission_path = exp_file + ".sh"
     with open(submission_path, 'w') as out_file:
@@ -67,6 +67,7 @@ def main_group_TN():
             exp_name = f"{params['view']}__group_scm__" + f"{name_pathway_file}__" + f"{params['update']}__" + f"c{params['c']}__" + f"random_weights{params['random_weights']}__" + f"{nb_repetitions}"
             launch_slurm_experiment_group(return_views=params['view'], 
                                           dataset=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
+                                          cancer_expe='brca',
                                             nb_repetitions=nb_repetitions, 
                                             pathway_file=pathway_dict, 
                                             update_method=params['update'], 
@@ -103,6 +104,7 @@ def main_group_PRAD():
             launch_slurm_experiment_group(return_views=params['view'], 
                                             nb_repetitions=nb_repetitions, 
                                             dataset=data_prad,
+                                            cancer_expe='prad',
                                             pathway_file=pathway_dict, 
                                             update_method=params['update'], 
                                             c=params['c'],
@@ -117,5 +119,5 @@ def main_group_PRAD():
     print("### DONE ###") 
 
 if __name__ == '__main__':
-    main_group_TN()
+    # main_group_TN()
     main_group_PRAD()

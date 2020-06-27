@@ -219,6 +219,7 @@ def main():
     parser.add_argument('-nb_r', '--nb_repetitions', type=int, default=1)
     parser.add_argument('-g_dict', '--groups_dict', type=str, default=f"{data_repository}/groups2pathwaysTN_biogrid.pck")
     parser.add_argument('-u_m', '--update_method', type=str, default="inner_group")
+    parser.add_argument('-cancer_expe', '--cancer_expe', type=str, default="brca")
     parser.add_argument('-c', '--c', type=float, default=0.1) 
     parser.add_argument('-random_weights', '--random_weights', type=bool, default=False)
     parser.add_argument('-data', '--data', type=str, default=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna)
@@ -230,7 +231,8 @@ def main():
     run_experiment(return_views=args.return_views, 
                    pathway_file=args.groups_dict, 
                    nb_repetitions=args.nb_repetitions,
-                   update_method=args.update_method, 
+                   update_method=args.update_method,
+                   cancer_expe=args.cancer_expe, 
                    c=args.c,
                    random_weights=args.random_weights,
                    data=args.data,  
