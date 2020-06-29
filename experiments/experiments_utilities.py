@@ -20,7 +20,7 @@ from os.path import abspath, dirname, exists, join
 from matplotlib import pyplot as plt
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from sklearn.preprocessing import StandardScaler
-from analysis.figures import generate_histogram
+from experiments.figures import generate_histogram
 
 c2_pickle_dictionary = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/c2_curated_genes.pck'
 c5_pickle_dictionary = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/c5_curated_genes.pck'

@@ -156,7 +156,7 @@ def generate_histogram(file_name, fig_title, accuracy_train, accuracy_test, f1_s
     plt.close()
 
 
-
+# CLICOMMAND THAT SHIT TOO
 def generate_figures_mean_results(directory, experiment, f='exp', type_of_update='inner', random_weights='False'):
     """
     Utility function to plot the results for the groups method using the MEAN (Should rethink this probably)
