@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd 
 import h5py
 import scipy
-from experiments.experiments_utilities import load_data, histogram_repo
+from experiments.experiments_utilities import load_data, histogram_repo, parcours_one_directory
 from sklearn.model_selection import train_test_split
 
 def plot_stats_on_biogrid_distribution(dictionnaire, fig_name='biogrid_inner_genes_distribution.png'):
@@ -156,6 +156,132 @@ def generate_histogram(file_name, fig_title, accuracy_train, accuracy_test, f1_s
     plt.close()
 
 
+
+def generate_figures_mean_results(directory, experiment, f='exp', type_of_update='inner', random_weights='False'):
+    """
+    Utility function to plot the results for the groups method using the MEAN (Should rethink this probably)
+    Args:
+        directory,
+        experiment, str, experiment name
+        f, str, activation function name
+        type_of_update, str, 
+        random_weights, str
+    """
+    x = np.round(np.linspace(0.1, 1, 10), 3)
+    os.chdir(f"{directory}")
+    list_of_directories = os.listdir('./')
+    list_of_directories = [directory for directory in list_of_directories if directory.startswith(experiment)] 
+    list_of_directories = [directory for directory in list_of_directories if directory.find(f'{type_of_update}') != -1]
+    list_of_directories = [directory for directory in list_of_directories if directory.find(f'{random_weights}') != -1]
+    list_of_directories = list(np.sort(list_of_directories)) # garantie que ca va de 0.1 à 1.0 ici (sinon tjrs de min a max value de c)
+    train_metrics_list = []; test_metrics_list = []; std_train_metrics_list = []; std_test_metrics_list = []
+    for directory in list_of_directories:
+        train_metrics, test_metrics, std_train_metrics, std_test_metrics, _, _, _ = parcours_one_directory(directory=directory)
+        train_metrics_list.append(train_metrics)
+        test_metrics_list.append(test_metrics)
+        std_train_metrics_list.append(std_train_metrics)
+        std_test_metrics_list.append(std_test_metrics)
+    train_metrics_list = np.asarray(train_metrics_list)
+    test_metrics_list = np.asarray(test_metrics_list)
+    std_train_metrics_list = np.asarray(std_train_metrics_list)
+    std_test_metrics_list = np.asarray(std_test_metrics_list)
+    # Plot the train fig
+    fig_title_train = f'Train mean metrics: Update Function:{f} {type_of_update}_groups random_weights: {random_weights}'
+    fig_name_train = f'{f}_train_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
+    f_train, ax_train = plt.subplots(nrows=1, ncols=1)
+    ax_train.set_title(f"{fig_title_train}")
+    ax_train.set_xlabel('c values')
+    ax_train.set_ylabel('Metrics values')
+    # ax.set_ylim(-0.1, 1.2)
+    ax_train.plot(x, train_metrics_list[:, 0], 'bo-', label='Acc', linewidth=2)
+    ax_train.plot(x, train_metrics_list[:, 1], 'ro-', label='F1 ', linewidth=2)
+    ax_train.plot(x, train_metrics_list[:, 2], 'go-', label='Prec', linewidth=2)
+    ax_train.plot(x, train_metrics_list[:, 3], 'ko-', label='Rec', linewidth=2)
+    ax_train.legend()
+    plt.tight_layout()
+    f_train.savefig(f"{saving_repository}/{fig_name_train}")
+    plt.close()
+    
+    # Plot the Test fig
+    fig_title_test = f'Test mean metrics: {type_of_update}_groups random_weights: {random_weights}'
+    fig_name_test = f'{f}_test_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
+    f_test, ax_test = plt.subplots(nrows=1, ncols=1)
+    ax_test.set_title(f"{fig_title_test}")
+    ax_test.set_xlabel('c values')
+    ax_test.set_ylabel('Metrics values')
+    # ax.set_ylim(-0.1, 1.2)
+    ax_test.plot(x, test_metrics_list[:, 0], 'bo-', label='Acc', linewidth=2)
+    ax_test.plot(x, test_metrics_list[:, 1], 'ro-', label='F1 ', linewidth=2)
+    ax_test.plot(x, test_metrics_list[:, 2], 'go-', label='Prec', linewidth=2)
+    ax_test.plot(x, test_metrics_list[:, 3], 'ko-', label='Rec', linewidth=2)
+    ax_test.legend()
+    plt.tight_layout()
+    f_test.savefig(f"{saving_repository}/{fig_name_test}")
+    plt.close()
+    os.chdir(f'{saving_repository}')
+    
+    
+def generate_figures_best_results(directory, experiment, f='exp', type_of_update='inner', random_weights='False'):
+    """
+    Utility function to plot the results for the groups method using the BEST scores return (Should rethink this probably)
+    Args:
+        directory,
+        experiment, str, experiment name
+        f, str, activation function name
+        type_of_update, str, 
+        random_weights, str
+    """
+    x = np.round(np.linspace(0.1, 1, 10), 3)
+    os.chdir(f"{directory}")
+    list_of_directories = os.listdir('./')
+    list_of_directories = [directory for directory in list_of_directories if directory.startswith(experiment)] 
+    list_of_directories = [directory for directory in list_of_directories if directory.find(f'{type_of_update}') != -1]
+    list_of_directories = [directory for directory in list_of_directories if directory.find(f'{random_weights}') != -1]
+    list_of_directories = list(np.sort(list_of_directories)) # garantie que ca va de 0.1 à 1.0 ici (sinon tjrs de min a max value de c)
+    train_metrics_list = []; test_metrics_list = []
+    for directory in list_of_directories:
+        _, _, _, _, train_metrics_best_file, test_metrics_best_file, _ = parcours_one_directory(directory=directory)
+        train_metrics_list.append(train_metrics_best_file)
+        test_metrics_list.append(test_metrics_best_file)
+    train_metrics_list = np.asarray(train_metrics_list)
+    test_metrics_list = np.asarray(test_metrics_list)
+    # Plot the train fig
+    fig_title_train = f'Train best metrics: Update Function:{f} {type_of_update}_groups random_weights: {random_weights}'
+    fig_name_train = f'{f}_train_best_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
+    f_train, ax_train = plt.subplots(nrows=1, ncols=1)
+    ax_train.set_title(f"{fig_title_train}")
+    ax_train.set_xlabel('c values')
+    ax_train.set_ylabel('Metrics values')
+    # ax.set_ylim(-0.1, 1.2)
+    ax_train.plot(x, train_metrics_list[:, 0], 'bo-', label='Acc', linewidth=2)
+    ax_train.plot(x, train_metrics_list[:, 1], 'ro-', label='F1 ', linewidth=2)
+    ax_train.plot(x, train_metrics_list[:, 2], 'go-', label='Prec', linewidth=2)
+    ax_train.plot(x, train_metrics_list[:, 3], 'ko-', label='Rec', linewidth=2)
+    ax_train.legend()
+    plt.tight_layout()
+    f_train.savefig(f"{saving_repository}/{fig_name_train}")
+    plt.close()
+    
+    # Plot the Test fig
+    fig_title_test = f'Test best metrics: {type_of_update}_groups random_weights: {random_weights}'
+    fig_name_test = f'{f}_test_best_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
+    f_test, ax_test = plt.subplots(nrows=1, ncols=1)
+    ax_test.set_title(f"{fig_title_test}")
+    ax_test.set_xlabel('c values')
+    ax_test.set_ylabel('Metrics values')
+    # ax.set_ylim(-0.1, 1.2)
+    ax_test.plot(x, test_metrics_list[:, 0], 'bo-', label='Acc', linewidth=2)
+    ax_test.plot(x, test_metrics_list[:, 1], 'ro-', label='F1 ', linewidth=2)
+    ax_test.plot(x, test_metrics_list[:, 2], 'go-', label='Prec', linewidth=2)
+    ax_test.plot(x, test_metrics_list[:, 3], 'ko-', label='Rec', linewidth=2)
+    ax_test.legend()
+    plt.tight_layout()
+    f_test.savefig(f"{saving_repository}/{fig_name_test}")
+    plt.close()
+    os.chdir(f'{saving_repository}')
+ 
+    
+    
 if __name__ == "__main__":
     boxplot_figures(data='/Users/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/triple_neg_new_labels_unbalanced_cpg_rna_rna_iso_mirna.h5',
                     return_views='methyl_rna_iso_mirna_snp_clinical', 

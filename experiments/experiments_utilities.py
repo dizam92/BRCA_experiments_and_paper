@@ -3,25 +3,24 @@ __author__ = 'maoss2'
 import os
 import pickle
 import random
+import click
 import re
 import time
+import h5py
+import networkx as nx
+import numpy as np
+import pandas as pd
+import seaborn as sns
 from collections import Counter, defaultdict
 from copy import deepcopy
 from glob import glob
 from itertools import combinations
 from os import makedirs
 from os.path import abspath, dirname, exists, join
-
-import h5py
-import networkx as nx
-import numpy as np
-import pandas as pd
-import seaborn as sns
 from matplotlib import pyplot as plt
-from sklearn.metrics import (accuracy_score, f1_score, precision_score,
-                             recall_score)
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from sklearn.preprocessing import StandardScaler
-
+from analysis.figures import generate_histogram
 
 c2_pickle_dictionary = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/c2_curated_genes.pck'
 c5_pickle_dictionary = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/c5_curated_genes.pck'
@@ -62,7 +61,7 @@ parameters_group_scm = {'model_type': param_model_type,
                         'max_rules': param_max_attributes
                         }
 
-
+########################################################### Loaders Sections ################################################################
 def load_data(data, return_views='all'):
     """
     Load the triple neg datasets
@@ -420,7 +419,9 @@ def load_baptiste_data(dataset, subsampling=False):
     features_names = [f'feature_{idx}' for idx in range(all_data.shape[1])]
     return view_0, view_0_name, view_1, view_1_name, view_2, view_2_name, view_3, view_3_name, view_4, view_4_name, view_5, view_5_name, view_6, view_6_name, view_7, view_7_name, view_8, view_8_name, view_9, view_9_name, view_10, view_10_name, view_11, view_11_name, view_12, view_12_name, view_13, view_13_name, all_data, groups_ids, y, proteins_ids, features_names
   
- 
+
+############################################################################################################################################
+
 def eliminate_features_for_scm(x, y, features_names, features_to_be_excluded):
     """ Objectif, enlever les features significatifs obtenus d'une execution du SCM afin de le rerouler.
     Args:
@@ -436,10 +437,16 @@ def eliminate_features_for_scm(x, y, features_names, features_to_be_excluded):
     x = x[:, idx_features_retained]
     return x, y, features_names
 
+########################################################## Analysis Sections  ################################################################
 
-def results_analysis(directory, output_text_file, recap_table_file, plot_hist=True):
+@click.group()
+def cli():
+    pass
+
+
+def sub_repo_analysis(directory, output_text_file, recap_table_file, cancer_name='brca', plot_hist=True):
     """
-    An utility function to run the results analysis and output them in a readable way
+    An utility function to run the results analysis and output them in a readable way. Work on the sub repo site
     Args:
         directory, str, path to the directory containing the pickle files
         data_path, str, path to the data of interest to be loaded to run the analysis
@@ -473,9 +480,21 @@ def results_analysis(directory, output_text_file, recap_table_file, plot_hist=Tr
     recall_test = [el['recall'] for el in metrics_test]
     if plot_hist:
         if not exists(histogram_repo): makedirs(histogram_repo)
-        generate_histogram(file_name=f"{directory}", fig_title='Metrics', accuracy_train=accuracy_train, accuracy_test=accuracy_test, f1_score_train=f1_score_train,
-                        f1_score_test=f1_score_test, precision_train=precision_train, precision_test=precision_test, recall_train=recall_train, recall_test=recall_test)
-    # Find the best seed based on the F1-score (since the dataset is unbalanced)
+        generate_histogram(file_name=f"{directory}", 
+                           fig_title='Metrics', 
+                           accuracy_train=accuracy_train, 
+                           accuracy_test=accuracy_test, 
+                           f1_score_train=f1_score_train,
+                           f1_score_test=f1_score_test, 
+                           precision_train=precision_train, 
+                           precision_test=precision_test, 
+                           recall_train=recall_train, 
+                           recall_test=recall_test)
+    # if cancer_name == 'brca':
+    #     # Find the best seed based on the F1-score (since the dataset is unbalanced)
+    #     best_file = list_fichiers[np.argmax(f1_score_test)]
+    # elif cancer_name == 'prad': # this is balanced right?
+    #     best_file = list_fichiers[np.argmax(accuracy_test)]
     best_file = list_fichiers[np.argmax(f1_score_test)]
     if directory.find('dt') != -1:
         for model in features_retenus:
@@ -616,11 +635,21 @@ def results_analysis(directory, output_text_file, recap_table_file, plot_hist=Tr
            np.round(np.mean(precision_test), 4), np.round(np.mean(recall_test), 4), model_comptes, groups_features
 
 
-def anaylses_resultats(type_experiment='normal', plot_hist=True):
-    list_of_directories = os.listdir('./')
-    output_text_file = f"{saving_repository}/results_analysis"
+def global_repo_analysis(directory, output_text_file='results_analysis', type_experiment='normal', sous_experiment_types=['dt', 'scm', 'rf'], plot_hist=True):
+    """
+    Parcours le grand repertoire contenant tous les resultats pour extraire (par experiences) le meilleur .pck et aussi la meilleure experience au total.
+    Work on the global repo site
+    Args:
+        directory, path to the results directory (groups_PRAD_experiments/ or groups_TN_experiments/ or normal_experiments/)
+        type_experiment: string, normal (for dt, scm, and rf); group_scm for pyscmgroup experiment
+        sous_experiment_types, list of string: name of the targeted experiments: [dt, scm, rf]; ['methyl_rna_iso_mirna_snp_clinical'](for brca); ['all'] for prad
+        plot_hist, bool, if true plot the figure (histogram)
+    Returns:
+        Write to 2 files: output_text_file_experiment and recap_text_file_experiment
+    """
+    # list_of_directories = os.listdir(directory)
+    output_text_file = f"{saving_repository}/{output_text_file}"
     if type_experiment == 'normal':
-        sous_experiment_types = ['rf', 'scm', 'dt']
         for experiment in sous_experiment_types:
             output_text_file_experiment = f"{output_text_file}__{experiment}.txt"
             recap_text_file_experiment = f"{output_text_file}__{experiment}__recap.txt"
@@ -629,13 +658,13 @@ def anaylses_resultats(type_experiment='normal', plot_hist=True):
             precis_test_list = []
             rec_test_list = []
             model_comptes_list = []
-            list_of_directories = os.listdir('./')
-            list_of_directories = [directory for directory in list_of_directories if directory.startswith(experiment)] 
-            for directory in list_of_directories:
-                acc_test, f1_test, precis_test, rec_test, model_comptes, _ = results_analysis(directory=directory,
-                                                                                            output_text_file=output_text_file_experiment,
-                                                                                            recap_table_file=recap_text_file_experiment,
-                                                                                            plot_hist=plot_hist)
+            list_of_directories = os.listdir(directory)
+            list_of_directories = [repository for repository in list_of_directories if repository.startswith(experiment)] 
+            for repository in list_of_directories:
+                acc_test, f1_test, precis_test, rec_test, model_comptes, _ = sub_repo_analysis(directory=repository,
+                                                                                              output_text_file=output_text_file_experiment,
+                                                                                              recap_table_file=recap_text_file_experiment,
+                                                                                              plot_hist=plot_hist)
                 acc_test_list.append(acc_test)
                 f1_test_list.append(f1_test)
                 precis_test_list.append(precis_test)
@@ -645,15 +674,11 @@ def anaylses_resultats(type_experiment='normal', plot_hist=True):
                 f.write('-' * 50)
                 f.write('\n')
                 f.write('Best model selected based on F1 Score\n')
-                best_model_idx = np.argmax(np.asarray(f1_test_list))
+                best_model_idx = np.argmax(np.asarray(f1_test_list)) # to be modified if i decied to go with the accuracy for PRAD vs f1 for BRCA
                 f.write(f'Best Experiment is:{list_of_directories[best_model_idx]}\n')
                 f.write(f'Results: Acc: {acc_test_list[best_model_idx]}\t F1: {f1_test_list[best_model_idx]}\t Prec: {precis_test_list[best_model_idx]}\t Rec: {rec_test_list[best_model_idx]} \n')
                 f.write(f'Model comptes {model_comptes_list[best_model_idx]}\n')
     if type_experiment == 'group_scm':
-        # sous_experiment_types = ['methyl_rna_iso_mirna', 'methyl_rna_iso_mirna_snp_clinical', 
-        #                          'methyl_rna_mirna', 'methyl_rna_mirna_snp_clinical', 'all']
-        sous_experiment_types = ['methyl_rna_iso_mirna_snp_clinical']
-        # sous_experiment_types = ['True__group_scm', 'False__group_scm']
         for experiment in sous_experiment_types:
             output_text_file_experiment = f"{output_text_file}__group_scm__{experiment}.txt"
             recap_text_file_experiment = f"{output_text_file}__{experiment}__recap.txt"
@@ -663,14 +688,13 @@ def anaylses_resultats(type_experiment='normal', plot_hist=True):
             rec_test_list = []
             model_comptes_list = [] 
             groups_features_list = []
-            list_of_directories = os.listdir('./')
-            list_of_directories = [directory for directory in list_of_directories if directory.startswith(experiment)] 
-            # list_of_directories = [directory for directory in list_of_directories if directory.find('psi') != -1]
-            for directory in list_of_directories:
-                acc_test, f1_test, precis_test, rec_test, model_comptes, groups_features = results_analysis(directory=directory,
-                                                                                            output_text_file=output_text_file_experiment,
-                                                                                            recap_table_file=recap_text_file_experiment,
-                                                                                            plot_hist=plot_hist)
+            list_of_directories = os.listdir(directory)
+            list_of_directories = [repository for repository in list_of_directories if repository.startswith(experiment)] 
+            for repository in list_of_directories:
+                acc_test, f1_test, precis_test, rec_test, model_comptes, groups_features = sub_repo_analysis(directory=repository,
+                                                                                                            output_text_file=output_text_file_experiment,
+                                                                                                            recap_table_file=recap_text_file_experiment,
+                                                                                                            plot_hist=plot_hist)
                 acc_test_list.append(acc_test)
                 f1_test_list.append(f1_test)
                 precis_test_list.append(precis_test)
@@ -689,6 +713,13 @@ def anaylses_resultats(type_experiment='normal', plot_hist=True):
         
 
 def parcours_one_directory(directory):
+    """
+    Parcours chaque sub repo et retourne les différentes metrics pour faciliter le plotting
+    Args:
+        directory, path to a single directory (sub_repo)
+    Returns:
+        train_metrics, test_metrics, std_train_metrics, std_test_metrics, train_metrics_best_file, test_metrics_best_file, features_retenus
+    """
     os.chdir(f'{directory}')
     metrics_train = []
     metrics_test = []
@@ -725,114 +756,27 @@ def parcours_one_directory(directory):
     os.chdir('../')
     return train_metrics, test_metrics, std_train_metrics, std_test_metrics, train_metrics_best_file, test_metrics_best_file, features_retenus
 
+@cli.command(help="Run the analysis results")
+@click.option('--directory', type=str, default=None, help="""results path""")
+@click.option('--output-text-file', type=str, default='normal_brca_results_analysis', help="""outout name file""")
+@click.option('--type-experiment', type=str, default='normal', help="""type of experiment global or group_scm""")
+@click.option('--sous-experiment-types', type=str, default='dt scm rf', help="""name of experiment""")
+@click.option('--plot-hist/--no-plot-hist', default=False, help="""plot histogram""")
+def run_analysis(directory, output_text_file, type_experiment, sous_experiment_types, plot_hist):
+    if plot_hist:
+        global_repo_analysis(directory, output_text_file, type_experiment, sous_experiment_types.split(), True)
+    else:
+        global_repo_analysis(directory, output_text_file, type_experiment, sous_experiment_types.split(), False)
 
-def generate_figures_mean_results(directory, experiment, f='exp', type_of_update='inner', random_weights='False'):
-    x = np.round(np.linspace(0.1, 1, 10), 3)
-    os.chdir(f"{directory}")
-    list_of_directories = os.listdir('./')
-    list_of_directories = [directory for directory in list_of_directories if directory.startswith(experiment)] 
-    list_of_directories = [directory for directory in list_of_directories if directory.find(f'{type_of_update}') != -1]
-    list_of_directories = [directory for directory in list_of_directories if directory.find(f'{random_weights}') != -1]
-    list_of_directories = list(np.sort(list_of_directories)) # garantie que ca va de 0.1 à 1.0 ici (sinon tjrs de min a max value de c)
-    train_metrics_list = []; test_metrics_list = []; std_train_metrics_list = []; std_test_metrics_list = []
-    for directory in list_of_directories:
-        train_metrics, test_metrics, std_train_metrics, std_test_metrics, _, _, _ = parcours_one_directory(directory=directory)
-        train_metrics_list.append(train_metrics)
-        test_metrics_list.append(test_metrics)
-        std_train_metrics_list.append(std_train_metrics)
-        std_test_metrics_list.append(std_test_metrics)
-    train_metrics_list = np.asarray(train_metrics_list)
-    test_metrics_list = np.asarray(test_metrics_list)
-    std_train_metrics_list = np.asarray(std_train_metrics_list)
-    std_test_metrics_list = np.asarray(std_test_metrics_list)
-    # Plot the train fig
-    fig_title_train = f'Train mean metrics: Update Function:{f} {type_of_update}_groups random_weights: {random_weights}'
-    fig_name_train = f'{f}_train_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
-    f_train, ax_train = plt.subplots(nrows=1, ncols=1)
-    ax_train.set_title(f"{fig_title_train}")
-    ax_train.set_xlabel('c values')
-    ax_train.set_ylabel('Metrics values')
-    # ax.set_ylim(-0.1, 1.2)
-    ax_train.plot(x, train_metrics_list[:, 0], 'bo-', label='Acc', linewidth=2)
-    ax_train.plot(x, train_metrics_list[:, 1], 'ro-', label='F1 ', linewidth=2)
-    ax_train.plot(x, train_metrics_list[:, 2], 'go-', label='Prec', linewidth=2)
-    ax_train.plot(x, train_metrics_list[:, 3], 'ko-', label='Rec', linewidth=2)
-    ax_train.legend()
-    plt.tight_layout()
-    f_train.savefig(f"{saving_repository}/{fig_name_train}")
-    plt.close()
-    
-    # Plot the Test fig
-    fig_title_test = f'Test mean metrics: {type_of_update}_groups random_weights: {random_weights}'
-    fig_name_test = f'{f}_test_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
-    f_test, ax_test = plt.subplots(nrows=1, ncols=1)
-    ax_test.set_title(f"{fig_title_test}")
-    ax_test.set_xlabel('c values')
-    ax_test.set_ylabel('Metrics values')
-    # ax.set_ylim(-0.1, 1.2)
-    ax_test.plot(x, test_metrics_list[:, 0], 'bo-', label='Acc', linewidth=2)
-    ax_test.plot(x, test_metrics_list[:, 1], 'ro-', label='F1 ', linewidth=2)
-    ax_test.plot(x, test_metrics_list[:, 2], 'go-', label='Prec', linewidth=2)
-    ax_test.plot(x, test_metrics_list[:, 3], 'ko-', label='Rec', linewidth=2)
-    ax_test.legend()
-    plt.tight_layout()
-    f_test.savefig(f"{saving_repository}/{fig_name_test}")
-    plt.close()
-    os.chdir(f'{saving_repository}')
-    
-    
-def generate_figures_best_results(directory, experiment, f='exp', type_of_update='inner', random_weights='False'):
-    x = np.round(np.linspace(0.1, 1, 10), 3)
-    os.chdir(f"{directory}")
-    list_of_directories = os.listdir('./')
-    list_of_directories = [directory for directory in list_of_directories if directory.startswith(experiment)] 
-    list_of_directories = [directory for directory in list_of_directories if directory.find(f'{type_of_update}') != -1]
-    list_of_directories = [directory for directory in list_of_directories if directory.find(f'{random_weights}') != -1]
-    list_of_directories = list(np.sort(list_of_directories)) # garantie que ca va de 0.1 à 1.0 ici (sinon tjrs de min a max value de c)
-    train_metrics_list = []; test_metrics_list = []
-    for directory in list_of_directories:
-        _, _, _, _, train_metrics_best_file, test_metrics_best_file, _ = parcours_one_directory(directory=directory)
-        train_metrics_list.append(train_metrics_best_file)
-        test_metrics_list.append(test_metrics_best_file)
-    train_metrics_list = np.asarray(train_metrics_list)
-    test_metrics_list = np.asarray(test_metrics_list)
-    # Plot the train fig
-    fig_title_train = f'Train best metrics: Update Function:{f} {type_of_update}_groups random_weights: {random_weights}'
-    fig_name_train = f'{f}_train_best_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
-    f_train, ax_train = plt.subplots(nrows=1, ncols=1)
-    ax_train.set_title(f"{fig_title_train}")
-    ax_train.set_xlabel('c values')
-    ax_train.set_ylabel('Metrics values')
-    # ax.set_ylim(-0.1, 1.2)
-    ax_train.plot(x, train_metrics_list[:, 0], 'bo-', label='Acc', linewidth=2)
-    ax_train.plot(x, train_metrics_list[:, 1], 'ro-', label='F1 ', linewidth=2)
-    ax_train.plot(x, train_metrics_list[:, 2], 'go-', label='Prec', linewidth=2)
-    ax_train.plot(x, train_metrics_list[:, 3], 'ko-', label='Rec', linewidth=2)
-    ax_train.legend()
-    plt.tight_layout()
-    f_train.savefig(f"{saving_repository}/{fig_name_train}")
-    plt.close()
-    
-    # Plot the Test fig
-    fig_title_test = f'Test best metrics: {type_of_update}_groups random_weights: {random_weights}'
-    fig_name_test = f'{f}_test_best_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
-    f_test, ax_test = plt.subplots(nrows=1, ncols=1)
-    ax_test.set_title(f"{fig_title_test}")
-    ax_test.set_xlabel('c values')
-    ax_test.set_ylabel('Metrics values')
-    # ax.set_ylim(-0.1, 1.2)
-    ax_test.plot(x, test_metrics_list[:, 0], 'bo-', label='Acc', linewidth=2)
-    ax_test.plot(x, test_metrics_list[:, 1], 'ro-', label='F1 ', linewidth=2)
-    ax_test.plot(x, test_metrics_list[:, 2], 'go-', label='Prec', linewidth=2)
-    ax_test.plot(x, test_metrics_list[:, 3], 'ko-', label='Rec', linewidth=2)
-    ax_test.legend()
-    plt.tight_layout()
-    f_test.savefig(f"{saving_repository}/{fig_name_test}")
-    plt.close()
-    os.chdir(f'{saving_repository}')
- 
-    
-    
+# python experiments/experiments_utilities.py --directory /home/maoss2/project/maoss2/saving_repository_article/normal_experiments_brca --output-text-file normal_brca_results_analysis --type-experiment dt scm rf --plot-hist
+# python experiments/experiments_utilities.py --directory /home/maoss2/project/maoss2/saving_repository_article/normal_experiments_prad --output-text-file normal_prad_results_analysis --type-experiment dt scm rf --plot-hist
+
+# python experiments/experiments_utilities.py --directory /home/maoss2/project/maoss2/saving_repository_article/groups_TN_experiments --output-text-file group_scm_brca_results_analysis --type-experiment methyl_rna_iso_mirna_snp_clinical 
+# python experiments/experiments_utilities.py --directory /home/maoss2/project/maoss2/saving_repository_article/groups_PRAD_experiments --output-text-file group_scm_prad_results_analysis --type-experiment all 
+
+############################################################################################################################################
+
+########################################################### Metrics Sections ################################################################
 def weighted_sample(y, y_target):
     """ Build a weighted sample array
     Args:
@@ -906,3 +850,4 @@ def zero_one_loss_imbalanced(y_target, y_estimate, sample_weight):
     assert len(sample_weight) == len(y_target) == len(y_estimate), 'Sample weight and y_target must have the same shape'
     return np.mean(np.dot((y_target != y_estimate).astype(np.int), sample_weight))
 
+############################################################################################################################################
