@@ -20,7 +20,7 @@ from os.path import abspath, dirname, exists, join
 from matplotlib import pyplot as plt
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from sklearn.preprocessing import StandardScaler
-from experiments.figures import generate_histogram
+
 
 c2_pickle_dictionary = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/c2_curated_genes.pck'
 c5_pickle_dictionary = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/c5_curated_genes.pck'
@@ -442,6 +442,43 @@ def eliminate_features_for_scm(x, y, features_names, features_to_be_excluded):
 @click.group()
 def cli():
     pass
+
+
+def generate_histogram(file_name, fig_title, accuracy_train, accuracy_test, f1_score_train, f1_score_test, 
+                       precision_train, precision_test, recall_train, recall_test):
+    """
+    Plot histogram figures
+    Args:
+
+    Returns:
+        Figures plotted, histogram bar plot (could rethink this and plot better figures huh)
+    """
+    train_metrics = np.asarray([np.round(np.mean(accuracy_train), 4), np.round(np.mean(f1_score_train), 4),
+                               np.round(np.mean(precision_train), 4), np.round(np.mean(recall_train), 4)])
+    test_metrics = np.asarray([np.round(np.mean(accuracy_test), 4), np.round(np.mean(f1_score_test), 4),
+                               np.round(np.mean(precision_test), 4), np.round(np.mean(recall_test), 4)])
+    std_train_metrics = np.asarray([np.round(np.std(accuracy_train), 4), np.round(np.std(f1_score_train), 4),
+                               np.round(np.std(precision_train), 4), np.round(np.std(recall_train), 4)])
+    std_test_metrics = np.asarray([np.round(np.std(accuracy_test), 4), np.round(np.std(f1_score_test), 4),
+                               np.round(np.std(precision_test), 4), np.round(np.std(recall_test), 4)])
+    
+    nbResults = len(train_metrics)
+    # figKW = {"figsize": (nbResults, 8)}
+    # f, ax = plt.subplots(nrows=1, ncols=1, **figKW)
+    f, ax = plt.subplots(nrows=1, ncols=1)
+    barWidth = 0.35
+    ax.set_title(f"{fig_title}")
+    rects = ax.bar(range(nbResults), test_metrics, barWidth, color="r", yerr=std_test_metrics)
+    rect2 = ax.bar(np.arange(nbResults) + barWidth, train_metrics, barWidth, color="0.7", yerr=std_train_metrics)
+    autolabel(rects, ax)
+    autolabel(rect2, ax)
+    ax.legend((rects[0], rect2[0]), ('Test', 'Train'), loc='upper right', ncol=2, mode="expand", borderaxespad=0.)
+    ax.set_ylim(-0.1, 1.2)
+    ax.set_xticks(np.arange(nbResults) + barWidth)
+    ax.set_xticklabels(['Acc', 'F1', 'Prec', 'Rec'])
+    plt.tight_layout()
+    f.savefig(f"{histogram_repo}/{file_name}.png")
+    plt.close()
 
 
 def sub_repo_analysis(directory, output_text_file, recap_table_file, cancer_name='brca', plot_hist=True):
