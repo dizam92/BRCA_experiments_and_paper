@@ -18,8 +18,8 @@ EXPERIMENTS_PATH = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/expe
 DATAREPOSITORY_PATH = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository'
 PROJECT_ROOT = dirname(abspath(__file__))
 SAVING_REPO = '/home/maoss2/project/maoss2/saving_repository_article/'
-saving_repository_tn = f'{saving_repository}groups_TN_experiments'
-saving_repository_prad = f'{saving_repository}groups_PRAD_experiments'
+saving_repository_tn = f'{saving_repository}groups_brca_experiments'
+saving_repository_prad = f'{saving_repository}groups_prad_experiments'
 
 def launch_slurm_experiment_group(return_views, dataset, cancer_expe, nb_repetitions, pathway_file, update_method, c, random_weights, 
                                   prior_dict_groups, prior_dict_rules, experiment_file, experiment_name, time, dispatch_path, saving_repo):
@@ -113,7 +113,7 @@ def main_group_PRAD():
                                             prior_dict_rules=f"{data_repository}/groups2pathwaysPRAD_biogrid.pck",
                                             experiment_file='run_new_group_experiments.py', 
                                             experiment_name=exp_name, 
-                                            time='20', 
+                                            time='15', 
                                             dispatch_path=dispatch_path,
                                             saving_repo=saving_repository_prad)
     print("### DONE ###") 
