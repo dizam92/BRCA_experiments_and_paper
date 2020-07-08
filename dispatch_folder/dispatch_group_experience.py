@@ -77,7 +77,7 @@ def main_group_TN():
                                             prior_dict_rules=f"{data_repository}/groups2pathwaysTN_biogrid.pck",
                                             experiment_file='run_new_group_experiments.py', 
                                             experiment_name=exp_name, 
-                                            time='20', 
+                                            time='15', 
                                             dispatch_path=dispatch_path,
                                             saving_repo=saving_repository_tn)
     print("### DONE ###") 
@@ -119,5 +119,5 @@ def main_group_PRAD():
     print("### DONE ###") 
 
 if __name__ == '__main__':
-    # main_group_TN()
+    main_group_TN()
     main_group_PRAD()

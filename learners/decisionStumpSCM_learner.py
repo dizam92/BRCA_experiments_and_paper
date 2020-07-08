@@ -35,6 +35,7 @@ class DecisionStumpSCMNew(BaseEstimator, ClassifierMixin):
                 self.model_type = value
             if key == 'max_rules':
                 self.max_rules = value
-
+        return self
+    
     def get_stats(self):
         return {"Binary_attributes": self.clf.model_.rules}

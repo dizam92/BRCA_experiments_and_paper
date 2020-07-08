@@ -19,7 +19,7 @@ saving_repository_brca = f'{saving_repository}normal_experiments_brca'
 saving_repository_prad = f'{saving_repository}normal_experiments_prad'
 # SAVING_REPO = '/home/maoss2/project/maoss2/saving_repository_article/normal_experiments'
 
-def launch_slurm_experiment(return_views, which_expe, dataset, nb_repetitions, experiment_file, experiment_name, time, dispatch_path):
+def launch_slurm_experiment(return_views, which_expe, dataset, nb_repetitions, experiment_file, experiment_name, time, dispatch_path, saving_repo):
     exp_file = join(dispatch_path, f"{return_views}__" + f"{experiment_name}__" + f"{nb_repetitions}")
                         
     submission_script = ""
@@ -34,7 +34,7 @@ def launch_slurm_experiment(return_views, which_expe, dataset, nb_repetitions, e
     submission_script += f"#SBATCH --mail-type=FAIL\n"
     submission_script += f"#SBATCH --time={time}:00:00\n" 
     submission_script += f"#SBATCH --output={exp_file + '.out'}\n\n" 
-    submission_script += f"python {EXPERIMENTS_PATH}/{experiment_file} -rt {return_views} -which_expe {which_expe} -nb_r {nb_repetitions} -data {dataset} -o {saving_repository}"
+    submission_script += f"python {EXPERIMENTS_PATH}/{experiment_file} -rt {return_views} -which_expe {which_expe} -nb_r {nb_repetitions} -data {dataset} -o {saving_repo}"
 
     submission_path = exp_file + ".sh"
     with open(submission_path, 'w') as out_file:
@@ -58,7 +58,8 @@ def main_brca():
                                 experiment_file='run_baselines_experiments.py', 
                                 experiment_name='normal_experiments_brca', 
                                 time='5', 
-                                dispatch_path=dispatch_path)
+                                dispatch_path=dispatch_path,
+                                saving_repo=saving_repository_brca)
     print("### DONE ###")   
 
 def main_prad():
@@ -75,7 +76,8 @@ def main_prad():
                                 experiment_file='run_baselines_experiments.py', 
                                 experiment_name='normal_experiments_prad', 
                                 time='5', 
-                                dispatch_path=dispatch_path)
+                                dispatch_path=dispatch_path,
+                                saving_repo=saving_repository_prad)
     print("### DONE ###")   
     
 if __name__ == '__main__':
