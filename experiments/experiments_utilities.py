@@ -62,6 +62,8 @@ parameters_group_scm = {'model_type': param_model_type,
                         'max_rules': param_max_attributes
                         }
 
+color_pool = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
+
 ########################################################### Loaders Sections ################################################################
 def load_data(data, return_views='all'):
     """
@@ -491,6 +493,16 @@ def sub_repo_analysis(directory, output_text_file, recap_table_file, dictionnary
                            precision_test=precision_test, 
                            recall_train=recall_train, 
                            recall_test=recall_test)
+        plot_errorbar_error(file_name=histogram_file_name, 
+                           fig_title='Metrics', 
+                           accuracy_train=accuracy_train, 
+                           accuracy_test=accuracy_test, 
+                           f1_score_train=f1_score_train,
+                           f1_score_test=f1_score_test, 
+                           precision_train=precision_train, 
+                           precision_test=precision_test, 
+                           recall_train=recall_train, 
+                           recall_test=recall_test)
     # Find the best seed based on the F1-score (since the dataset is unbalanced)
     best_file = list_fichiers[np.argmax(f1_score_test)] # work for t=both unbalanced and balanced dataset
     if directory.find('dt') != -1:
@@ -702,8 +714,8 @@ def run_analysis(directory, output_text_file, type_experiment, dict_for_prior_ru
 # python experiments/experiments_utilities.py run-analysis --directory /home/maoss2/project/maoss2/saving_repository_article/normal_experiments_brca --dict-for-prior-rules /home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/groups2pathwaysTN_biogrid.pck --output-text-file normal_brca_results_analysis --type-experiment normal --sous-experiment-types 'dt scm rf' --plot-hist
 # python experiments/experiments_utilities.py run-analysis --directory /home/maoss2/project/maoss2/saving_repository_article/normal_experiments_prad --dict-for-prior-rules /home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/groups2pathwaysPRAD_biogrid.pck --output-text-file normal_prad_results_analysis --type-experiment normal --sous-experiment-types 'dt scm rf' --plot-hist
 
-# python experiments/experiments_utilities.py run-analysis --directory /home/maoss2/project/maoss2/saving_repository_article/groups_TN_experiments --dict-for-prior-rules /home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/groups2pathwaysTN_biogrid.pck --output-text-file group_scm_brca_results_analysis --type-experiment group_scm --sous-experiment-types 'methyl_rna_iso_mirna_snp_clinical' 
-# python experiments/experiments_utilities.py run-analysis --directory /home/maoss2/project/maoss2/saving_repository_article/groups_PRAD_experiments --dict-for-prior-rules /home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/groups2pathwaysPRAD_biogrid.pck --output-text-file group_scm_prad_results_analysis --type-experiment group_scm --sous-experiment-types 'all' 
+# python experiments/experiments_utilities.py run-analysis --directory /home/maoss2/project/maoss2/saving_repository_article/groups_brca_experiments --dict-for-prior-rules /home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/groups2pathwaysTN_biogrid.pck --output-text-file group_scm_brca_results_analysis --type-experiment group_scm --sous-experiment-types 'methyl_rna_iso_mirna_snp_clinical' 
+# python experiments/experiments_utilities.py run-analysis --directory /home/maoss2/project/maoss2/saving_repository_article/groups_prad_experiments --dict-for-prior-rules /home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/groups2pathwaysPRAD_biogrid.pck --output-text-file group_scm_prad_results_analysis --type-experiment group_scm --sous-experiment-types 'all' 
 
 ############################################################################################################################################
 
@@ -736,6 +748,7 @@ def generate_histogram(file_name, fig_title, accuracy_train, accuracy_test, f1_s
     # figKW = {"figsize": (nbResults, 8)}
     # f, ax = plt.subplots(nrows=1, ncols=1, **figKW)
     f, ax = plt.subplots(nrows=1, ncols=1)
+    sns.set_style("darkgrid")
     barWidth = 0.35
     ax.set_title(f"{fig_title}")
     rects = ax.bar(range(nbResults), test_metrics, barWidth, color="r", yerr=std_test_metrics)
@@ -751,6 +764,43 @@ def generate_histogram(file_name, fig_title, accuracy_train, accuracy_test, f1_s
     plt.close()
 
 
+def plot_errorbar_error(file_name, fig_title, accuracy_train, accuracy_test, f1_score_train, f1_score_test, 
+                       precision_train, precision_test, recall_train, recall_test):
+    """
+    Plot Error bar figures
+    Args:
+    Returns:
+        Figures plotted, error bar on the figures (rebranding the previous function)
+    pos[0]: accuracy
+    pos[1]: f1_score
+    pos[2]: precicion
+    pos[3]: recall
+    """
+    train_metrics = np.asarray([np.round(np.mean(accuracy_train), 4), np.round(np.mean(f1_score_train), 4),
+                               np.round(np.mean(precision_train), 4), np.round(np.mean(recall_train), 4)])
+    test_metrics = np.asarray([np.round(np.mean(accuracy_test), 4), np.round(np.mean(f1_score_test), 4),
+                               np.round(np.mean(precision_test), 4), np.round(np.mean(recall_test), 4)])
+    std_train_metrics = np.asarray([np.round(np.std(accuracy_train), 4), np.round(np.std(f1_score_train), 4),
+                               np.round(np.std(precision_train), 4), np.round(np.std(recall_train), 4)])
+    std_test_metrics = np.asarray([np.round(np.std(accuracy_test), 4), np.round(np.std(f1_score_test), 4),
+                               np.round(np.std(precision_test), 4), np.round(np.std(recall_test), 4)])
+    fig = plt.figure(figsize=(9, 7))
+    sns.set_style("darkgrid")
+    x = ['Acc', 'F1', 'Prec', 'Rec']
+    fig.suptitle(f'{fig_title}_train', fontsize=8)
+    plt.errorbar(x, train_metrics, yerr=std_train_metrics, fmt='-', color=color_pool[0], label='train')
+    plt.fill_between(x, train_metrics - std_train_metrics, train_metrics + std_train_metrics, facecolor=color_pool[0], alpha=0.5)
+    plt.errorbar(x, test_metrics, yerr=std_test_metrics, fmt='-', color=color_pool[1], label='test')
+    plt.fill_between(x, test_metrics - std_test_metrics, test_metrics + std_test_metrics, facecolor=color_pool[1], alpha=0.5)
+    plt.legend(loc='best', fontsize='x-small', shadow=True)
+    plt.xlabel('Metrics', fontsize=10)
+    plt.xticks(range(len(x)), x)  # rotation='vertical'
+    plt.ylabel(f'Values', fontsize=10)
+    plt.yticks(rotation=90)
+    fig.savefig(f"{histogram_repo}/{file_name}_error_bars.png")
+    plt.close()
+ 
+    
 def parcours_one_directory(directory):
     """
     Parcours chaque sub repo et retourne les différentes metrics pour faciliter le plotting
@@ -828,6 +878,7 @@ def generate_figures_mean_results(directory, sous_experiment_types, cancer_name=
     fig_title_train = f'Train mean metrics: Update Function:{f} {type_of_update}_groups random_weights: {random_weights}'
     fig_name_train = f'{f}_{cancer_name}_train_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
     f_train, ax_train = plt.subplots(nrows=1, ncols=1)
+    sns.set_style("darkgrid")
     ax_train.set_title(f"{fig_title_train}")
     ax_train.set_xlabel('c values')
     ax_train.set_ylabel('Metrics values')
@@ -845,6 +896,7 @@ def generate_figures_mean_results(directory, sous_experiment_types, cancer_name=
     fig_title_test = f'Test mean metrics: {type_of_update}_groups random_weights: {random_weights}'
     fig_name_test = f'{f}_{cancer_name}_test_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
     f_test, ax_test = plt.subplots(nrows=1, ncols=1)
+    sns.set_style("darkgrid")
     ax_test.set_title(f"{fig_title_test}")
     ax_test.set_xlabel('c values')
     ax_test.set_ylabel('Metrics values')
@@ -859,7 +911,79 @@ def generate_figures_mean_results(directory, sous_experiment_types, cancer_name=
     plt.close()
     os.chdir(f'{saving_repository}')
     
+
+def generate_figures_mean_results_errorbar_error(directory, sous_experiment_types, cancer_name='brca', f='exp', type_of_update='inner', random_weights=False):
+    """
+    Utility function to plot the results for the groups method using the MEAN (Should rethink this probably)
+    Args:
+        directory,
+        experiment, str, experiment name
+        f, str, activation function name
+        type_of_update, str, 
+        random_weights, bool
+    """
+    x = np.round(np.linspace(0.1, 1, 10), 3)
+    os.chdir(f"{directory}")
+    list_of_directories = os.listdir('./')
+    list_of_directories = [directory for directory in list_of_directories if directory.startswith(sous_experiment_types)] 
+    list_of_directories = [directory for directory in list_of_directories if directory.find(f'{type_of_update}') != -1]
+    list_of_directories = [directory for directory in list_of_directories if directory.find(f'{random_weights}') != -1]
+    list_of_directories = list(np.sort(list_of_directories)) # garantie que ca va de 0.1 à 1.0 ici (sinon tjrs de min a max value de c)
+    train_metrics_list = []; test_metrics_list = []; std_train_metrics_list = []; std_test_metrics_list = []
+    for directory in list_of_directories:
+        train_metrics, test_metrics, std_train_metrics, std_test_metrics, _, _, _ = parcours_one_directory(directory=directory)
+        train_metrics_list.append(train_metrics)
+        test_metrics_list.append(test_metrics)
+        std_train_metrics_list.append(std_train_metrics)
+        std_test_metrics_list.append(std_test_metrics)
+    train_metrics_list = np.asarray(train_metrics_list)
+    test_metrics_list = np.asarray(test_metrics_list)
+    std_train_metrics_list = np.asarray(std_train_metrics_list)
+    std_test_metrics_list = np.asarray(std_test_metrics_list)
+    # Plot the train fig
+    fig_title_train = f'Train mean metrics: Update Function:{f} {type_of_update}_groups random_weights: {random_weights}'
+    fig_name_train = f'{f}_{cancer_name}_train_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}_error_bars.png'
+    f_train, ax_train = plt.subplots(nrows=1, ncols=1)
+    sns.set_style("darkgrid")
+    ax_train.set_title(f"{fig_title_train}")
+    ax_train.set_xlabel('c values')
+    ax_train.set_ylabel('Metrics values')
+    ax_train.errorbar(x, train_metrics_list[:, 0], yerr=std_train_metrics_list[:, 0], fmt='-', color=color_pool[0], label='Acc')
+    ax_train.fill_between(x, train_metrics_list[:, 0] - std_train_metrics_list[:, 0], train_metrics_list[:, 0] + std_train_metrics_list[:, 0], facecolor=color_pool[0], alpha=0.5)
+    ax_train.errorbar(x, train_metrics_list[:, 1], yerr=std_train_metrics_list[:, 1], fmt='-', color=color_pool[1], label='F1')
+    ax_train.fill_between(x, train_metrics_list[:, 1] - std_train_metrics_list[:, 1], train_metrics_list[:, 1] + std_train_metrics_list[:, 1], facecolor=color_pool[1], alpha=0.5)
+    ax_train.errorbar(x, train_metrics_list[:, 2], yerr=std_train_metrics_list[:, 2], fmt='-', color=color_pool[2], label='Prec')
+    ax_train.fill_between(x, train_metrics_list[:, 2] - std_train_metrics_list[:, 2], train_metrics_list[:, 2] + std_train_metrics_list[:, 2], facecolor=color_pool[2], alpha=0.5)
+    ax_train.errorbar(x, train_metrics_list[:, 3], yerr=std_train_metrics_list[:, 3], fmt='-', color=color_pool[3], label='Rec')
+    ax_train.fill_between(x, train_metrics_list[:, 3] - std_train_metrics_list[:, 3], train_metrics_list[:, 3] + std_train_metrics_list[:, 3], facecolor=color_pool[3], alpha=0.5) 
+    ax_train.legend(loc='best', fontsize='x-small', shadow=True)
+    # plt.tight_layout()
+    f_train.savefig(f"{histogram_repo}/{fig_name_train}")
+    plt.close()
     
+    # Plot the Test fig
+    fig_title_test = f'Test mean metrics: {type_of_update}_groups random_weights: {random_weights}'
+    fig_name_test = f'{f}_{cancer_name}_test_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}_error_bars.png'
+    f_test, ax_test = plt.subplots(nrows=1, ncols=1)
+    sns.set_style("darkgrid")
+    ax_test.set_title(f"{fig_title_test}")
+    ax_test.set_xlabel('c values')
+    ax_test.set_ylabel('Metrics values')
+    ax_test.errorbar(x, test_metrics_list[:, 0], yerr=std_test_metrics_list[:, 0], fmt='-', color=color_pool[0], label='Acc')
+    ax_test.fill_between(x, test_metrics_list[:, 0] - std_test_metrics_list[:, 0], test_metrics_list[:, 0] + std_test_metrics_list[:, 0], facecolor=color_pool[0], alpha=0.5)
+    ax_test.errorbar(x, test_metrics_list[:, 1], yerr=std_test_metrics_list[:, 1], fmt='-', color=color_pool[1], label='F1')
+    ax_test.fill_between(x, test_metrics_list[:, 1] - std_test_metrics_list[:, 1], test_metrics_list[:, 1] + std_test_metrics_list[:, 1], facecolor=color_pool[1], alpha=0.5)
+    ax_test.errorbar(x, test_metrics_list[:, 2], yerr=std_test_metrics_list[:, 2], fmt='-', color=color_pool[2], label='Prec')
+    ax_test.fill_between(x, test_metrics_list[:, 2] - std_test_metrics_list[:, 2], test_metrics_list[:, 2] + std_test_metrics_list[:, 2], facecolor=color_pool[2], alpha=0.5)
+    ax_test.errorbar(x, test_metrics_list[:, 3], yerr=std_test_metrics_list[:, 3], fmt='-', color=color_pool[3], label='Rec')
+    ax_test.fill_between(x, test_metrics_list[:, 3] - std_test_metrics_list[:, 3], test_metrics_list[:, 3] + std_test_metrics_list[:, 3], facecolor=color_pool[3], alpha=0.5)
+    ax_test.legend(loc='best', fontsize='x-small', shadow=True)
+    # plt.tight_layout()
+    f_test.savefig(f"{histogram_repo}/{fig_name_test}")
+    plt.close()
+    os.chdir(f'{saving_repository}')
+
+   
 def generate_figures_best_results(directory, sous_experiment_types, cancer_name='brca', f='exp', type_of_update='inner', random_weights=False):
     """
     Utility function to plot the results for the groups method using the BEST scores return (Should rethink this probably)
@@ -888,6 +1012,7 @@ def generate_figures_best_results(directory, sous_experiment_types, cancer_name=
     fig_title_train = f'Train best metrics: Update Function:{f} {type_of_update}_groups random_weights: {random_weights}'
     fig_name_train = f'{f}_{cancer_name}_train_best_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
     f_train, ax_train = plt.subplots(nrows=1, ncols=1)
+    sns.set_style("darkgrid")
     ax_train.set_title(f"{fig_title_train}")
     ax_train.set_xlabel('c values')
     ax_train.set_ylabel('Metrics values')
@@ -905,6 +1030,7 @@ def generate_figures_best_results(directory, sous_experiment_types, cancer_name=
     fig_title_test = f'Test best metrics: {type_of_update}_groups random_weights: {random_weights}'
     fig_name_test = f'{f}_{cancer_name}_test_best_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
     f_test, ax_test = plt.subplots(nrows=1, ncols=1)
+    sns.set_style("darkgrid")
     ax_test.set_title(f"{fig_title_test}")
     ax_test.set_xlabel('c values')
     ax_test.set_ylabel('Metrics values')
@@ -935,17 +1061,18 @@ def run_plot_groups(directory, sous_experiment_types, cancer_name, f, type_of_up
             generate_figures_mean_results(directory, sous_experiment_types, cancer_name, f, type_of_update, True)
         else:
             generate_figures_mean_results(directory, sous_experiment_types, cancer_name, f, type_of_update, False)
+            generate_figures_mean_results_errorbar_error(directory, sous_experiment_types, cancer_name, f, type_of_update, False)
     if plot_best:
         if random_weights:
             generate_figures_best_results(directory, sous_experiment_types, cancer_name, f, type_of_update, True)
         else:
             generate_figures_best_results(directory, sous_experiment_types, cancer_name, f, type_of_update, False)
 
-# python experiments/experiments_utilities.py run-plot-groups --directory /home/maoss2/project/maoss2/saving_repository_article/groups_PRAD_experiments --cancer_name 'prad' --f exp --sous-experiment-types 'all' --type-of-update 'inner' --plot-mean --plot-best
-# python experiments/experiments_utilities.py run-plot-groups --directory /home/maoss2/project/maoss2/saving_repository_article/groups_PRAD_experiments --cancer_name 'prad' --f exp --sous-experiment-types 'all' --type-of-update 'outer' --plot-mean --plot-best
+# python experiments/experiments_utilities.py run-plot-groups --directory /home/maoss2/project/maoss2/saving_repository_article/groups_prad_experiments --cancer_name 'prad' --f exp --sous-experiment-types 'all' --type-of-update 'inner' --plot-mean --plot-best
+# python experiments/experiments_utilities.py run-plot-groups --directory /home/maoss2/project/maoss2/saving_repository_article/groups_prad_experiments --cancer_name 'prad' --f exp --sous-experiment-types 'all' --type-of-update 'outer' --plot-mean --plot-best
 
-# python experiments/experiments_utilities.py run-plot-groups --directory /home/maoss2/project/maoss2/saving_repository_article/groups_TN_experiments --cancer_name 'brca' --f exp --sous-experiment-types 'methyl_rna_iso_mirna_snp_clinical' --type-of-update 'inner' --plot-mean --plot-best
-# python experiments/experiments_utilities.py run-plot-groups --directory /home/maoss2/project/maoss2/saving_repository_article/groups_TN_experiments --cancer_name 'brca' --f exp --sous-experiment-types 'methyl_rna_iso_mirna_snp_clinical' --type-of-update 'outer' --plot-mean --plot-best
+# python experiments/experiments_utilities.py run-plot-groups --directory /home/maoss2/project/maoss2/saving_repository_article/groups_brca_experiments --cancer_name 'brca' --f exp --sous-experiment-types 'methyl_rna_iso_mirna_snp_clinical' --type-of-update 'inner' --plot-mean --plot-best
+# python experiments/experiments_utilities.py run-plot-groups --directory /home/maoss2/project/maoss2/saving_repository_article/groups_brca_experiments --cancer_name 'brca' --f exp --sous-experiment-types 'methyl_rna_iso_mirna_snp_clinical' --type-of-update 'outer' --plot-mean --plot-best
 ############################################################################################################################################
     
 ########################################################### Metrics Sections ################################################################
