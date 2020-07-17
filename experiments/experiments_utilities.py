@@ -592,7 +592,7 @@ def sub_repo_analysis(directory, output_text_file, recap_table_file, dictionnary
     best_feat = model_comptes[index_best_experiment_file]
     best_groups_feat = groups_features[index_best_experiment_file]
     with open(recap_table_file, 'a+') as f:
-        f.write(f"{best_file}\t{best_acc}\t{best_f1}\t{best_pre}\t{best_rec}\t{var}\t{best_groups_feat}\n")
+        f.write(f"{best_file}\t{best_acc}\t{best_f1}\t{best_pre}\t{best_rec}\t{best_feat}\t{best_groups_feat}\n")
     os.chdir(saving_repository)
     return np.round(np.mean(accuracy_test), 4), np.round(np.mean(f1_score_test), 4), \
            np.round(np.mean(precision_test), 4), np.round(np.mean(recall_test), 4), model_comptes, groups_features
