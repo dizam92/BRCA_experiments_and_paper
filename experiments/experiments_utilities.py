@@ -505,6 +505,7 @@ def sub_repo_analysis(directory, output_text_file, recap_table_file, dictionnary
                            recall_test=recall_test)
     # Find the best seed based on the F1-score (since the dataset is unbalanced)
     best_file = list_fichiers[np.argmax(f1_score_test)] # work for t=both unbalanced and balanced dataset
+    index_best_experiment_file = np.argmax(f1_score_test)
     if directory.find('dt') != -1:
         for model in features_retenus:
             temp = [el[3] for el in model[0][:3] if el[2] > 0]
@@ -584,22 +585,12 @@ def sub_repo_analysis(directory, output_text_file, recap_table_file, dictionnary
         f.write('-'*50)
         f.write('\n')
     # Write best results file of the directory to the recap file
-    d_temp = pickle.load(open(best_file, 'rb'))
-    best_acc = np.round(d_temp['metrics']['accuracy'], 4)
-    best_f1 = np.round(d_temp['metrics']['f1_score'], 4)
-    best_pre = np.round(d_temp['metrics']['precision'], 4)
-    best_rec = np.round(d_temp['metrics']['recall'], 4)
-    best_feat = d_temp['rules_str'][0]
-    if directory.find('scm') != -1: # scm and group scm
-        temp = [feature[1] for feature in best_feat]
-        best_groups_feat = [dict_pr_rules[el] for el in temp]
-        for el in temp:
-            var += '&{}'.format(el)
-    else: #dt and rf
-        temp = [feature[3] for feature in best_feat[:3] if feature[2] > 0]
-        best_groups_feat = [dict_pr_rules[el] for el in temp]
-        for el in temp:
-            var += '&{}'.format(el) 
+    best_acc = np.round(accuracy_test[index_best_experiment_file], 4)
+    best_f1 = np.round(f1_score_test[index_best_experiment_file], 4)
+    best_pre = np.round(precision_test[index_best_experiment_file], 4)
+    best_rec = np.round(recall_test[index_best_experiment_file], 4)
+    best_feat = model_comptes[index_best_experiment_file]
+    best_groups_feat = groups_features[index_best_experiment_file]
     with open(recap_table_file, 'a+') as f:
         f.write(f"{best_file}\t{best_acc}\t{best_f1}\t{best_pre}\t{best_rec}\t{var}\t{best_groups_feat}\n")
     os.chdir(saving_repository)
