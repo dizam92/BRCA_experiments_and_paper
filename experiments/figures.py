@@ -27,7 +27,7 @@ def plot_stats_on_biogrid_distribution(dictionnaire, fig_name='biogrid_inner_gen
         plt.plot(x, y, 'bo')
         plt.xlabel('Groups(Pathways): collection of genes intereacting with each other')
         plt.ylabel('Number of elements(genes) in each pathways') 
-        plt.savefig(f"{saving_repo}/{fig_name}")
+        plt.savefig(f"{histogram_repo}/{fig_name}")
         plt.close()
     if type(dico) == dict:
         y = [len(v) for k, v in dico.items()]
@@ -36,7 +36,7 @@ def plot_stats_on_biogrid_distribution(dictionnaire, fig_name='biogrid_inner_gen
         plt.xlabel('Features')
         plt.ylabel('Number of pathways a feature is linked to') 
         plt.savefig(fig_name)
-        plt.savefig(f"{saving_repo}/{fig_name}")
+        plt.savefig(f"{histogram_repo}/{fig_name}")
         plt.close()
         
 
@@ -114,7 +114,7 @@ def boxplot_figures(data, return_views, cancer_name, algo_used, features_cibles,
 def run_box_plot_fig(data, sous_experiment_types, cancer_name, algo_used, saving_repo, target_features):
     boxplot_figures(data=data, return_views=sous_experiment_types, cancer_name=cancer_name, algo_used=algo_used, 
                     features_cibles=target_features.split(), saving_repo=saving_repo)
-    if cancer_name == 'brca'
+    if cancer_name == 'brca':
         plot_stats_on_biogrid_distribution(dictionnaire=brca_dictionnary_for_prior_rules, fig_name='brca_biogrid_inner_genes_distribution.png')
     else:
         plot_stats_on_biogrid_distribution(dictionnaire=prad_dictionnary_for_prior_rules, fig_name='prad_biogrid_inner_genes_distribution.png')
@@ -122,7 +122,7 @@ def run_box_plot_fig(data, sous_experiment_types, cancer_name, algo_used, saving
 if __name__ == "__main__":
     cli()
     
-# python experiments/figures.py run-box-plot-fig --data /home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/triple_neg_new_labels_unbalanced_cpg_rna_rna_iso_mirna.h5 --sous-experiment-types 'methyl_rna_iso_mirna_snp_clinical' --cancer_name 'brca' --algo-used group_scm --target-features 'cg00347904_SCUBE3 cg20261915_GLP2R uc002acg.3_KIAA1370 cg20556988_CCL1 cg14620221_OR8B8 uc001xqa.2_LTBP2'
+# python experiments/figures.py run-box-plot-fig --data /home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/triple_neg_new_labels_unbalanced_cpg_rna_rna_iso_mirna.h5 --sous-experiment-types 'methyl_rna_iso_mirna_snp_clinical' --cancer-name 'brca' --algo-used group_scm --target-features 'cg00347904_SCUBE3 cg20261915_GLP2R uc002acg.3_KIAA1370 cg20556988_CCL1 cg14620221_OR8B8 uc001xqa.2_LTBP2'
 
-# python experiments/figures.py run-box-plot-fig --data /home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/prad_cancer_metastase_vs_non_metastase.h5 --sous-experiment-types 'all' --cancer_name 'prad' --algo-used group_scm --target-features 'mrna_LRIT1 mrna_SUN3 mrna_AGMO mrna_TMEM71'
+# python experiments/figures.py run-box-plot-fig --data /home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/prad_cancer_metastase_vs_non_metastase.h5 --sous-experiment-types 'all' --cancer-name 'prad' --algo-used group_scm --target-features 'mrna_LRIT1 mrna_SUN3 mrna_AGMO mrna_TMEM71'
    
