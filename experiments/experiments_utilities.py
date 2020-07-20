@@ -874,10 +874,10 @@ def generate_figures_mean_results(directory, sous_experiment_types, cancer_name=
     ax_train.set_xlabel('c values')
     ax_train.set_ylabel('Metrics values')
     # ax.set_ylim(-0.1, 1.2)
-    ax_train.plot(x, train_metrics_list[:, 0], 'bo-', label='Acc', linewidth=2)
-    ax_train.plot(x, train_metrics_list[:, 1], 'ro-', label='F1 ', linewidth=2)
-    ax_train.plot(x, train_metrics_list[:, 2], 'go-', label='Prec', linewidth=2)
-    ax_train.plot(x, train_metrics_list[:, 3], 'ko-', label='Rec', linewidth=2)
+    ax_train.plot(x, train_metrics_list[:, 0], 'o-', color=color_pool[0], label='Acc', linewidth=2)
+    ax_train.plot(x, train_metrics_list[:, 1], 'o-', color=color_pool[1], label='F1 ', linewidth=2)
+    ax_train.plot(x, train_metrics_list[:, 2], 'o-', color=color_pool[2], label='Prec', linewidth=2)
+    ax_train.plot(x, train_metrics_list[:, 3], 'o-', color=color_pool[3], label='Rec', linewidth=2)
     ax_train.legend()
     plt.tight_layout()
     f_train.savefig(f"{histogram_repo}/{fig_name_train}")
@@ -892,10 +892,10 @@ def generate_figures_mean_results(directory, sous_experiment_types, cancer_name=
     ax_test.set_xlabel('c values')
     ax_test.set_ylabel('Metrics values')
     # ax.set_ylim(-0.1, 1.2)
-    ax_test.plot(x, test_metrics_list[:, 0], 'bo-', label='Acc', linewidth=2)
-    ax_test.plot(x, test_metrics_list[:, 1], 'ro-', label='F1 ', linewidth=2)
-    ax_test.plot(x, test_metrics_list[:, 2], 'go-', label='Prec', linewidth=2)
-    ax_test.plot(x, test_metrics_list[:, 3], 'ko-', label='Rec', linewidth=2)
+    ax_test.plot(x, test_metrics_list[:, 0], 'o-', color=color_pool[0], label='Acc', linewidth=2)
+    ax_test.plot(x, test_metrics_list[:, 1], 'o-', color=color_pool[1], label='F1 ', linewidth=2)
+    ax_test.plot(x, test_metrics_list[:, 2], 'o-', color=color_pool[2], label='Prec', linewidth=2)
+    ax_test.plot(x, test_metrics_list[:, 3], 'o-', color=color_pool[3], label='Rec', linewidth=2)
     ax_test.legend()
     plt.tight_layout()
     f_test.savefig(f"{histogram_repo}/{fig_name_test}")
@@ -1008,10 +1008,10 @@ def generate_figures_best_results(directory, sous_experiment_types, cancer_name=
     ax_train.set_xlabel('c values')
     ax_train.set_ylabel('Metrics values')
     # ax.set_ylim(-0.1, 1.2)
-    ax_train.plot(x, train_metrics_list[:, 0], 'bo-', label='Acc', linewidth=2)
-    ax_train.plot(x, train_metrics_list[:, 1], 'ro-', label='F1 ', linewidth=2)
-    ax_train.plot(x, train_metrics_list[:, 2], 'go-', label='Prec', linewidth=2)
-    ax_train.plot(x, train_metrics_list[:, 3], 'ko-', label='Rec', linewidth=2)
+    ax_train.plot(x, train_metrics_list[:, 0], 'o-', color=color_pool[0], label='Acc', linewidth=2)
+    ax_train.plot(x, train_metrics_list[:, 1], 'o-', color=color_pool[1], label='F1 ', linewidth=2)
+    ax_train.plot(x, train_metrics_list[:, 2], 'o-', color=color_pool[2], label='Prec', linewidth=2)
+    ax_train.plot(x, train_metrics_list[:, 3], 'o-', color=color_pool[3], label='Rec', linewidth=2)
     ax_train.legend()
     plt.tight_layout()
     f_train.savefig(f"{histogram_repo}/{fig_name_train}")
@@ -1026,10 +1026,10 @@ def generate_figures_best_results(directory, sous_experiment_types, cancer_name=
     ax_test.set_xlabel('c values')
     ax_test.set_ylabel('Metrics values')
     # ax.set_ylim(-0.1, 1.2)
-    ax_test.plot(x, test_metrics_list[:, 0], 'bo-', label='Acc', linewidth=2)
-    ax_test.plot(x, test_metrics_list[:, 1], 'ro-', label='F1 ', linewidth=2)
-    ax_test.plot(x, test_metrics_list[:, 2], 'go-', label='Prec', linewidth=2)
-    ax_test.plot(x, test_metrics_list[:, 3], 'ko-', label='Rec', linewidth=2)
+    ax_test.plot(x, test_metrics_list[:, 0], 'o-', color=color_pool[0], label='Acc', linewidth=2)
+    ax_test.plot(x, test_metrics_list[:, 1], 'o-', color=color_pool[1], label='F1 ', linewidth=2)
+    ax_test.plot(x, test_metrics_list[:, 2], 'o-', color=color_pool[2], label='Prec', linewidth=2)
+    ax_test.plot(x, test_metrics_list[:, 3], 'o-', color=color_pool[3], label='Rec', linewidth=2)
     ax_test.legend()
     plt.tight_layout()
     f_test.savefig(f"{histogram_repo}/{fig_name_test}")
@@ -1040,7 +1040,7 @@ def generate_figures_best_results(directory, sous_experiment_types, cancer_name=
 @cli.command(help="Run the analysis results")
 @click.option('--directory', type=str, default=None, help="""results path""")
 @click.option('--sous-experiment-types', type=str, default='all', help="""name of experiment in results_views""")
-@click.option('--cancer_name', type=str, default='brca', help="""cancer name""")
+@click.option('--cancer-name', type=str, default='brca', help="""cancer name""")
 @click.option('--f', type=str, default='exp', help="""cancer name""")
 @click.option('--type-of-update', type=str, default='inner', help="""update type""")
 @click.option('--random-weights/--no-random-weights', default=False, help="""random-weights generate or not""")
@@ -1059,11 +1059,11 @@ def run_plot_groups(directory, sous_experiment_types, cancer_name, f, type_of_up
         else:
             generate_figures_best_results(directory, sous_experiment_types, cancer_name, f, type_of_update, False)
 
-# python experiments/experiments_utilities.py run-plot-groups --directory /home/maoss2/project/maoss2/saving_repository_article/groups_prad_experiments --cancer_name 'prad' --f exp --sous-experiment-types 'all' --type-of-update 'inner' --plot-mean --plot-best
-# python experiments/experiments_utilities.py run-plot-groups --directory /home/maoss2/project/maoss2/saving_repository_article/groups_prad_experiments --cancer_name 'prad' --f exp --sous-experiment-types 'all' --type-of-update 'outer' --plot-mean --plot-best
+# python experiments/experiments_utilities.py run-plot-groups --directory /home/maoss2/project/maoss2/saving_repository_article/groups_prad_experiments --cancer-name 'prad' --f exp --sous-experiment-types 'all' --type-of-update 'inner' --plot-mean --plot-best
+# python experiments/experiments_utilities.py run-plot-groups --directory /home/maoss2/project/maoss2/saving_repository_article/groups_prad_experiments --cancer-name 'prad' --f exp --sous-experiment-types 'all' --type-of-update 'outer' --plot-mean --plot-best
 
-# python experiments/experiments_utilities.py run-plot-groups --directory /home/maoss2/project/maoss2/saving_repository_article/groups_brca_experiments --cancer_name 'brca' --f exp --sous-experiment-types 'methyl_rna_iso_mirna_snp_clinical' --type-of-update 'inner' --plot-mean --plot-best
-# python experiments/experiments_utilities.py run-plot-groups --directory /home/maoss2/project/maoss2/saving_repository_article/groups_brca_experiments --cancer_name 'brca' --f exp --sous-experiment-types 'methyl_rna_iso_mirna_snp_clinical' --type-of-update 'outer' --plot-mean --plot-best
+# python experiments/experiments_utilities.py run-plot-groups --directory /home/maoss2/project/maoss2/saving_repository_article/groups_brca_experiments --cancer-name 'brca' --f exp --sous-experiment-types 'methyl_rna_iso_mirna_snp_clinical' --type-of-update 'inner' --plot-mean --plot-best
+# python experiments/experiments_utilities.py run-plot-groups --directory /home/maoss2/project/maoss2/saving_repository_article/groups_brca_experiments --cancer-name 'brca' --f exp --sous-experiment-types 'methyl_rna_iso_mirna_snp_clinical' --type-of-update 'outer' --plot-mean --plot-best
 ############################################################################################################################################
     
 ########################################################### Metrics Sections ################################################################
