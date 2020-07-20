@@ -92,15 +92,15 @@ def boxplot_figures(data, return_views, cancer_name, algo_used, features_cibles,
                     arrowprops=dict(arrowstyle="-", ec='#aaaaaa', connectionstyle="bar,fraction=0.2"))
         ax.text(1.5, y_max + abs(y_max - y_min) * 0.1, stars(p_value), horizontalalignment='center', verticalalignment='center')
 
-        # plt.xlabel(f'Positives                                               Negatives')
-        plt.xlabel(f'Positives\t\t\t\t\t\t\t\t\t\t\t\tNegatives')
+        plt.xlabel(f'Positives                                               Negatives')
+        # plt.xlabel(f'Positives\t\t\t\t\t\t\t\t\t\t\t\tNegatives')
         plt.ylabel(f'{feat[1]}')
         # plt.boxplot(data=data)
         feat_name = feat[1].replace('.', '')
         feat_name = feat_name.replace('_', '')
         fig_name = f'{feat_name}_{algo_used}_{cancer_name}'
         plt.tight_layout()
-        fig.savefig(f"{saving_repo}/{fig_name}_BoxPlots.pdf")
+        fig.savefig(f"{saving_repo}/{fig_name}_BoxPlots.png")
         plt.close()
 
 
@@ -111,9 +111,9 @@ def boxplot_figures(data, return_views, cancer_name, algo_used, features_cibles,
 @click.option('--algo-used', type=str, default='scm', help="""name of the algo used""")
 @click.option('--target-features', type=str, default='dt scm rf', help="""list of feature to bocplot figure""")
 @click.option('--output', type=str, default=histogram_repo, help="""saving repo path""")
-def run_box_plot_fig(data, sous_experiment_types, cancer_name, algo_used, saving_repo, target_features):
+def run_box_plot_fig(data, sous_experiment_types, cancer_name, algo_used, output, target_features):
     boxplot_figures(data=data, return_views=sous_experiment_types, cancer_name=cancer_name, algo_used=algo_used, 
-                    features_cibles=target_features.split(), saving_repo=saving_repo)
+                    features_cibles=target_features.split(), saving_repo=output)
     if cancer_name == 'brca':
         plot_stats_on_biogrid_distribution(dictionnaire=brca_dictionnary_for_prior_rules, fig_name='brca_biogrid_inner_genes_distribution.png')
     else:
