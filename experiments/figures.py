@@ -149,7 +149,7 @@ def add_boxplot_figures(data, return_views, cancer_name, algo_used, features_cib
     for feat in features_cibles_index[1:]: # on va du 2eme element vu qu'on a déja recuperer le 1er plus haut
         data_positif += x_patients_positifs[:, feat[0]]
         data_negatif += x_patients_negatifs[:, feat[0]]
-        feat_name += '|{feat[1]}'
+        feat_name += f'|{feat[1]}'
     z, p = scipy.stats.mannwhitneyu(data_positif, data_negatif)
     p_value = p * 2
     y_max = np.max(np.concatenate((data_positif, data_negatif)))
@@ -164,9 +164,7 @@ def add_boxplot_figures(data, return_views, cancer_name, algo_used, features_cib
     ax.text(1.5, y_max + abs(y_max - y_min) * 0.1, stars(p_value), horizontalalignment='center', verticalalignment='center')
 
     plt.xlabel(f'Positives                                               Negatives')
-    # plt.xlabel(f'Positives\t\t\t\t\t\t\t\t\t\t\t\tNegatives')
     plt.ylabel(f'{feat[1]}')
-    # plt.boxplot(data=data)
     feat_name = feat_name.replace('_', '')
     fig_name = f'{feat_name}_{algo_used}_{cancer_name}'
     plt.tight_layout()
