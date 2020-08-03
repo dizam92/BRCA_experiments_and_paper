@@ -7,7 +7,7 @@
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-type=END
 #SBATCH --mail-type=FAIL
-#SBATCH --time=00:45:00
+#SBATCH --time=00:15:00
 #SBATCH --output=/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/dispatch_folder/dispatch_analysis.out
 
 # remove all the files so far
