@@ -7,7 +7,7 @@
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-type=END
 #SBATCH --mail-type=FAIL
-#SBATCH --time=00:15:00
+#SBATCH --time=00:20:00
 #SBATCH --output=/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/dispatch_folder/dispatch_analysis.out
 
 # remove all the files so far
@@ -43,9 +43,28 @@ python experiments/experiments_utilities.py run-plot-groups --directory /home/ma
 python experiments/figures.py run-box-plot-fig --data /home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/triple_neg_new_labels_unbalanced_cpg_rna_rna_iso_mirna.h5 --sous-experiment-types 'methyl_rna_iso_mirna_snp_clinical' --cancer-name 'brca' --algo-used 'group_scm' --target-features 'cg00347904_SCUBE3 cg20261915_GLP2R uc002acg.3_KIAA1370 cg20556988_CCL1 cg14620221_OR8B8 uc001xqa.2_LTBP2'
 python experiments/figures.py run-box-plot-fig --data /home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/prad_cancer_metastase_vs_non_metastase.h5 --sous-experiment-types 'all' --cancer-name 'prad' --algo-used 'group_scm' --target-features 'mrna_LRIT1 mrna_SUN3 mrna_AGMO mrna_TMEM71'
 
+# BoxPlots Groups SCM Features: ADD features 2 and more
+python experiments/figures.py run-add-box-plot-fig --data /home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/triple_neg_new_labels_unbalanced_cpg_rna_rna_iso_mirna.h5 --sous-experiment-types 'methyl_rna_iso_mirna_snp_clinical' --cancer-name 'brca' --algo-used group_scm --target-features 'cg00347904_SCUBE3 cg20261915_GLP2R'
+python experiments/figures.py run-add-box-plot-fig --data /home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/triple_neg_new_labels_unbalanced_cpg_rna_rna_iso_mirna.h5 --sous-experiment-types 'methyl_rna_iso_mirna_snp_clinical' --cancer-name 'brca' --algo-used group_scm --target-features 'cg00347904_SCUBE3 cg20261915_GLP2R uc002acg.3_KIAA1370'
+python experiments/figures.py run-add-box-plot-fig --data /home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/triple_neg_new_labels_unbalanced_cpg_rna_rna_iso_mirna.h5 --sous-experiment-types 'methyl_rna_iso_mirna_snp_clinical' --cancer-name 'brca' --algo-used group_scm --target-features 'cg00347904_SCUBE3 cg20261915_GLP2R uc002acg.3_KIAA1370 cg20556988_CCL1'
+python experiments/figures.py run-add-box-plot-fig --data /home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/triple_neg_new_labels_unbalanced_cpg_rna_rna_iso_mirna.h5 --sous-experiment-types 'methyl_rna_iso_mirna_snp_clinical' --cancer-name 'brca' --algo-used group_scm --target-features 'cg00347904_SCUBE3 cg20261915_GLP2R uc002acg.3_KIAA1370 cg20556988_CCL1 cg14620221_OR8B8'
+python experiments/figures.py run-add-box-plot-fig --data /home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/triple_neg_new_labels_unbalanced_cpg_rna_rna_iso_mirna.h5 --sous-experiment-types 'methyl_rna_iso_mirna_snp_clinical' --cancer-name 'brca' --algo-used group_scm --target-features 'cg00347904_SCUBE3 cg20261915_GLP2R uc002acg.3_KIAA1370 cg20556988_CCL1 cg14620221_OR8B8 uc001xqa.2_LTBP2'
+
+python experiments/figures.py run-add-box-plot-fig --data /home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/prad_cancer_metastase_vs_non_metastase.h5 --sous-experiment-types 'all' --cancer-name 'prad' --algo-used group_scm --target-features 'mrna_LRIT1 mrna_SUN3'
+python experiments/figures.py run-add-box-plot-fig --data /home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/prad_cancer_metastase_vs_non_metastase.h5 --sous-experiment-types 'all' --cancer-name 'prad' --algo-used group_scm --target-features 'mrna_LRIT1 mrna_SUN3 mrna_AGMO'
+python experiments/figures.py run-add-box-plot-fig --data /home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/prad_cancer_metastase_vs_non_metastase.h5 --sous-experiment-types 'all' --cancer-name 'prad' --algo-used group_scm --target-features 'mrna_LRIT1 mrna_SUN3 mrna_AGMO mrna_TMEM71'
+
 # BoxPlots SCM Features
 python experiments/figures.py run-box-plot-fig --data /home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/triple_neg_new_labels_unbalanced_cpg_rna_rna_iso_mirna.h5 --sous-experiment-types 'methyl_rna_iso_mirna_snp_clinical' --cancer-name 'brca' --algo-used 'scm' --target-features 'uc002vwt.2_MLPH uc002hul.3_RARA'
 python experiments/figures.py run-box-plot-fig --data /home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/prad_cancer_metastase_vs_non_metastase.h5 --sous-experiment-types 'all' --cancer-name 'prad' --algo-used 'scm' --target-features 'mrna_PSKH2 mrna_GABRB1 mrna_ZP2 mrna_HOXB9'
+
+# BoxPlots SCM Features: ADD features 2 and more
+python experiments/figures.py run-add-box-plot-fig --data /home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/triple_neg_new_labels_unbalanced_cpg_rna_rna_iso_mirna.h5 --sous-experiment-types 'methyl_rna_iso_mirna_snp_clinical' --cancer-name 'brca' --algo-used scm --target-features 'uc002vwt.2_MLPH uc002hul.3_RARA'
+
+python experiments/figures.py run-add-box-plot-fig --data /home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/prad_cancer_metastase_vs_non_metastase.h5 --sous-experiment-types 'all' --cancer-name 'prad' --algo-used scm --target-features 'mrna_PSKH2 mrna_GABRB1'
+python experiments/figures.py run-add-box-plot-fig --data /home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/prad_cancer_metastase_vs_non_metastase.h5 --sous-experiment-types 'all' --cancer-name 'prad' --algo-used scm --target-features 'mrna_PSKH2 mrna_GABRB1 mrna_ZP2'
+python experiments/figures.py run-add-box-plot-fig --data /home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/prad_cancer_metastase_vs_non_metastase.h5 --sous-experiment-types 'all' --cancer-name 'prad' --algo-used scm --target-features 'mrna_PSKH2 mrna_GABRB1 mrna_ZP2 mrna_HOXB9'
+
 
 # BoxPlots DT Features
 python experiments/figures.py run-box-plot-fig --data /home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/triple_neg_new_labels_unbalanced_cpg_rna_rna_iso_mirna.h5 --sous-experiment-types 'methyl_rna_iso_mirna_snp_clinical' --cancer-name 'brca' --algo-used 'dt' --target-features 'uc002vwt.2_MLPH cg26377677_FURIN uc003aed.2_XBP1'
