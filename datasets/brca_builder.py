@@ -318,17 +318,22 @@ def build_brca_dataset_for_graalpy(dataset='',
     features_inexistant = [el.split('_')[0] for el in features_names_rna_isoforms_linked if el.find('INEXISTANT') != -1]
     features_inexistant_idx = [idx for idx, el in enumerate(features_names_rna_isoforms_linked) if el.find('INEXISTANT') != -1]
     d_second_genes_file = pd.read_csv('/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/files_to_build_datasets/hg19.geneSymbolMap.txt', sep='\t')
-    second_methyl_file_features_isoforms = d_second_genes_file['isoforms'].values
-    second_methyl_file_genes = d_second_genes_file['genes_names'].values
-    idx_position = [np.where(second_methyl_file_features_isoforms==el)[0][0] if el in second_methyl_file_features_isoforms else 500000 for el in features_inexistant] 
+    second_rna_file_features_isoforms = d_second_genes_file['isoforms'].values
+    second_rna_file_genes = d_second_genes_file['genes_names'].values
+    idx_position = [np.where(second_rna_file_features_isoforms==el)[0][0] if el in second_rna_file_features_isoforms else 500000 for el in features_inexistant] 
     # len(idx_position) == 6229
     # au total on a encore 4299 inexistant huh
     # np.where(np.asarray(idx_position)==500000)[0].shape (4299,)
-    second_methyl_file_genes_names = [second_methyl_file_genes[idx] if idx != 500000 else 'INEXISTANT' for idx in idx_position]
-    new_isoforms_names = [f'{el}_{second_methyl_file_genes_names[idx]}' for idx, el in enumerate(features_inexistant)] 
+    second_rna_file_genes_names = [second_rna_file_genes[idx] if idx != 500000 else 'INEXISTANT' for idx in idx_position]   
+    d_third_genes_file = pd.read_csv('/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/files_to_build_datasets/hg18_knowngene_matching.txt', sep='\t')
+    d_third_genes_file = d_third_genes_file.dropna()
+    third_rna_file_features_isoforms = d_third_genes_file['#name'].values
+    third_rna_file_genes = d_third_genes_file['proteinID'].values
+    idx_position = [np.where(third_rna_file_features_isoforms==el)[0][0] if el in third_rna_file_features_isoforms else 500000 for el in features_inexistant] 
+    third_rna_file_genes_names = [third_rna_file_genes[idx] if idx != 500000 else 'INEXISTANT' for idx in idx_position]
+    new_isoforms_names = [f'{el}_{second_rna_file_genes_names[idx]}' if el != 'INEXISTANT' else f'{el}_{third_rna_file_genes_names[idx]}' for idx, el in enumerate(features_inexistant)]
     features_names_rna_isoforms_linked = np.asarray(features_names_rna_isoforms_linked)
     features_names_rna_isoforms_linked[features_inexistant_idx] = new_isoforms_names
-    # Pour les 4299 restant j'ai pas pu trouvé et ca me prends trop de temps du coup je vais skip et esperer que mon mad selection facilite l'affaire :) 
     try:
         x_snps = data['snp/block0_values'][()]
         features_names_snps = data['snp/block0_items'][()]
@@ -428,42 +433,42 @@ def select_features_based_on_mad(x, axe=0, nb_features=5000):
 def main_brca_dataset_builder():
     label_file = new_label_file
     balanced = False
-    for boolean in [True, False]:
-        for mad_selection in [True, False]:
-            brca_builder = BuildBrcaDatasets(cancer_name='BRCA',
-                                             label_file=label_file,
-                                             methyl_path_450=project_path_on_is2 + "BRCA/brca_methylome/DNA_Methylation/JHU_USC__HumanMethylation450/Level_3",
-                                             methyl_path_27=project_path_on_is2 + "BRCA/brca_methylome/DNA_Methylation/JHU_USC__HumanMethylation27/Level_3",
-                                             rnaseq_path=project_path_on_is2 + "BRCA/brca_rnaseq/RNASeqV2/UNC__IlluminaHiSeq_RNASeqV2/Level_3",
-                                             snps_path=project_path_on_is2 + "BRCA/brca_exome/Somatic_Mutations/WUSM__IlluminaGA_DNASeq_curated/Level_2/genome.wustl.edu__IlluminaGA_curated_DNA_sequencing_level2.maf",
-                                             mirna_file=project_path_on_is2 + "BRCA/brca_mirna/miRNASeq/BCGSC__IlluminaHiSeq_miRNASeq/Level_3")
-            brca_builder.combine_dataset(file_name='BRCA_triple_neg_new_labels',
-                                         methyl_450_file=methyl_450_file,
-                                         methyl_27_file=methyl_27_file,
-                                         rnaseq_genes_file=rnaseq_genes_file,
-                                         rnaseq_isoforms_file=rnaseq_isoforms_file,
-                                         snp_file=snp_file,
-                                         mirna_file=mirna_file,
-                                         clinical_file=new_clinical_file,
-                                         balanced_dataset=balanced,
-                                         methyl_rna_mirna_snp=boolean,
-                                         feature_mad_selection=mad_selection)
-            if boolean is True:
-                if mad_selection is True:
-                    dataset_name = 'BRCA_triple_neg_new_labels_unbalanced_all_views.h5'
-                    final_dataset_name = 'triple_neg_new_labels_unbalanced_all_views'
-                else:
-                    dataset_name = 'BRCA_triple_neg_new_labels_unbalanced_all_views_complet.h5'
-                    final_dataset_name = 'triple_neg_new_labels_unbalanced_all_views_complet'   
-            else:
-                if mad_selection is True:
-                    dataset_name = 'BRCA_triple_neg_new_labels_unbalanced_cpg_rna_rna_iso_mirna.h5'
-                    final_dataset_name = 'triple_neg_new_labels_unbalanced_cpg_rna_rna_iso_mirna'
-                else:
-                    dataset_name = 'BRCA_triple_neg_new_labels_unbalanced_cpg_rna_rna_iso_mirna_complet.h5'
-                    final_dataset_name = 'triple_neg_new_labels_unbalanced_cpg_rna_rna_iso_mirna_complet'   
-                    
-            build_brca_dataset_for_graalpy(dataset=dataset_name, name=final_dataset_name, feature_mad_selection=mad_selection)
+    boolean = False # on veut juste cpg/rna/rnaiso/mirna
+    mad_selection = False # On va deplacer le madselection dans le loader vu qu'on veut eliminer les inexistant et autres 
+    brca_builder = BuildBrcaDatasets(cancer_name='BRCA',
+                                        label_file=label_file,
+                                        methyl_path_450=project_path_on_is2 + "BRCA/brca_methylome/DNA_Methylation/JHU_USC__HumanMethylation450/Level_3",
+                                        methyl_path_27=project_path_on_is2 + "BRCA/brca_methylome/DNA_Methylation/JHU_USC__HumanMethylation27/Level_3",
+                                        rnaseq_path=project_path_on_is2 + "BRCA/brca_rnaseq/RNASeqV2/UNC__IlluminaHiSeq_RNASeqV2/Level_3",
+                                        snps_path=project_path_on_is2 + "BRCA/brca_exome/Somatic_Mutations/WUSM__IlluminaGA_DNASeq_curated/Level_2/genome.wustl.edu__IlluminaGA_curated_DNA_sequencing_level2.maf",
+                                        mirna_file=project_path_on_is2 + "BRCA/brca_mirna/miRNASeq/BCGSC__IlluminaHiSeq_miRNASeq/Level_3")
+    brca_builder.combine_dataset(file_name='BRCA_triple_neg_new_labels',
+                                    methyl_450_file=methyl_450_file,
+                                    methyl_27_file=methyl_27_file,
+                                    rnaseq_genes_file=rnaseq_genes_file,
+                                    rnaseq_isoforms_file=rnaseq_isoforms_file,
+                                    snp_file=snp_file,
+                                    mirna_file=mirna_file,
+                                    clinical_file=new_clinical_file,
+                                    balanced_dataset=balanced,
+                                    methyl_rna_mirna_snp=boolean,
+                                    feature_mad_selection=mad_selection)
+    if boolean is True:
+        if mad_selection is True:
+            dataset_name = 'BRCA_triple_neg_new_labels_unbalanced_all_views.h5'
+            final_dataset_name = 'triple_neg_new_labels_unbalanced_all_views'
+        else:
+            dataset_name = 'BRCA_triple_neg_new_labels_unbalanced_all_views_complet.h5'
+            final_dataset_name = 'triple_neg_new_labels_unbalanced_all_views_complet'   
+    else:
+        if mad_selection is True:
+            dataset_name = 'BRCA_triple_neg_new_labels_unbalanced_cpg_rna_rna_iso_mirna.h5'
+            final_dataset_name = 'triple_neg_new_labels_unbalanced_cpg_rna_rna_iso_mirna'
+        else:
+            dataset_name = 'BRCA_triple_neg_new_labels_unbalanced_cpg_rna_rna_iso_mirna_complet.h5'
+            final_dataset_name = 'triple_neg_new_labels_unbalanced_cpg_rna_rna_iso_mirna_complet'   
+            
+    build_brca_dataset_for_graalpy(dataset=dataset_name, name=final_dataset_name, feature_mad_selection=mad_selection)
 
 if __name__ == '__main__':
     main_brca_dataset_builder()

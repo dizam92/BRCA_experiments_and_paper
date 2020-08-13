@@ -43,15 +43,15 @@ def plot_stats_on_biogrid_distribution(dictionnaire, fig_name='biogrid_inner_gen
 def stars(p):
     """ Small function find on the internet to plot the importance of the p value """
     if p < 0.0001:
-        return "****"
+        return "0.0001" # tres tres tres significatif
     elif p < 0.001:
-        return "***"
+        return "0.001" # tres tres significatif
     elif p < 0.01:
-        return "**"
+        return "0.01" # tres significatif
     elif p < 0.05:
-        return "*"
+        return "0.05" # significatif
     else:
-        return "-"
+        return "-" # pas significatif
     
 
 def boxplot_figures(data, return_views, cancer_name, algo_used, features_cibles, saving_repo):
@@ -164,7 +164,7 @@ def add_boxplot_figures(data, return_views, cancer_name, algo_used, features_cib
     ax.text(1.5, y_max + abs(y_max - y_min) * 0.1, stars(p_value), horizontalalignment='center', verticalalignment='center')
 
     plt.xlabel(f'Positives                                               Negatives')
-    plt.ylabel(f'{feat_name}')
+    plt.ylabel('features')
     feat_name = feat_name.replace('_', '')
     fig_name = f'{feat_name}_{algo_used}_{cancer_name}'
     plt.tight_layout()
