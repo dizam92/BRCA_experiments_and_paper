@@ -536,30 +536,25 @@ def new_function():
     
     rna_features_original = list(features_rna_to_index.keys())
     rna_features = [el.split('|')[0] for el in rna_features_original]
+    iso_features_original = list(features_iso_to_index.keys())
+    iso_features = [el.split('_')[-1] for el in iso_features_original]
+    
+    cg_features_original = list(features_cg_to_index.keys())
+    cg_features = [el.split('_')[-1] for el in cg_features_original]
+    
     for pos, gene in enumerate(rna_features):
         for pathway_list_pos, pathway_list in enumerate(all_pathways_list_biogrid_canonical):
             if gene in pathway_list:
                 dico_results[rna_features_original[pos]].append(groups_idx_all_pathways_list_biogrid_canonical[pathway_list_pos])
-                
-    iso_features_original = list(features_iso_to_index.keys())
-    iso_features = [el.split('_')[-1] for el in iso_features_original]
-    for pos, gene in enumerate(iso_features):
-        for pathway_list_pos, pathway_list in enumerate(all_pathways_list_biogrid_canonical):
-            if gene in pathway_list:
+            if iso_features[pos] in pathway_list:
                 dico_results[iso_features_original[pos]].append(groups_idx_all_pathways_list_biogrid_canonical[pathway_list_pos])
-    
-    cg_features_original = list(features_cg_to_index.keys())
-    cg_features = [el.split('_')[-1] for el in cg_features_original]
-    for pos, gene in enumerate(cg_features):
-        if gene.find(';') != -1:
-            genes = gene.split(';')
-            for g in genes:
-                for pathway_list_pos, pathway_list in enumerate(all_pathways_list_biogrid_canonical):
+            if cg_features[pos].find(';') != -1:
+                genes = cg_features[pos].split(';')
+                for g in genes:
                     if g in pathway_list:
                         dico_results[cg_features_original[pos]].append(groups_idx_all_pathways_list_biogrid_canonical[pathway_list_pos])
-        else:
-            for pathway_list_pos, pathway_list in enumerate(all_pathways_list_biogrid_canonical):
-                if gene in pathway_list:
+            if cg_features[pos].find(';') == -1:
+                if cg_features[pos] in pathway_list:
                     dico_results[cg_features_original[pos]].append(groups_idx_all_pathways_list_biogrid_canonical[pathway_list_pos])
 
     features_not_in_any_pathway = []
@@ -570,7 +565,9 @@ def new_function():
      
     with open(f'{data_repository}/groups2genes_biogrid_msigDB.pck', 'wb') as f: # Dict: {'G_number': []} # 
         dict_results = {el: all_pathways_list[idx] for idx, el in enumerate(groups_idx)}
-        pickle.dump(dict_results, f)        
+        pickle.dump(dict_results, f)
+    with open(f'{data_repository}/featuresNotInAnyPathways.pck', 'wb') as f:
+        pickle.dump(features_not_in_any_pathway, f)    
     with open(f'{data_repository}/{output_file_name}', 'wb') as f:
         pickle.dump(dico_results, f)
              
