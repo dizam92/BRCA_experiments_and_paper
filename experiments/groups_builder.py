@@ -473,9 +473,28 @@ def load_canonical_pathways():
     with open(f'{data_repository}/canonical_pathways_biocarta_kegg_pid_reactome_genes_set.pck', 'wb') as f:
         pickle.dump(dico_cp, f)
     return dico_cp 
-
-def new_function():
+         
     
+def build_dictionnary_groups(data_path=data_to_extract_features_from, return_views='all', output_file_name=''):
+    """
+    Utility function to build pathway file of the groups to be loaded in LearnFromBiogridGroup
+    The pathway will be stored in pickle file
+    Major change: gene.lower() is no longer. Idk why i was using it but it is not doing what it supposed to do
+    genes_in_dataset: 6311
+    genes_in_biogrid_pathways: 78397
+    genes_in_common: 5940
+    Du coup on a environ: 371 features (genes) a ne pas considérer car appartenant à inexistant group. Pour l'instant je vais
+    construire le dico avec eux et aller ensuite voir dans reactome s'ils y sont. 
+    Aussi je peux trouver les miRNA quel genes ils influencent avec msigDB.
+    Maintenant la question est: est-ce qu'on mélange les BD? Clairement va falloir utliser msigDB pour les miRNA... 
+    maintenant est-ce que réactome et biogrid speak the same language? 
+    Args:
+        data_path: str, data path
+        return_views: str, correct view for the group
+        output_file_name: str, output file name
+    Return:
+        output_file_name.pck
+    """
     graph_biogrid = pickle.load(open(f'{data_repository}/graph_interactions_biogrids.pck', 'rb'))
     canonical_pathways = pickle.load(open(f'{data_repository}/canonical_pathways_biocarta_kegg_pid_reactome_genes_set.pck', 'rb'))
     mirna_pathways = pickle.load(open(f'{data_repository}/mirna_mapping_to_genes_from_msigDB.pck', 'rb'))
@@ -538,7 +557,6 @@ def new_function():
     rna_features = [el.split('|')[0] for el in rna_features_original]
     iso_features_original = list(features_iso_to_index.keys())
     iso_features = [el.split('_')[-1] for el in iso_features_original]
-    
     cg_features_original = list(features_cg_to_index.keys())
     cg_features = [el.split('_')[-1] for el in cg_features_original]
     
@@ -570,97 +588,8 @@ def new_function():
         pickle.dump(features_not_in_any_pathway, f)    
     with open(f'{data_repository}/{output_file_name}', 'wb') as f:
         pickle.dump(dico_results, f)
-             
-    
-def build_dictionnary_groups(data_path=data_to_extract_features_from, return_views='all', output_file_name=''):
-    """
-    Utility function to build pathway file of the groups to be loaded in LearnFromBiogridGroup
-    The pathway will be stored in pickle file
-    Major change: gene.lower() is no longer. Idk why i was using it but it is not doing what it supposed to do
-    genes_in_dataset: 6311
-    genes_in_biogrid_pathways: 78397
-    genes_in_common: 5940
-    Du coup on a environ: 371 features (genes) a ne pas considérer car appartenant à inexistant group. Pour l'instant je vais
-    construire le dico avec eux et aller ensuite voir dans reactome s'ils y sont. 
-    Aussi je peux trouver les miRNA quel genes ils influencent avec msigDB.
-    Maintenant la question est: est-ce qu'on mélange les BD? Clairement va falloir utliser msigDB pour les miRNA... 
-    maintenant est-ce que réactome et biogrid speak the same language? 
-    Args:
-        data_path: str, data path
-        return_views: str, correct view for the group
-        output_file_name: str, output file name
-    Return:
-        output_file_name.pck
-    """
-    graph, _ = load_biogrid_network()
-    _, _, features_names, _ = load_data(data=data_path, return_views=return_views, drop_inexistant_features=True, mad_selection=True)
-    features_names = list(features_names)
-    adjacency_matrix = np.asarray(list(graph.adjacency()))
-    # nodes = np.asarray(list(graph.nodes))
-    dico_results = {feature: [] for feature in features_names}
-    # noeud + et toutes leurs interactions; 
-    # el[0] is always the node and list(el[1].keys()) the genes whose are interacting with the node
-    biogrid_pathways = [list(el[1].keys()) + [el[0]] for el in adjacency_matrix] # Obtention des pathways de biogrids
-    biogrid_pathways.append('miRNA') # biogrid_pathways[20170]
-    biogrid_pathways.append('clinical View') # biogrid_pathways[20171]
-    biogrid_pathways.append('unknown') # biogrid_pathways[20172]
-    # Biogrids rank from 1 to 20170 + 3: pathways
-    for feature in features_names:
-        if feature.find('_') != -1:
-            # I went step by step for the comprehension but remember the gene is always at the end of the feature so use the [-1] access
-            split_results = feature.split('_')
-            gene_cible = split_results[-1]
-            if gene_cible.find(';'): # Cas ou on a un feature lié à 2 ou plus genes (surtout pour les cpg)
-                gene_cibles = gene_cible.split(';')
-                for gene in gene_cibles: # Recupere chaque gene et on remplit le dico
-                    for idx, pathway_in_biogrid in enumerate(biogrid_pathways):
-                        # if gene.lower() in pathway_in_biogrid:
-                        if gene in pathway_in_biogrid: # idk why i was using lower but it is clearly not working the way it supposed to do
-                            dico_results[feature].append('G_{}'.format(idx))
-            else: # Different du premier if du coup le feature est link à un seul gene et on remplit le dictionnaire de facon adéquate
-                for idx, pathway_in_biogrid in enumerate(biogrid_pathways):
-                    if gene_cible in pathway_in_biogrid:
-                        dico_results[feature].append('G_{}'.format(idx))
-        elif feature.find('|') != -1: # Here the gene is the 1st element always since it's directly the RNA view only
-            split_results = feature.split('|')
-            gene_cible = split_results[0].lower()
-            for idx, pathway_in_biogrid in enumerate(biogrid_pathways):
-                if gene_cible in pathway_in_biogrid:
-                    dico_results[feature].append('G_{}'.format(idx))
-        elif feature.startswith('hsa'):  # MiRNA View: faire le traitement directement
-            dico_results[feature].append('G_20170')
-        else:
-            dico_results[feature].append('G_20171')
-    for cle, valeur in dico_results.items():
-        if valeur == []:
-            dico_results[cle].append('G_20172')
-
-    with open(f'{data_repository}/groups2genes_biogrid.pck', 'wb') as f: # Dict: {'G_number': []} # 
-        dict_results = {f'G_{idx}': el for idx, el in enumerate(biogrid_pathways)}
-        pickle.dump(dict_results, f)
-    with open(f'{data_repository}/{output_file_name}', 'wb') as f:
-        pickle.dump(dico_results, f)
-
-def build_dictionnary_groups_prad(data_path=data_prad, return_views='all', output_file_name=''):
-    graph, _ = load_biogrid_network()
-    _, _, features_names, _ = load_prad_data(data=data_path, return_views=return_views)
-    features_names = list(features_names)
-    adjacency_matrix = np.asarray(list(graph.adjacency()))
-    dico_results = {feature: [] for feature in features_names}
-    biogrid_pathways = [list(el[1].keys()) + [el[0]] for el in adjacency_matrix] # Obtention des pathways de biogrids
-    for feature in features_names:
-        split_results = feature.split('_')
-        gene_cible = split_results[-1].lower()
-        for idx, pathway_in_biogrid in enumerate(biogrid_pathways):
-            if gene_cible in pathway_in_biogrid:
-                dico_results[feature].append('G_{}'.format(idx))
-    for cle, valeur in dico_results.items():
-        if valeur == []:
-            dico_results[cle].append('G_20172') # unknown
-    with open(f'{data_repository}/{output_file_name}', 'wb') as f:
-        pickle.dump(dico_results, f)   
-                
+                        
 if __name__ == "__main__":
-    build_dictionnary_groups(data_path=data_to_extract_features_from, return_views='all', output_file_name='groups2pathwaysTN_biogrid.pck')
-    build_dictionnary_groups_prad(data_path=data_prad, return_views='all', output_file_name='groups2pathwaysPRAD_biogrid.pck')
+    build_dictionnary_groups(data_path=data_to_extract_features_from, return_views='all', output_file_name='groups2pathwaysTN_biogrid_msigDB.pck')
+    # build_dictionnary_groups_prad(data_path=data_prad, return_views='all', output_file_name='groups2pathwaysPRAD_biogrid.pck')
     
