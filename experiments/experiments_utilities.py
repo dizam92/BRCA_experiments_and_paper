@@ -20,6 +20,7 @@ from os.path import abspath, dirname, exists, join
 from matplotlib import pyplot as plt
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from sklearn.preprocessing import StandardScaler
+from datasets.brca_builder import select_features_based_on_mad
 
 c2_pickle_dictionary = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/c2_curated_genes.pck'
 c5_pickle_dictionary = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/c5_curated_genes.pck'
@@ -65,7 +66,7 @@ parameters_group_scm = {'model_type': param_model_type,
 color_pool = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
 
 ########################################################### Loaders Sections ################################################################
-def load_data(data, return_views='all'):
+def load_data(data, return_views='all', drop_inexistant_features=True, mad_selection=True):
     """
     Load the triple neg datasets
     Args:
@@ -89,6 +90,10 @@ def load_data(data, return_views='all'):
     features_names = np.asarray([el.decode("utf-8") for el in features_names])
     patients_names = d['patients_ids'][()]
     patients_names = np.asarray([el.decode("utf-8") for el in patients_names])
+    if drop_inexistant_features:
+        index_features_with_genes = [idx for idx, el in enumerate(features_names) if el.find('INEXISTANT') == -1]
+        features_names = features_names[index_features_with_genes]
+        x = x[:, index_features_with_genes]
     random.seed(42)
     data_x_y_patients_names = list(zip(x, y, patients_names))
     random.shuffle(data_x_y_patients_names)
@@ -124,27 +129,47 @@ def load_data(data, return_views='all'):
     # Methyl
     x_methyl = x[:, index_methyl]
     features_names_methyl = features_names[index_methyl]
+    if mad_selection:
+        indices_mad_selected = select_features_based_on_mad(x=x_methyl, nb_features=2000)
+        x_methyl = x_methyl[:, indices_mad_selected]
+        features_names_methyl = features_names_methyl[indices_mad_selected]
     # RNA ISO
     x_rna_iso = x[:, index_rna_iso]
     features_names_rna_iso = features_names[index_rna_iso]
+    if mad_selection:
+        indices_mad_selected = select_features_based_on_mad(x=x_rna_iso, nb_features=2000)
+        x_rna_iso = x_rna_iso[:, indices_mad_selected]
+        features_names_rna_iso = features_names_rna_iso[indices_mad_selected]
     # MiRNA
     x_mirna = x[:, index_mirna]
     features_names_mirna = features_names[index_mirna]
+    if mad_selection:
+        indices_mad_selected = select_features_based_on_mad(x=x_mirna, nb_features=250)
+        x_mirna = x_mirna[:, indices_mad_selected]
+        features_names_mirna = features_names_mirna[indices_mad_selected]
     # SNP
     if len(index_snps) != 0:
         x_snp = x[:, index_snps]
         features_names_snp = features_names[index_snps]
+        if mad_selection:
+            indices_mad_selected = select_features_based_on_mad(x=x_snp, nb_features=2000)
+            x_snp = x_snp[:, indices_mad_selected]
+            features_names_snp = features_names_snp[indices_mad_selected]
     # Clinical
     x_clinical = x[:, index_clinical]
     features_names_clinical = features_names[index_clinical]
     # RNA
     x_rna = x[:, index_rna]
     features_names_rna = features_names[index_rna]
+    if mad_selection:
+        indices_mad_selected = select_features_based_on_mad(x=x_rna, nb_features=2000)
+        x_rna = x_rna[:, indices_mad_selected]
+        features_names_rna = features_names_rna[indices_mad_selected]
     # Normalization
     x_rna_iso = StandardScaler().fit_transform(x_rna_iso)
     x_mirna = StandardScaler().fit_transform(x_mirna)
     x_rna = StandardScaler().fit_transform(x_rna)
-    if return_views == 'methyl_rna_iso_mirna':
+    if return_views == 'methyl_rna_iso_mirna': # THATS THE VIEW I SHOULD JUST BE USING: CE QUI CHANGE DE SO FAR J'AI JUSTE PAS LES !* FEATURES DE CLINICAL QUI SE RAJOUTE THATS IT
         x_methyl_rna_iso_mirna = np.hstack((x_methyl, x_rna_iso, x_mirna))
         features_names_rna_iso_mirna = np.hstack((features_names_methyl, features_names_rna_iso, features_names_mirna))
         x = x_methyl_rna_iso_mirna

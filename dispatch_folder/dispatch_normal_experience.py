@@ -45,7 +45,7 @@ def launch_slurm_experiment(return_views, which_expe, dataset, nb_repetitions, e
 def main_brca():
     # return_views = ['methyl_rna_iso_mirna', 'methyl_rna_iso_mirna_snp_clinical',
     #             'methyl_rna_mirna', 'methyl_rna_mirna_snp_clinical', 'all']
-    return_views = ['methyl_rna_iso_mirna_snp_clinical']
+    return_views = ['methyl_rna_iso_mirna']
     dispatch_path = join(RESULTS_PATH, "dispatch_normal_exp_brca")
     if not exists(dispatch_path): makedirs(dispatch_path)
     if not exists(saving_repository_brca): makedirs(saving_repository_brca)
@@ -81,5 +81,5 @@ def main_prad():
     print("### DONE ###")   
     
 if __name__ == '__main__':
-    main_prad()
+    # main_prad()
     main_brca()

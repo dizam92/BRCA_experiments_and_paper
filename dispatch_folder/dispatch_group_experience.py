@@ -48,7 +48,7 @@ def launch_slurm_experiment_group(return_views, dataset, cancer_expe, nb_repetit
 def main_group_TN():
     # return_views = ['methyl_rna_iso_mirna', 'methyl_rna_iso_mirna_snp_clinical',
     #             'methyl_rna_mirna', 'methyl_rna_mirna_snp_clinical', 'all']
-    return_views = ['methyl_rna_iso_mirna_snp_clinical']
+    return_views = ['methyl_rna_iso_mirna']
     dictionaries_paths = [f"{DATAREPOSITORY_PATH}/groups2pathwaysTN_biogrid.pck"]
     update_method = ['inner_group', 'outer_group']
     random.seed(42)
@@ -77,7 +77,7 @@ def main_group_TN():
                                             prior_dict_rules=f"{data_repository}/groups2pathwaysTN_biogrid.pck",
                                             experiment_file='run_new_group_experiments.py', 
                                             experiment_name=exp_name, 
-                                            time='15', 
+                                            time='48', # 48 pour le final mais genre 1h pour juste test quoi huh  
                                             dispatch_path=dispatch_path,
                                             saving_repo=saving_repository_tn)
     print("### DONE ###") 
@@ -120,4 +120,4 @@ def main_group_PRAD():
 
 if __name__ == '__main__':
     main_group_TN()
-    main_group_PRAD()
+    # main_group_PRAD()
