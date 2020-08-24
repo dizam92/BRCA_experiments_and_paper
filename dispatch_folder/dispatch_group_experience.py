@@ -56,7 +56,7 @@ def main_group_TN():
     random.seed(42)
     c_list = np.round(np.linspace(0.1, 1, 10), 3)
     random_weights_list = [False]
-    eliminate_feature_not_in_pathways_list = [False, True]
+    eliminate_feature_not_in_pathways_list = ['False', 'True']
     param_grid = {'view': return_views, 'update': update_method, 'c': c_list, 'random_weights': random_weights_list, 
                   'eliminate_feature_not_in_pathways': eliminate_feature_not_in_pathways_list}
     dispatch_path = join(RESULTS_PATH, "dispatch_f_exp_group_TN_biogrid")
@@ -83,7 +83,7 @@ def main_group_TN():
                                             prior_dict_rules=f"{data_repository}/groups2pathwaysTN_biogrid_msigDB.pck",
                                             experiment_file='run_new_group_experiments.py', 
                                             experiment_name=exp_name, 
-                                            time='5', # 48 pour le final mais genre 1h pour juste test quoi huh  
+                                            time='1', # 48 pour le final mais genre 1h pour juste test quoi huh  
                                             dispatch_path=dispatch_path,
                                             saving_repo=saving_repository_tn)
     print("### DONE ###") 

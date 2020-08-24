@@ -170,11 +170,14 @@ def run_experiment(return_views, pathway_file, nb_repetitions, cancer_expe='brca
     features_names = [el.encode("utf-8") for el in features_names]
     features_names = [el.decode("utf-8") for el in features_names]
     features_names_to_idx =  {feature: idx for idx, feature in enumerate(features_names)}
-    if eliminate_feature_not_in_pathways:
+    logger.info('eliminate_feature_not_in_pathways is {}'.format(eliminate_feature_not_in_pathways))
+    logger.info('x shape is {}'.format(x.shape))
+    if eliminate_feature_not_in_pathways == 'True':
         temp = pickle.load(open(f'{data_repository}/featuresNotInAnyPathways.pck', 'rb'))
         temp_idx_to_del = [features_names_to_idx[feature] for feature in temp if feature in features_names_to_idx.keys()]
         x = np.delete(x, temp_idx_to_del, axis=1)
         features_names = np.delete(features_names, temp_idx_to_del, axis=0)
+    logger.info('x shape is {}'.format(x.shape))
     random.seed(42)
     random_seeds_list = [random.randint(1, 2000) for _ in range(nb_repetitions)]
     # Parameters for GROUP_SCM
@@ -232,7 +235,7 @@ def main():
     parser.add_argument('-c', '--c', type=float, default=0.1) 
     parser.add_argument('-random_weights', '--random_weights', type=bool, default=False)
     parser.add_argument('-data', '--data', type=str, default=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna)
-    parser.add_argument('-eliminate_feature_not_in_pathways', '--eliminate_feature_not_in_pathways', type=bool, default=False)
+    parser.add_argument('-eliminate_feature_not_in_pathways', '--eliminate_feature_not_in_pathways', type=str, default='False')
     parser.add_argument('-prior_dict_groups', '--prior_dict_groups', type=str, default=f"{data_repository}/groups2genes_biogrid_msigDB.pck")
     parser.add_argument('-prior_dict_rules', '--prior_dict_rules', type=str, default=f"{data_repository}/groups2pathwaysTN_biogrid_msigDB.pck")
     parser.add_argument('-exp_name', '--experiment_name', type=str, default="experiment_group_scm")
