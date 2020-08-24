@@ -67,7 +67,7 @@ def main_group_TN():
         print(f"Launching {pathway_dict}")
         for params in ParameterGrid(param_grid):
             print(f"Launching {params}")
-            nb_repetitions = 1 # juste pour tester 1
+            nb_repetitions = 15 # juste pour tester 1
             exp_name = f"{params['view']}__group_scm__{name_pathway_file}__{params['update']}__c{params['c']}__random_weights{params['random_weights']}__{nb_repetitions}__eliminate{params['eliminate_feature_not_in_pathways']}"
             # exp_name = f"{params['view']}__group_scm__" + f"{name_pathway_file}__" + f"{params['update']}__" + f"c{params['c']}__" + f"random_weights{params['random_weights']}__" + f"{nb_repetitions}"
             launch_slurm_experiment_group(return_views=params['view'], 
@@ -83,7 +83,7 @@ def main_group_TN():
                                             prior_dict_rules=f"{data_repository}/groups2pathwaysTN_biogrid_msigDB.pck",
                                             experiment_file='run_new_group_experiments.py', 
                                             experiment_name=exp_name, 
-                                            time='1', # 48 pour le final mais genre 1h pour juste test quoi huh  
+                                            time='8', # 48 pour le final mais genre 1h pour juste test quoi huh  
                                             dispatch_path=dispatch_path,
                                             saving_repo=saving_repository_tn)
     print("### DONE ###") 
