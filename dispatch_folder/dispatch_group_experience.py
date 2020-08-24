@@ -22,7 +22,8 @@ saving_repository_tn = f'{saving_repository}groups_brca_experiments'
 saving_repository_prad = f'{saving_repository}groups_prad_experiments'
 
 def launch_slurm_experiment_group(return_views, dataset, cancer_expe, nb_repetitions, pathway_file, update_method, c, random_weights, 
-                                  prior_dict_groups, prior_dict_rules, experiment_file, experiment_name, time, dispatch_path, saving_repo):
+                                  eliminate_feature_not_in_pathways, prior_dict_groups, prior_dict_rules, experiment_file, 
+                                  experiment_name, time, dispatch_path, saving_repo):
     exp_file = join(dispatch_path, experiment_name)
     submission_script = ""
     submission_script += f"#!/bin/bash\n"
@@ -36,7 +37,7 @@ def launch_slurm_experiment_group(return_views, dataset, cancer_expe, nb_repetit
     submission_script += f"#SBATCH --mail-type=FAIL\n"
     submission_script += f"#SBATCH --time={time}:00:00\n" 
     submission_script += f"#SBATCH --output={exp_file + '.out'}\n\n" 
-    submission_script += f"python {EXPERIMENTS_PATH}/{experiment_file} -data {dataset} -cancer_expe {cancer_expe} -rt {return_views} -nb_r {nb_repetitions} -g_dict {pathway_file} -u_m {update_method} -c {c} -random_weights {random_weights} -prior_dict_groups {prior_dict_groups} -prior_dict_rules {prior_dict_rules} -exp_name {experiment_name} -o {saving_repo}" 
+    submission_script += f"python {EXPERIMENTS_PATH}/{experiment_file} -data {dataset} -cancer_expe {cancer_expe} -rt {return_views} -nb_r {nb_repetitions} -g_dict {pathway_file} -u_m {update_method} -c {c} -random_weights {random_weights} -eliminate_feature_not_in_pathways {eliminate_feature_not_in_pathways} -prior_dict_groups {prior_dict_groups} -prior_dict_rules {prior_dict_rules} -exp_name {experiment_name} -o {saving_repo}" 
     
     submission_path = exp_file + ".sh"
     with open(submission_path, 'w') as out_file:
@@ -49,12 +50,15 @@ def main_group_TN():
     # return_views = ['methyl_rna_iso_mirna', 'methyl_rna_iso_mirna_snp_clinical',
     #             'methyl_rna_mirna', 'methyl_rna_mirna_snp_clinical', 'all']
     return_views = ['methyl_rna_iso_mirna']
-    dictionaries_paths = [f"{DATAREPOSITORY_PATH}/groups2pathwaysTN_biogrid.pck"]
+    # dictionaries_paths = [f"{DATAREPOSITORY_PATH}/groups2pathwaysTN_biogrid.pck"]
+    dictionaries_paths = [f"{DATAREPOSITORY_PATH}/groups2pathwaysTN_biogrid_msigDB.pck"]
     update_method = ['inner_group', 'outer_group']
     random.seed(42)
     c_list = np.round(np.linspace(0.1, 1, 10), 3)
     random_weights_list = [False]
-    param_grid = {'view': return_views, 'update': update_method, 'c': c_list, 'random_weights': random_weights_list}
+    eliminate_feature_not_in_pathways_list = [False, True]
+    param_grid = {'view': return_views, 'update': update_method, 'c': c_list, 'random_weights': random_weights_list, 
+                  'eliminate_feature_not_in_pathways': eliminate_feature_not_in_pathways_list}
     dispatch_path = join(RESULTS_PATH, "dispatch_f_exp_group_TN_biogrid")
     if not exists(dispatch_path): makedirs(dispatch_path)
     if not exists(saving_repository_tn): makedirs(saving_repository_tn)
@@ -63,21 +67,23 @@ def main_group_TN():
         print(f"Launching {pathway_dict}")
         for params in ParameterGrid(param_grid):
             print(f"Launching {params}")
-            nb_repetitions = 15
-            exp_name = f"{params['view']}__group_scm__" + f"{name_pathway_file}__" + f"{params['update']}__" + f"c{params['c']}__" + f"random_weights{params['random_weights']}__" + f"{nb_repetitions}"
+            nb_repetitions = 1 # juste pour tester 1
+            exp_name = f"{params['view']}__group_scm__{name_pathway_file}__{params['update']}__c{params['c']}__random_weights{params['random_weights']}__{nb_repetitions}__eliminate{params['eliminate_feature_not_in_pathways']}"
+            # exp_name = f"{params['view']}__group_scm__" + f"{name_pathway_file}__" + f"{params['update']}__" + f"c{params['c']}__" + f"random_weights{params['random_weights']}__" + f"{nb_repetitions}"
             launch_slurm_experiment_group(return_views=params['view'], 
                                           dataset=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
                                           cancer_expe='brca',
-                                            nb_repetitions=nb_repetitions, 
+                                          nb_repetitions=nb_repetitions, 
                                             pathway_file=pathway_dict, 
                                             update_method=params['update'], 
                                             c=params['c'],
                                             random_weights=params['random_weights'],
-                                            prior_dict_groups=f"{data_repository}/groups2genes_biogrid.pck",
-                                            prior_dict_rules=f"{data_repository}/groups2pathwaysTN_biogrid.pck",
+                                            eliminate_feature_not_in_pathways=params['eliminate_feature_not_in_pathways'],
+                                            prior_dict_groups=f"{data_repository}/groups2genes_biogrid_msigDB.pck",
+                                            prior_dict_rules=f"{data_repository}/groups2pathwaysTN_biogrid_msigDB.pck",
                                             experiment_file='run_new_group_experiments.py', 
                                             experiment_name=exp_name, 
-                                            time='48', # 48 pour le final mais genre 1h pour juste test quoi huh  
+                                            time='5', # 48 pour le final mais genre 1h pour juste test quoi huh  
                                             dispatch_path=dispatch_path,
                                             saving_repo=saving_repository_tn)
     print("### DONE ###") 

@@ -583,6 +583,7 @@ def build_dictionnary_groups(data_path=data_to_extract_features_from, return_vie
      
     with open(f'{data_repository}/groups2genes_biogrid_msigDB.pck', 'wb') as f: # Dict: {'G_number': []} # 
         dict_results = {el: all_pathways_list[idx] for idx, el in enumerate(groups_idx)}
+        dict_results[groups_idx_inexistant] = [groups_idx_inexistant] 
         pickle.dump(dict_results, f)
     with open(f'{data_repository}/featuresNotInAnyPathways.pck', 'wb') as f:
         pickle.dump(features_not_in_any_pathway, f)    

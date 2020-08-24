@@ -136,8 +136,10 @@ def build_priors_rules_vector(c,
     return prior_values_dict_pr_group, prior_values_dict_pr_rules
     
     
-def run_experiment(return_views, pathway_file, nb_repetitions, cancer_expe='brca', activation_function=f_1, update_method='inner_group', c=0.1, random_weights=False,
+def run_experiment(return_views, pathway_file, nb_repetitions, cancer_expe='brca', 
+                   activation_function=f_1, update_method='inner_group', c=0.1, random_weights=False,
                    data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna, 
+                   eliminate_feature_not_in_pathways=False,
                    dictionnary_for_prior_group=f"{data_repository}/groups2genes_biogrid.pck", 
                    dictionnary_for_prior_rules=f"{data_repository}/groups2pathwaysTN_biogrid.pck",
                    experiment_name='experiment_group_scm', saving_rep=saving_repository):
@@ -160,13 +162,19 @@ def run_experiment(return_views, pathway_file, nb_repetitions, cancer_expe='brca
     assert nb_repetitions >= 1, 'At least one split'
     saving_dict_scm = defaultdict(dict)
     if cancer_expe == 'brca':
-        x, y, features_names, patients_names = load_data(data=data, return_views=return_views)
+        x, y, features_names, patients_names = load_data(data=data, return_views=return_views, drop_inexistant_features=True, mad_selection=True)    
     elif cancer_expe == 'prad':
         x, y, features_names, patients_names = load_prad_data(data=data, return_views=return_views)
     else:
         raise ValueError(f'{cancer_expe} is not supported yet')
     features_names = [el.encode("utf-8") for el in features_names]
     features_names = [el.decode("utf-8") for el in features_names]
+    features_names_to_idx =  {feature: idx for idx, feature in enumerate(features_names)}
+    if eliminate_feature_not_in_pathways:
+        temp = pickle.load(open(f'{data_repository}/featuresNotInAnyPathways.pck', 'rb'))
+        temp_idx_to_del = [features_names_to_idx[feature] for feature in temp if feature in features_names_to_idx.keys()]
+        x = np.delete(x, temp_idx_to_del, axis=1)
+        features_names = np.delete(features_names, temp_idx_to_del, axis=0)
     random.seed(42)
     random_seeds_list = [random.randint(1, 2000) for _ in range(nb_repetitions)]
     # Parameters for GROUP_SCM
@@ -217,14 +225,16 @@ def main():
     parser = argparse.ArgumentParser(description="Learn Group TN Experiment")
     parser.add_argument('-rt', '--return_views', type=str, default="all")
     parser.add_argument('-nb_r', '--nb_repetitions', type=int, default=1)
-    parser.add_argument('-g_dict', '--groups_dict', type=str, default=f"{data_repository}/groups2pathwaysTN_biogrid.pck")
+    # parser.add_argument('-g_dict', '--groups_dict', type=str, default=f"{data_repository}/groups2pathwaysTN_biogrid.pck")
+    parser.add_argument('-g_dict', '--groups_dict', type=str, default=f"{data_repository}/groups2pathwaysTN_biogrid_msigDB.pck")
     parser.add_argument('-u_m', '--update_method', type=str, default="inner_group")
     parser.add_argument('-cancer_expe', '--cancer_expe', type=str, default="brca")
     parser.add_argument('-c', '--c', type=float, default=0.1) 
     parser.add_argument('-random_weights', '--random_weights', type=bool, default=False)
     parser.add_argument('-data', '--data', type=str, default=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna)
-    parser.add_argument('-prior_dict_groups', '--prior_dict_groups', type=str, default=f"{data_repository}/groups2genes_biogrid.pck")
-    parser.add_argument('-prior_dict_rules', '--prior_dict_rules', type=str, default=f"{data_repository}/groups2pathwaysTN_biogrid.pck")
+    parser.add_argument('-eliminate_feature_not_in_pathways', '--eliminate_feature_not_in_pathways', type=bool, default=False)
+    parser.add_argument('-prior_dict_groups', '--prior_dict_groups', type=str, default=f"{data_repository}/groups2genes_biogrid_msigDB.pck")
+    parser.add_argument('-prior_dict_rules', '--prior_dict_rules', type=str, default=f"{data_repository}/groups2pathwaysTN_biogrid_msigDB.pck")
     parser.add_argument('-exp_name', '--experiment_name', type=str, default="experiment_group_scm")
     parser.add_argument('-o', '--saving_rep', type=str, default=saving_repository)
     args = parser.parse_args()
@@ -235,7 +245,8 @@ def main():
                    cancer_expe=args.cancer_expe, 
                    c=args.c,
                    random_weights=args.random_weights,
-                   data=args.data,  
+                   data=args.data, 
+                   eliminate_feature_not_in_pathways=args.eliminate_feature_not_in_pathways,
                    dictionnary_for_prior_group=args.prior_dict_groups,
                    dictionnary_for_prior_rules=args.prior_dict_rules,
                    experiment_name=args.experiment_name, 
