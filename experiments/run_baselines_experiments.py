@@ -332,7 +332,7 @@ def run_experiment(return_views, nb_repetitions, which_expe='brca', data=data_tn
     saving_dict_dt = defaultdict(dict)
     saving_dict_scm = defaultdict(dict)
     if which_expe == 'brca':
-        x, y, features_names, patients_names = load_data(data=data, return_views=return_views)
+        x, y, features_names, patients_names = load_data(data=data, return_views=return_views, drop_inexistant_features=True, mad_selection=True)
         features_names = [el.encode("utf-8") for el in features_names]
         features_names = [el.decode("utf-8") for el in features_names]
         balanced_weights = weighted_sample(y=y, y_target=y)
