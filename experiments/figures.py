@@ -66,7 +66,7 @@ def boxplot_figures(data, return_views, cancer_name, algo_used, features_cibles,
         figures
     """
     if cancer_name == 'brca':
-        x, y, features_names, patients_names = load_data(data=data, return_views=return_views)
+        x, y, features_names, patients_names = load_data(data=data, return_views=return_views, drop_inexistant_features=True, mad_selection=True)
     elif cancer_name == 'prad':
         x, y, features_names, patients_names = load_prad_data(data=data, return_views=return_views)
     else:
@@ -133,7 +133,7 @@ def add_boxplot_figures(data, return_views, cancer_name, algo_used, features_cib
         figures
     """
     if cancer_name == 'brca':
-        x, y, features_names, patients_names = load_data(data=data, return_views=return_views)
+        x, y, features_names, patients_names = load_data(data=data, return_views=return_views, drop_inexistant_features=True, mad_selection=True)
     elif cancer_name == 'prad':
         x, y, features_names, patients_names = load_prad_data(data=data, return_views=return_views)
     else:

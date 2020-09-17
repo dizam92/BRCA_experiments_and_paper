@@ -367,87 +367,6 @@ def load_prad_data(data, return_views='all'):
         return x, x_cna, x_rna, y, features_names, features_names_cna, features_names_rna, patients_names
 
 
-# Facteur de rebalancement : si mult = 1 on aura 1 négatif pour chaque positif, si mult = 2, on aura 2 négtifs pour chaque positif
-mult = 1
-def load_baptiste_data(dataset, subsampling=False):
-    """
-    Load the dataset
-    Ideal cible: label 1vs2 i.e multi_clustered vs EMF
-    Args: 
-        dataset, str path to the dataset
-        subsampling, bool if true, make a subsampling else do nothing
-    Return:
-        view_0, view_0_name, view_1, view_1_name, view_2, view_2_name, view_3, view_3_name, 
-        view_4, view_4_name, view_5, view_5_name, view_6, view_6_name, view_7, view_7_name, 
-        view_8, view_8_name, view_9, view_9_name, view_10, view_10_name, view_11, view_11_name, 
-        view_12, view_12_name, view_13, view_13_name, all_data, groups_ids, y, proteins_ids, features_names
-    """
-    d = h5py.File(dataset, 'r')
-    labels = d['Labels'][()]
-    labels_emf_idx = np.where(labels == 2)[0] # EMF
-    labels_multi_c_idx = np.where(labels == 1)[0] # multi_clustered
-    labels_mono_c_idx = np.where(labels == 0)[0] # mono_clustered
-    random_state = np.random.RandomState(42)
-    if subsampling:
-        labels_multi_c_idx = random_state.choice(labels_multi_c_idx, labels_emf_idx.shape[0]*mult, replace=False)
-    proteins_ids = d["Metadata"]["example_ids"][()]
-    proteins_ids_pos = proteins_ids[labels_emf_idx]
-    proteins_ids_neg = proteins_ids[labels_multi_c_idx]
-    proteins_ids = np.hstack((proteins_ids_pos, proteins_ids_neg))
-    view_0 = d["View0"][()];  view_0_name = d["View0"].attrs["name"] # PPInetwork_topology
-    view_1 = d["View1"][()];  view_1_name = d["View1"].attrs["name"] # Subcell_Location
-    view_2 = d["View2"][()];  view_2_name = d["View2"].attrs["name"] # Tissue_Expression
-    view_3 = d["View3"][()];  view_3_name = d["View3"].attrs["name"] # SDNE_PPInetwork
-    view_4 = d["View4"][()];  view_4_name = d["View4"].attrs["name"] # Gene_Ontology_BP
-    view_5 = d["View5"][()];  view_5_name = d["View5"].attrs["name"] # Gene_Ontology_CC
-    view_6 = d["View6"][()];  view_6_name = d["View6"].attrs["name"] # Gene_Ontology_MF
-    view_7 = d["View7"][()];  view_7_name = d["View7"].attrs["name"] # BP_PPInetwork_embed
-    view_8 = d["View8"][()];  view_8_name = d["View8"].attrs["name"] # CC_PPInetwork_embed
-    view_9 = d["View9"][()];  view_9_name = d["View9"].attrs["name"] # Phenotype_Ontology
-    view_10 = d["View10"][()];  view_10_name = d["View10"].attrs["name"] # Protein_Domains
-    view_11 = d["View11"][()];  view_11_name = d["View11"].attrs["name"] # PTM
-    view_12 = d["View12"][()];  view_12_name = d["View12"].attrs["name"] # 3UTR_Complexes
-    view_13 = d["View13"][()];  view_13_name = d["View13"].attrs["name"] # Linear_Motifs
-
-    view_0_pos = view_0[labels_emf_idx]; view_0_neg = view_0[labels_multi_c_idx]
-    view_1_pos = view_1[labels_emf_idx]; view_1_neg = view_1[labels_multi_c_idx]
-    view_2_pos = view_2[labels_emf_idx]; view_2_neg = view_2[labels_multi_c_idx]
-    view_3_pos = view_3[labels_emf_idx]; view_3_neg = view_3[labels_multi_c_idx]
-    view_4_pos = view_4[labels_emf_idx]; view_4_neg = view_4[labels_multi_c_idx]
-    view_5_pos = view_5[labels_emf_idx]; view_5_neg = view_5[labels_multi_c_idx]
-    view_6_pos = view_6[labels_emf_idx]; view_6_neg = view_6[labels_multi_c_idx]
-    view_7_pos = view_7[labels_emf_idx]; view_7_neg = view_7[labels_multi_c_idx]
-    view_8_pos = view_8[labels_emf_idx]; view_8_neg = view_8[labels_multi_c_idx]
-    view_9_pos = view_9[labels_emf_idx]; view_9_neg = view_9[labels_multi_c_idx]
-    view_10_pos = view_10[labels_emf_idx]; view_10_neg = view_10[labels_multi_c_idx]
-    view_11_pos = view_11[labels_emf_idx]; view_11_neg = view_11[labels_multi_c_idx]
-    view_12_pos = view_12[labels_emf_idx]; view_12_neg = view_12[labels_multi_c_idx]
-    view_13_pos = view_13[labels_emf_idx]; view_13_neg = view_13[labels_multi_c_idx]
-    y_pos = np.ones(labels_emf_idx.shape); y_neg = np.ones(labels_multi_c_idx.shape) * -1
-    
-    view_0 = np.vstack((view_0_pos, view_0_neg)); groups_0 = ['ppi' for _ in range(view_0.shape[1])]
-    view_1 = np.vstack((view_1_pos, view_1_neg)); groups_1 = ['subcell' for _ in range(view_1.shape[1])]
-    view_2 = np.vstack((view_2_pos, view_2_neg)); groups_2 = ['tissue_expression' for _ in range(view_2.shape[1])]
-    view_3 = np.vstack((view_3_pos, view_3_neg)); groups_3 = ['sdne_ppi' for _ in range(view_3.shape[1])]
-    view_4 = np.vstack((view_4_pos, view_4_neg)); groups_4 = ['go_BP' for _ in range(view_4.shape[1])]
-    view_5 = np.vstack((view_5_pos, view_5_neg)); groups_5 = ['go_CC' for _ in range(view_5.shape[1])]
-    view_6 = np.vstack((view_6_pos, view_6_neg)); groups_6 = ['go_MF' for _ in range(view_6.shape[1])]
-    view_7 = np.vstack((view_7_pos, view_7_neg)); groups_7 = ['BP_ppi' for _ in range(view_7.shape[1])]
-    view_8 = np.vstack((view_8_pos, view_8_neg)); groups_8 = ['CC_ppi' for _ in range(view_8.shape[1])]
-    view_9 = np.vstack((view_9_pos, view_9_neg)); groups_9 = ['phenotype_ontology' for _ in range(view_9.shape[1])]
-    view_10 = np.vstack((view_10_pos, view_10_neg)); groups_10 = ['Protein_Domains' for _ in range(view_10.shape[1])]
-    view_11 = np.vstack((view_11_pos, view_11_neg)); groups_11 = ['PTM' for _ in range(view_11.shape[1])]
-    view_12 = np.vstack((view_12_pos, view_12_neg)); groups_12 = ['3UTR_Complexes' for _ in range(view_12.shape[1])]
-    view_13 = np.vstack((view_13_pos, view_13_neg)); groups_13 = ['Linear_Motifs' for _ in range(view_13.shape[1])]
-    
-    all_data = np.hstack((view_0, view_1, view_2, view_3, view_4, view_5, view_6, view_7, view_8, view_9, view_10, view_11, view_12, view_13)) 
-    # (2370, 37325)
-    groups_ids = groups_0 + groups_1 + groups_2 + groups_3 + groups_4 + groups_5 + groups_6 + groups_7 + groups_8 + groups_9 + groups_10 + groups_11 + groups_12 + groups_13
-    y = np.hstack((y_pos, y_neg))
-    features_names = [f'feature_{idx}' for idx in range(all_data.shape[1])]
-    return view_0, view_0_name, view_1, view_1_name, view_2, view_2_name, view_3, view_3_name, view_4, view_4_name, view_5, view_5_name, view_6, view_6_name, view_7, view_7_name, view_8, view_8_name, view_9, view_9_name, view_10, view_10_name, view_11, view_11_name, view_12, view_12_name, view_13, view_13_name, all_data, groups_ids, y, proteins_ids, features_names
-  
-
 ############################################################################################################################################
 
 def eliminate_features_for_scm(x, y, features_names, features_to_be_excluded):
@@ -727,12 +646,6 @@ def run_analysis(directory, output_text_file, type_experiment, dict_for_prior_ru
     else:
         global_repo_analysis(directory, output_text_file, type_experiment, dict_for_prior_rules, sous_experiment_types.split(), False)
 
-# python experiments/experiments_utilities.py run-analysis --directory /home/maoss2/project/maoss2/saving_repository_article/normal_experiments_brca --dict-for-prior-rules /home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/groups2pathwaysTN_biogrid.pck --output-text-file normal_brca_results_analysis --type-experiment normal --sous-experiment-types 'dt scm rf' --plot-hist
-# python experiments/experiments_utilities.py run-analysis --directory /home/maoss2/project/maoss2/saving_repository_article/normal_experiments_prad --dict-for-prior-rules /home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/groups2pathwaysPRAD_biogrid.pck --output-text-file normal_prad_results_analysis --type-experiment normal --sous-experiment-types 'dt scm rf' --plot-hist
-
-# python experiments/experiments_utilities.py run-analysis --directory /home/maoss2/project/maoss2/saving_repository_article/groups_brca_experiments --dict-for-prior-rules /home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/groups2pathwaysTN_biogrid.pck --output-text-file group_scm_brca_results_analysis --type-experiment group_scm --sous-experiment-types 'methyl_rna_iso_mirna_snp_clinical' 
-# python experiments/experiments_utilities.py run-analysis --directory /home/maoss2/project/maoss2/saving_repository_article/groups_prad_experiments --dict-for-prior-rules /home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/groups2pathwaysPRAD_biogrid.pck --output-text-file group_scm_prad_results_analysis --type-experiment group_scm --sous-experiment-types 'all' 
-
 ############################################################################################################################################
 
 ########################################################## Analysis Sections Plot########################################################
@@ -862,7 +775,7 @@ def parcours_one_directory(directory):
     return train_metrics, test_metrics, std_train_metrics, std_test_metrics, train_metrics_best_file, test_metrics_best_file, features_retenus
 
 
-def generate_figures_mean_results(directory, sous_experiment_types, cancer_name='brca', f='exp', type_of_update='inner', random_weights=False):
+def generate_figures_mean_results(directory, sous_experiment_types, fig_name='', cancer_name='brca', f='exp', type_of_update='inner', random_weights=False):
     """
     Utility function to plot the results for the groups method using the MEAN (Should rethink this probably)
     Args:
@@ -892,7 +805,10 @@ def generate_figures_mean_results(directory, sous_experiment_types, cancer_name=
     std_test_metrics_list = np.asarray(std_test_metrics_list)
     # Plot the train fig
     fig_title_train = f'Train mean metrics: Update Function:{f} {type_of_update}_groups random_weights: {random_weights}'
-    fig_name_train = f'{f}_{cancer_name}_train_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
+    if fig_name == ''
+        fig_name_train = f'{f}_{cancer_name}_train_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
+    else:
+        fig_name_train = f'{fig_name}_train_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
     f_train, ax_train = plt.subplots(nrows=1, ncols=1)
     sns.set_style("darkgrid")
     ax_train.set_title(f"{fig_title_train}")
@@ -910,7 +826,10 @@ def generate_figures_mean_results(directory, sous_experiment_types, cancer_name=
     
     # Plot the Test fig
     fig_title_test = f'Test mean metrics: {type_of_update}_groups random_weights: {random_weights}'
-    fig_name_test = f'{f}_{cancer_name}_test_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
+    if fig_name == ''
+        fig_name_test = f'{f}_{cancer_name}_test_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
+    else:
+        fig_name_test = f'{fig_name}_test_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
     f_test, ax_test = plt.subplots(nrows=1, ncols=1)
     sns.set_style("darkgrid")
     ax_test.set_title(f"{fig_title_test}")
@@ -928,7 +847,7 @@ def generate_figures_mean_results(directory, sous_experiment_types, cancer_name=
     os.chdir(f'{saving_repository}')
     
 
-def generate_figures_mean_results_errorbar_error(directory, sous_experiment_types, cancer_name='brca', f='exp', type_of_update='inner', random_weights=False):
+def generate_figures_mean_results_errorbar_error(directory, sous_experiment_types, fig_name='', cancer_name='brca', f='exp', type_of_update='inner', random_weights=False):
     """
     Utility function to plot the results for the groups method using the MEAN (Should rethink this probably)
     Args:
@@ -958,7 +877,10 @@ def generate_figures_mean_results_errorbar_error(directory, sous_experiment_type
     std_test_metrics_list = np.asarray(std_test_metrics_list)
     # Plot the train fig
     fig_title_train = f'Train mean metrics: Update Function:{f} {type_of_update}_groups random_weights: {random_weights}'
-    fig_name_train = f'{f}_{cancer_name}_train_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}_error_bars.png'
+    if fig_name == '':
+        fig_name_train = f'{f}_{cancer_name}_train_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}_error_bars.png'
+    else:
+        fig_name_train = f'{fig_name}_train_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}_error_bars.png'
     f_train, ax_train = plt.subplots(nrows=1, ncols=1)
     sns.set_style("darkgrid")
     ax_train.set_title(f"{fig_title_train}")
@@ -979,7 +901,10 @@ def generate_figures_mean_results_errorbar_error(directory, sous_experiment_type
     
     # Plot the Test fig
     fig_title_test = f'Test mean metrics: {type_of_update}_groups random_weights: {random_weights}'
-    fig_name_test = f'{f}_{cancer_name}_test_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}_error_bars.png'
+    if fig_name == '':
+        fig_name_test = f'{f}_{cancer_name}_test_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}_error_bars.png'
+    else:
+        fig_name_test = f'{fig_name}_test_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}_error_bars.png'
     f_test, ax_test = plt.subplots(nrows=1, ncols=1)
     sns.set_style("darkgrid")
     ax_test.set_title(f"{fig_title_test}")
@@ -1000,7 +925,7 @@ def generate_figures_mean_results_errorbar_error(directory, sous_experiment_type
     os.chdir(f'{saving_repository}')
 
    
-def generate_figures_best_results(directory, sous_experiment_types, cancer_name='brca', f='exp', type_of_update='inner', random_weights=False):
+def generate_figures_best_results(directory, sous_experiment_types, fig_name='', cancer_name='brca', f='exp', type_of_update='inner', random_weights=False):
     """
     Utility function to plot the results for the groups method using the BEST scores return (Should rethink this probably)
     Args:
@@ -1026,7 +951,10 @@ def generate_figures_best_results(directory, sous_experiment_types, cancer_name=
     test_metrics_list = np.asarray(test_metrics_list)
     # Plot the train fig
     fig_title_train = f'Train best metrics: Update Function:{f} {type_of_update}_groups random_weights: {random_weights}'
-    fig_name_train = f'{f}_{cancer_name}_train_best_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
+    if fig_name == '':
+        fig_name_train = f'{f}_{cancer_name}_train_best_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
+    else:
+        fig_name_train = f'{fig_name}_train_best_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
     f_train, ax_train = plt.subplots(nrows=1, ncols=1)
     sns.set_style("darkgrid")
     ax_train.set_title(f"{fig_title_train}")
@@ -1044,7 +972,10 @@ def generate_figures_best_results(directory, sous_experiment_types, cancer_name=
     
     # Plot the Test fig
     fig_title_test = f'Test best metrics: {type_of_update}_groups random_weights: {random_weights}'
-    fig_name_test = f'{f}_{cancer_name}_test_best_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
+    if fig_name == '':
+        fig_name_test = f'{f}_{cancer_name}_test_best_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
+    else:
+        fig_name_test = f'{fig_name}_test_best_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
     f_test, ax_test = plt.subplots(nrows=1, ncols=1)
     sns.set_style("darkgrid")
     ax_test.set_title(f"{fig_title_test}")
@@ -1066,12 +997,13 @@ def generate_figures_best_results(directory, sous_experiment_types, cancer_name=
 @click.option('--directory', type=str, default=None, help="""results path""")
 @click.option('--sous-experiment-types', type=str, default='all', help="""name of experiment in results_views""")
 @click.option('--cancer-name', type=str, default='brca', help="""cancer name""")
+@click.option('--fig-name', type=str, default='', help="""figure name""")
 @click.option('--f', type=str, default='exp', help="""cancer name""")
 @click.option('--type-of-update', type=str, default='inner', help="""update type""")
 @click.option('--random-weights/--no-random-weights', default=False, help="""random-weights generate or not""")
 @click.option('--plot-mean/--no-plot-mean', default=True, help="""plot mean values figures""")
 @click.option('--plot-best/--no-plot-best', default=True, help="""plot best values figures""")
-def run_plot_groups(directory, sous_experiment_types, cancer_name, f, type_of_update, random_weights, plot_mean, plot_best):
+def run_plot_groups(directory, sous_experiment_types, fig_name, cancer_name, f, type_of_update, random_weights, plot_mean, plot_best):
     if plot_mean:
         if random_weights:
             generate_figures_mean_results(directory, sous_experiment_types, cancer_name, f, type_of_update, True)
@@ -1084,11 +1016,6 @@ def run_plot_groups(directory, sous_experiment_types, cancer_name, f, type_of_up
         else:
             generate_figures_best_results(directory, sous_experiment_types, cancer_name, f, type_of_update, False)
 
-# python experiments/experiments_utilities.py run-plot-groups --directory /home/maoss2/project/maoss2/saving_repository_article/groups_prad_experiments --cancer-name 'prad' --f exp --sous-experiment-types 'all' --type-of-update 'inner' --plot-mean --plot-best
-# python experiments/experiments_utilities.py run-plot-groups --directory /home/maoss2/project/maoss2/saving_repository_article/groups_prad_experiments --cancer-name 'prad' --f exp --sous-experiment-types 'all' --type-of-update 'outer' --plot-mean --plot-best
-
-# python experiments/experiments_utilities.py run-plot-groups --directory /home/maoss2/project/maoss2/saving_repository_article/groups_brca_experiments --cancer-name 'brca' --f exp --sous-experiment-types 'methyl_rna_iso_mirna_snp_clinical' --type-of-update 'inner' --plot-mean --plot-best
-# python experiments/experiments_utilities.py run-plot-groups --directory /home/maoss2/project/maoss2/saving_repository_article/groups_brca_experiments --cancer-name 'brca' --f exp --sous-experiment-types 'methyl_rna_iso_mirna_snp_clinical' --type-of-update 'outer' --plot-mean --plot-best
 ############################################################################################################################################
     
 ########################################################### Metrics Sections ################################################################
