@@ -1006,15 +1006,15 @@ def generate_figures_best_results(directory, sous_experiment_types, fig_name='',
 def run_plot_groups(directory, sous_experiment_types, fig_name, cancer_name, f, type_of_update, random_weights, plot_mean, plot_best):
     if plot_mean:
         if random_weights:
-            generate_figures_mean_results(directory, sous_experiment_types, cancer_name, f, type_of_update, True)
+            generate_figures_mean_results(directory, sous_experiment_types, fig_name, cancer_name, f, type_of_update, True)
         else:
-            generate_figures_mean_results(directory, sous_experiment_types, cancer_name, f, type_of_update, False)
-            generate_figures_mean_results_errorbar_error(directory, sous_experiment_types, cancer_name, f, type_of_update, False)
+            generate_figures_mean_results(directory, sous_experiment_types, fig_name, cancer_name, f, type_of_update, False)
+            generate_figures_mean_results_errorbar_error(directory, sous_experiment_types, fig_name, cancer_name, f, type_of_update, False)
     if plot_best:
         if random_weights:
-            generate_figures_best_results(directory, sous_experiment_types, cancer_name, f, type_of_update, True)
+            generate_figures_best_results(directory, sous_experiment_types, fig_name, cancer_name, f, type_of_update, True)
         else:
-            generate_figures_best_results(directory, sous_experiment_types, cancer_name, f, type_of_update, False)
+            generate_figures_best_results(directory, sous_experiment_types, fig_name, cancer_name, f, type_of_update, False)
 
 ############################################################################################################################################
     
