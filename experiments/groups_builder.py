@@ -28,6 +28,15 @@ mirna_dat_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datase
 c2_file_canonical_pathways = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/c2.cp.v7.1.symbols.gmt'
 c3_file_mirna = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/c3.mir.v7.1.symbols.gmt'
 
+c1_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/c1.all.v6.1.symbols.gmt'
+c2_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/c2.all.v6.1.symbols.gmt'
+c3_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/c3.all.v6.1.symbols.gmt'
+c4_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/c4.all.v6.1.symbols.gmt'
+c5_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/c5.all.v6.1.symbols.gmt'
+c6_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/c6.all.v6.1.symbols.gmt'
+c7_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/c7.all.v6.1.symbols.gmt'
+hall_mark_file = '/home/maoss2/PycharmProjects/BRCA_experiments_and_paper/datasets/datasets_repository/h.all.v6.1.symbols.gmt'
+
 #-------------------------------------Old fashion to build the different type of groups ------------------------------------#
 class ExtractGroupsToPickle:
     def __init__(self, fichier, saving_file):

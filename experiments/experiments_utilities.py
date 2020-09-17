@@ -805,7 +805,7 @@ def generate_figures_mean_results(directory, sous_experiment_types, fig_name='',
     std_test_metrics_list = np.asarray(std_test_metrics_list)
     # Plot the train fig
     fig_title_train = f'Train mean metrics: Update Function:{f} {type_of_update}_groups random_weights: {random_weights}'
-    if fig_name == ''
+    if fig_name == '':
         fig_name_train = f'{f}_{cancer_name}_train_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
     else:
         fig_name_train = f'{fig_name}_train_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
@@ -826,7 +826,7 @@ def generate_figures_mean_results(directory, sous_experiment_types, fig_name='',
     
     # Plot the Test fig
     fig_title_test = f'Test mean metrics: {type_of_update}_groups random_weights: {random_weights}'
-    if fig_name == ''
+    if fig_name == '':
         fig_name_test = f'{f}_{cancer_name}_test_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
     else:
         fig_name_test = f'{fig_name}_test_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
