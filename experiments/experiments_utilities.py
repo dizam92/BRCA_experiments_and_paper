@@ -63,7 +63,8 @@ parameters_group_scm = {'model_type': param_model_type,
                         'max_rules': param_max_attributes
                         }
 
-color_pool = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
+# color_pool = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
+color_pool = ['#1f77b4', '#d62728', '#ff7f0e', '#2ca02c', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
 
 ########################################################### Loaders Sections ################################################################
 def load_data(data, return_views='all', drop_inexistant_features=True, mad_selection=True):
@@ -804,11 +805,13 @@ def generate_figures_mean_results(directory, sous_experiment_types, fig_name='',
     std_train_metrics_list = np.asarray(std_train_metrics_list)
     std_test_metrics_list = np.asarray(std_test_metrics_list)
     # Plot the train fig
-    fig_title_train = f'Train mean metrics: Update Function:{f} {type_of_update}_groups random_weights: {random_weights}'
+    # fig_title_train = f'Train mean metrics: Update Function:{f} {type_of_update}_groups random_weights: {random_weights}'
+    fig_title_train = 'Train mean metrics'
     if fig_name == '':
         fig_name_train = f'{f}_{cancer_name}_train_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
     else:
-        fig_name_train = f'{fig_name}_train_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
+        fig_name_train = f'{fig_name}_train_mean_metrics_c_values.png'
+        # fig_name_train = f'{fig_name}_train_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
     f_train, ax_train = plt.subplots(nrows=1, ncols=1)
     sns.set_style("darkgrid")
     ax_train.set_title(f"{fig_title_train}")
@@ -825,11 +828,13 @@ def generate_figures_mean_results(directory, sous_experiment_types, fig_name='',
     plt.close()
     
     # Plot the Test fig
-    fig_title_test = f'Test mean metrics: {type_of_update}_groups random_weights: {random_weights}'
+    # fig_title_test = f'Test mean metrics: {type_of_update}_groups random_weights: {random_weights}'
+    fig_title_test = 'Test mean metrics'
     if fig_name == '':
         fig_name_test = f'{f}_{cancer_name}_test_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
     else:
-        fig_name_test = f'{fig_name}_test_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
+        fig_name_test = f'{fig_name}_test_mean_metrics_c_values.png'
+        # fig_name_test = f'{fig_name}_test_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
     f_test, ax_test = plt.subplots(nrows=1, ncols=1)
     sns.set_style("darkgrid")
     ax_test.set_title(f"{fig_title_test}")
@@ -876,11 +881,12 @@ def generate_figures_mean_results_errorbar_error(directory, sous_experiment_type
     std_train_metrics_list = np.asarray(std_train_metrics_list)
     std_test_metrics_list = np.asarray(std_test_metrics_list)
     # Plot the train fig
-    fig_title_train = f'Train mean metrics: Update Function:{f} {type_of_update}_groups random_weights: {random_weights}'
+    fig_title_train = 'Train mean metrics'
     if fig_name == '':
-        fig_name_train = f'{f}_{cancer_name}_train_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}_error_bars.png'
+        fig_name_train = f'{f}_{cancer_name}_train_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
     else:
-        fig_name_train = f'{fig_name}_train_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}_error_bars.png'
+        fig_name_train = f'{fig_name}_train_mean_metrics_c_values_error_bars.png'
+        # fig_name_train = f'{fig_name}_train_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
     f_train, ax_train = plt.subplots(nrows=1, ncols=1)
     sns.set_style("darkgrid")
     ax_train.set_title(f"{fig_title_train}")
@@ -900,11 +906,13 @@ def generate_figures_mean_results_errorbar_error(directory, sous_experiment_type
     plt.close()
     
     # Plot the Test fig
-    fig_title_test = f'Test mean metrics: {type_of_update}_groups random_weights: {random_weights}'
+    # fig_title_test = f'Test mean metrics: {type_of_update}_groups random_weights: {random_weights}'
+    fig_title_test = 'Test mean metrics'
     if fig_name == '':
-        fig_name_test = f'{f}_{cancer_name}_test_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}_error_bars.png'
+        fig_name_test = f'{f}_{cancer_name}_test_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
     else:
-        fig_name_test = f'{fig_name}_test_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}_error_bars.png'
+        fig_name_test = f'{fig_name}_test_mean_metrics_c_values_error_bars.png'
+        # fig_name_test = f'{fig_name}_test_mean_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
     f_test, ax_test = plt.subplots(nrows=1, ncols=1)
     sns.set_style("darkgrid")
     ax_test.set_title(f"{fig_title_test}")
@@ -950,11 +958,13 @@ def generate_figures_best_results(directory, sous_experiment_types, fig_name='',
     train_metrics_list = np.asarray(train_metrics_list)
     test_metrics_list = np.asarray(test_metrics_list)
     # Plot the train fig
-    fig_title_train = f'Train best metrics: Update Function:{f} {type_of_update}_groups random_weights: {random_weights}'
+    # fig_title_train = f'Train best metrics: Update Function:{f} {type_of_update}_groups random_weights: {random_weights}'
+    fig_title_train = 'Train best metrics'
     if fig_name == '':
         fig_name_train = f'{f}_{cancer_name}_train_best_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
     else:
-        fig_name_train = f'{fig_name}_train_best_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
+        fig_name_train = f'{fig_name}_train_best_metrics_c_values.png'
+        # fig_name_train = f'{fig_name}_train_best_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
     f_train, ax_train = plt.subplots(nrows=1, ncols=1)
     sns.set_style("darkgrid")
     ax_train.set_title(f"{fig_title_train}")
@@ -971,11 +981,13 @@ def generate_figures_best_results(directory, sous_experiment_types, fig_name='',
     plt.close()
     
     # Plot the Test fig
-    fig_title_test = f'Test best metrics: {type_of_update}_groups random_weights: {random_weights}'
+    # fig_title_test = f'Test best metrics: {type_of_update}_groups random_weights: {random_weights}'
+    fig_title_test = 'Test best metrics'
     if fig_name == '':
         fig_name_test = f'{f}_{cancer_name}_test_best_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
     else:
-        fig_name_test = f'{fig_name}_test_best_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
+        fig_name_test = f'{fig_name}_test_best_metrics_c_values.png'
+        # fig_name_test = f'{fig_name}_test_best_metrics_c_values_of_{type_of_update}_groups_random_weights_{random_weights}.png'
     f_test, ax_test = plt.subplots(nrows=1, ncols=1)
     sns.set_style("darkgrid")
     ax_test.set_title(f"{fig_title_test}")
