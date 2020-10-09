@@ -83,7 +83,7 @@ def main_group_TN():
                                             prior_dict_rules=f"{data_repository}/groups2pathwaysTN_biogrid_msigDB.pck",
                                             experiment_file='run_new_group_experiments.py', 
                                             experiment_name=exp_name, 
-                                            time='8', # 48 pour le final mais genre 1h pour juste test quoi huh  
+                                            time='3', 
                                             dispatch_path=dispatch_path,
                                             saving_repo=saving_repository_tn)
     print("### DONE ###") 
