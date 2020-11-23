@@ -183,6 +183,40 @@ def run_add_box_plot_fig(data, sous_experiment_types, cancer_name, algo_used, ou
     add_boxplot_figures(data=data, return_views=sous_experiment_types, cancer_name=cancer_name, algo_used=algo_used, 
                     features_cibles=target_features.split(), saving_repo=output)
     
+
+def figure_nb_features():
+    # GARS FUCK IT WESH depoiis kle matin ca fait du n'importe quoi ahi
+    """
+    This is a manual one: i reported all the vectors by hands so BEWARE when using it
+    """ 
+    seeds_order = ['229', '1519', '286', '1509', '1117', '179', '1386', '52', '1310', '458', '210', '1828', '1517', '502', '564']
+    dt_nb_of_features = [7,8,5,8,1,5,6,6,1,7,1,1,7,6,6]
+    scm_nb_of_features = [4,1,1,1,1,1,5,1,1,2,1,1,2,2,2]
+    gscm_false_outer_nb_of_features = [3,4,3,3,3,3,3,3,6,2,4,3,3,3,3]
+    gscm_true_outer_nb_of_features = [4,3,3,2,4,3,6,4,2,4,3,5,4,2,4]
+    gscm_false_inner_nb_of_features = [3,2,2,2,3,3,3,2,4,2,3,4,3,4,4]
+    gscm_true_inner_nb_of_features = [6,5,3,5,5,4,4,4,6,4,6,5,4,2,5]
+    ind = np.arange(15)
+    fig = plt.figure(figsize=(9, 9))
+    sns.set_style("darkgrid")
+    # ax = fig.add_axes([0,0,1,1])
+    ax = fig.add_subplot(2,1,1)
+    width = 0.10
+    ax.bar(ind, dt_nb_of_features, width, color='limegreen')
+    ax.bar(ind + 0.10, scm_nb_of_features, width, color='brown') 
+    ax.bar(ind + 0.20, gscm_false_outer_nb_of_features, width, color='red')
+    ax.bar(ind + 0.30, gscm_false_inner_nb_of_features, width, color='orangered') 
+    ax.bar(ind + 0.40, gscm_true_outer_nb_of_features, width, color='blue') 
+    ax.bar(ind + 0.50, gscm_true_inner_nb_of_features, width, color='royalblue') 
+    ax.set_ylabel('Nb of Features selected')
+    ax.set_title('Number of Features selected per algorithm')
+    ax.set_xticks(ind, seeds_order)
+    ax.set_yticks(np.arange(11))
+    ax.legend(loc='best', labels=['DT', 'SCM', 'GSCM_False_Outer', 'GSCM_False_Inner', 'GSCM_True_Outer', 'GSCM_True_Inner'],  fontsize='small', shadow=True)
+    # plt.legend(loc='best', fontsize='small', shadow=True)
+    plt.xlabel('Seeds', fontsize=10)
+    plt.xticks(range(len(seeds_order)), seeds_order)
+    plt.savefig('u.png')
     
 if __name__ == "__main__":
     cli()

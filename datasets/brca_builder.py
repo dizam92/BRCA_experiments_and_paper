@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 __author__ = 'maoss2'
-from datasets.datasets_utilities import *
+from datasets.utilities import *
 from scipy.stats import median_absolute_deviation
 # Build the clinical file and stuf with the jupyter notebook file
 
