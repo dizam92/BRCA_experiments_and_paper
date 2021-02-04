@@ -1,30 +1,31 @@
 # -*- coding: utf-8 -*-
 __author__ = 'maoss2'
-from experiments.utilities import *
-from collections import defaultdict
-from learners.decisionStumpSCM_learner import DecisionStumpSCMNew
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split, GridSearchCV, KFold
-from sklearn.pipeline import Pipeline
-from sklearn.metrics import confusion_matrix
-import logging
-import click
-import time
-import json
-import hashlib
-import subprocess
 import argparse
+import hashlib
+import json
+import logging
+import subprocess
 import sys
+import time
 import traceback
+from collections import defaultdict
 from pathlib import Path
+
+import click
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import GridSearchCV, KFold, train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.tree import DecisionTreeClassifier
+
+from experiments.experiments_utilities import *
+from learners.decisionStumpSCM_learner import DecisionStumpSCMNew
+
 logging.getLogger('parso.python.diff').disabled = True
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 nb_jobs = 30
 cv_fold = KFold(n_splits=5, random_state=42)
-
-# TODO: ADD A verification to not redo the same pickle (check in the repository if the file is there: if yes pass if no do it)
 
 class LearnTN(object):
     def __init__(self, parameters, learner, saving_dict, balanced_weights, saving_file="", rs=42, nb_jobs=nb_jobs,
@@ -313,7 +314,7 @@ class LearnTN(object):
             pickle.dump(self.saving_dict, f)
 
 
-def run_experiment(return_views, nb_repetitions, data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna, 
+def run_experiment(return_views, nb_repetitions, which_expe='brca', data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna, 
                    experiment_name='experiment_tn_new_label_unbalanced', saving_rep=saving_repository):
     """
     Utility function to run experiment on specific data and with specific wiew. To be called in a loop in a main
@@ -330,12 +331,20 @@ def run_experiment(return_views, nb_repetitions, data=data_tn_new_label_unbalanc
     saving_dict_rf = defaultdict(dict)
     saving_dict_dt = defaultdict(dict)
     saving_dict_scm = defaultdict(dict)
-    x, y, features_names, patients_names = load_data(data=data, return_views=return_views)
-    features_names = [el.encode("utf-8") for el in features_names]
-    features_names = [el.decode("utf-8") for el in features_names]
-    balanced_weights = weighted_sample(y=y, y_target=y)
-    balanced_weights = np.unique(balanced_weights)
-    balanced_weights = {1: balanced_weights.max() * x.shape[0], -1: balanced_weights.min() * x.shape[0]}
+    if which_expe == 'brca':
+        x, y, features_names, patients_names = load_data(data=data, return_views=return_views, drop_inexistant_features=True, mad_selection=True)
+        features_names = [el.encode("utf-8") for el in features_names]
+        features_names = [el.decode("utf-8") for el in features_names]
+        balanced_weights = weighted_sample(y=y, y_target=y)
+        balanced_weights = np.unique(balanced_weights)
+        balanced_weights = {1: balanced_weights.max() * x.shape[0], -1: balanced_weights.min() * x.shape[0]}
+    elif which_expe == 'prad':
+        x, y, features_names, patients_names = load_prad_data(data=data, return_views=return_views)
+        features_names = [el.encode("utf-8") for el in features_names]
+        features_names = [el.decode("utf-8") for el in features_names]
+        balanced_weights = {1: 1, -1: 1} # same weights and just to not change the LearnTN format
+    else:
+        raise ValueError(f'{which_expe}: ValueError exception thrown')
     random.seed(42)
     random_seeds_list = [random.randint(1, 2000) for _ in range(nb_repetitions)]
     try:
@@ -480,31 +489,22 @@ def run_experiment(return_views, nb_repetitions, data=data_tn_new_label_unbalanc
     os.chdir('/home/maoss2/')
 
 
-# def main_run_experiments_new_labels():
-#     for view in return_views:
-#         logger.info('experiment_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna')
-#         logger.info('--------------------------------------------------------')
-#         run_experiment(data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna,
-#                         experiment_name='experiment_tn_new_label_unbalanced',
-#                         return_views=view,
-#                         nb_repetitions=15,
-#                         saving_rep=saving_repository)
-
 def main():
     parser = argparse.ArgumentParser(description="Learn TN Experiment")
     parser.add_argument('-rt', '--return_views', type=str, default="all")
     parser.add_argument('-nb_r', '--nb_repetitions', type=int, default=1)
+    parser.add_argument('-which_expe', '--which_expe', type=str, default="brca")
     parser.add_argument('-data', '--data', type=str, default=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna)
     parser.add_argument('-exp_name', '--experiment_name', type=str, default="experiment_tn_new_label_unbalanced")
     parser.add_argument('-o', '--saving_rep', type=str, default=saving_repository)
     args = parser.parse_args()
     run_experiment(data=args.data,
-                experiment_name=args.experiment_name,
-                return_views=args.return_views,
-                nb_repetitions=args.nb_repetitions,
-                saving_rep=args.saving_rep)
+                   which_expe=args.which_expe,
+                   experiment_name=args.experiment_name,
+                   return_views=args.return_views,
+                   nb_repetitions=args.nb_repetitions,
+                   saving_rep=args.saving_rep)
     
 
 if __name__ == '__main__':
     main()
-    # main_run_experiments_new_labels()

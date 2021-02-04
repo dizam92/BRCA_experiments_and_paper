@@ -1,17 +1,20 @@
 # -*- coding: utf-8 -*-
 from __future__ import division
-__author__ = 'maoss2'
+
 import logging
+
 import numpy as np
-
-from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.utils.validation import check_X_y, check_random_state
 from future.utils import iteritems
-
-from pyscm.scm import BaseSetCoveringMachine
 from pyscm._scm_utility import find_max as find_max_utility  # cpp extensions
 from pyscm.model import ConjunctionModel, DisjunctionModel
 from pyscm.rules import DecisionStump
+from pyscm.scm import BaseSetCoveringMachine
+from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.utils.validation import check_random_state, check_X_y
+
+__author__ = 'maoss2'
+
+
 
 # logging.basicConfig(level=logging.DEBUG)
 # logging.basicConfig(filename='pyscm_group.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
@@ -28,8 +31,8 @@ class GroupSetCoveringMachineClassifier(BaseSetCoveringMachine):
             features_to_index: a dictionnary with key= idx and value the correspondant features at place idx 
             prior_rules : The prior or preference on the rules (pre-calculated)
             update_method: str, name of the method to update the prioRules in the GroupSCM model
-                'add'
-                'mult'
+                'inner_group': p_ri = p_ri * exp(| g_i \intersection GR | )  update 1
+                'outer_group': p_ri = p_ri * exp(-| g_i \intersection GR | )  update 2
                 
             groups : g_i \in [1, G]+ is the set of groups associated with the rule r_i, 
                 where G is the total number of groups. 
@@ -113,9 +116,7 @@ class GroupSetCoveringMachineClassifier(BaseSetCoveringMachine):
         remaining_example_idx = np.arange(len(y))
         remaining_negative_example_idx = neg_ex_idx
         
-        # Initialization of features weights: Everybody start at one
-        features_weights = np.ones((X.shape[1]), dtype=np.float64)
-        # features_weights = self.prior_rules # Initialization of groups weights 
+        features_weights = self.prior_rules # Initialization of groups weights 
         # Feature_weights is the vector used to multipled the utility function in find_max_utility (update_optimal_solution)
         while len(remaining_negative_example_idx) > 0 and len(self.model_) < self.max_rules:
             iteration_info = {"iteration_number": len(self.model_) + 1}
@@ -155,6 +156,7 @@ class GroupSetCoveringMachineClassifier(BaseSetCoveringMachine):
                     else:
                         list_model_idx = [el.feature_idx for el in self.model_.rules]
                         rules_to_untie = [self.features_to_index[idx] for idx in list_model_idx]
+                        print(f'Yeah we use the tiebreaking and the rules to untie are {rules_to_untie}')
                         length_groups_of_rules_to_untie = [len(self.groups[rule]) for rule in rules_to_untie]
                         keep_idx = np.argmin(length_groups_of_rules_to_untie)
             else:
@@ -181,37 +183,32 @@ class GroupSetCoveringMachineClassifier(BaseSetCoveringMachine):
     
     def _get_best_utility_rules(self, X, y, X_argsort_by_feature_T, example_idx, groups, groups_rules, features_weights,  next_rule_model_idx):
         if next_rule_model_idx is None:
-            calculated_utility = find_max_utility(self.p, X, y, X_argsort_by_feature_T, example_idx, features_weights)
-            print(f'the initial utility function is: {calculated_utility}')
-            return calculated_utility
+            # calculated_utility = find_max_utility(self.p, X, y, X_argsort_by_feature_T, example_idx, features_weights)
+            # print(f'the initial utility function is: {calculated_utility}')
+            return find_max_utility(self.p, X, y, X_argsort_by_feature_T, example_idx, features_weights)
         else:
-            # Update the prior aka update the features weights vector
             previous_rule_choosed_i = self.features_to_index[next_rule_model_idx] # must give a feature Name
+            # UPDATE PRI FOR ALL THE RULES HAVING AT LEAST ONE OF THE GROUPS OF THE PREVIOUS RULES
             groups_previous_rule_choosed_i = self.groups[previous_rule_choosed_i] # list 
-            print(f'the groups of the choosen rules are: {groups_previous_rule_choosed_i}')
-            for feat_name, groups_list in self.groups.items():
-                for choosen_group in groups_previous_rule_choosed_i:
-                    if choosen_group in groups_list:
-                        for idx, feat_name_idx in self.features_to_index.items():
-                            if feat_name == feat_name_idx:
-                                if self.update_method == 'mult':
-                                    print(f'features weights before the update {features_weights[idx]}')
-                                    features_weights[idx] *= self.prior_rules[idx] # ici ca donne 1 * val donc val va etre notre update
-                                    print(f'features weights after the update {features_weights[idx]}')
-                                if self.update_method == 'add':
-                                    print(f'features weights before the update {features_weights[idx]}')
-                                    features_weights[idx] += self.prior_rules[idx] # ici ca donne 1 + val (probably higher that mult in the 1st run)
-                                    print(f'features weights after the update {features_weights[idx]}')
-                                else:
-                                    raise ValueError(f"{self.update_method} must be a str and in ['mult', 'add']")
+            # print(f'the groups of the choosen rules are: {groups_previous_rule_choosed_i}')
+            # retrieve the intersection for each rules candidates/features: dict of keys: features_name, values: int
+            dict_intersection_groups_rules = {feat_name: len([el for el in groups_previous_rule_choosed_i if el in groups_list]) for feat_name, groups_list in self.groups.items()}
+            if self.update_method == 'inner_group':
+                for idx, feat_name_idx in self.features_to_index.items():
+                    if idx != next_rule_model_idx: # pas la peine de reponderer la meme regle quoi
+                        features_weights[idx] *= np.exp(dict_intersection_groups_rules[feat_name_idx])
+            elif self.update_method == 'outer_group':
+                for idx, feat_name_idx in self.features_to_index.items():
+                    if idx != next_rule_model_idx: # pas la peine de reponderer la meme regle quoi
+                        features_weights[idx] *= np.exp(- dict_intersection_groups_rules[feat_name_idx])    
+            else:
+                 raise ValueError(f"{self.update_method} must be a str and in ['inner_group', 'outer_group']")
             # UPDATE GR
-            self.groups_rules.extend(groups_previous_rule_choosed_i) # Expected results: [G1, G2, ...]
-            self.groups_rules = list(np.unique(self.groups_rules))
-            calculated_utility = find_max_utility(self.p, X, y, X_argsort_by_feature_T, example_idx, features_weights)
-            print(f'the new utility function is: {calculated_utility}')
-            return calculated_utility
-            # Note toself: l'idée est de prendre les nouveaux groupes de la nouvelle regel trouvée huh du coup J'accumule pas et je ne surpondere pas les old old goups rules
-            # on peut penser à les upgrade à chaque tour why not. Let's test this first
+            # self.groups_rules.extend(groups_previous_rule_choosed_i) # Expected results: [G1, G2, ...]
+            # self.groups_rules = list(np.unique(self.groups_rules))
+            # calculated_utility = find_max_utility(self.p, X, y, X_argsort_by_feature_T, example_idx, features_weights)
+            # print(f'the new utility function is: {calculated_utility}')
+            return find_max_utility(self.p, X, y, X_argsort_by_feature_T, example_idx, features_weights)
         
         
 

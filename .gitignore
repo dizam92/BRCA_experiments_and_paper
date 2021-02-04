@@ -13,6 +13,9 @@ __pycache__
 *.toc
 *.dat
 *.zip
+*.png
+*.pdf
+*.gmt
 # Jupyter Notebook
 .ipynb_checkpoints
 *.xlsx
@@ -23,3 +26,4 @@ __pycache__
 # Repertory
 datasets/datasets_repository/files_to_build_datasets/*
 datasets/datasets_repository/TCGA.normalised.mixDIABLO_2.RData
+datasets/datasets_repository_prad/*

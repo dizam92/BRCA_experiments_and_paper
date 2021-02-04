@@ -1,29 +1,35 @@
 # -*- coding: utf-8 -*-
 __author__ = 'maoss2'
-from experiments.experiments_utilities import *
-from os.path import join, abspath, dirname, exists
-from os import makedirs
-from collections import defaultdict
-from learners.pyscmGroup import GroupSCM
-from sklearn.model_selection import train_test_split, GridSearchCV, KFold
-from sklearn.pipeline import Pipeline
-from sklearn.metrics import confusion_matrix
 import argparse
-from functools import partial
-import multiprocessing
-from multiprocessing import Pool
 import logging
+import multiprocessing
+from collections import defaultdict
+from functools import partial
+from multiprocessing import Pool
+from os import makedirs
+from os.path import abspath, dirname, exists, join
+
+from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import GridSearchCV, KFold, train_test_split
+from sklearn.pipeline import Pipeline
+
+from experiments.utilities import *
+from learners.pyscmGroup import GroupSCM
+
 logging.getLogger('parso.python.diff').disabled = True
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 nb_jobs = 30
 cv_fold = KFold(n_splits=5, random_state=42)
 
-#TODO: Create a def analyse to link features to their pathways selected
+project_path = '/home/maoss2/project/maoss2/'
+saving_rep = '/home/maoss2/project/maoss2/'
+dataset_baptiste = f'{project_path}/lives_14view_EMF.hdf5'
 
-class LearnGroupTN(object):
-    def __init__(self, parameters, learner, saving_dict, saving_file="", rs=42, nb_jobs=nb_jobs,
-                 cv=cv_fold, data_path=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna, return_views='all'):
+
+class LearnGroupMultiViewData(object):
+    def __init__(self, parameters, learner, saving_dict, saving_file="", subsampling=False, 
+                 rs=42, nb_jobs=nb_jobs, cv=cv_fold, data_path=dataset_baptiste):
         """
         Learning Class to learn experiment on TN dataset
         Args:
@@ -35,17 +41,16 @@ class LearnGroupTN(object):
             nb_jobs: int, number of cpu to run the class
             cv: int of Kfold object, crossvalidation object
             data_path: str, path to dataset
-            return_views: str, for the loader
         """
         self.parameters = parameters
         self.learner = learner
         self.saving_file = saving_file
         self.rs = rs
         self.data_path = data_path
-        self.return_views = return_views
         self.saving_dict = saving_dict
         self.nb_jobs = nb_jobs
         self.cv = cv
+        self.subsampling = subsampling
         self.gs_clf = GridSearchCV(self.learner, param_grid=self.parameters, n_jobs=self.nb_jobs, cv=self.cv, verbose=1)
 
     @staticmethod
@@ -62,7 +67,7 @@ class LearnGroupTN(object):
     def predict(self, x):
         return self.gs_clf.predict(x)
 
-    def learning(self, features_names, x_train, x_test, y_train, y_test, patients_train, patients_test):
+    def learning(self, features_names, x_train, x_test, y_train, y_test, proteins_ids_train, proteins_ids_test):
         self.gs_clf.fit(x_train, y_train)
         pred = self.gs_clf.predict(x_test)
         y_train_pred = self.gs_clf.predict(x_train)
@@ -80,23 +85,20 @@ class LearnGroupTN(object):
         self.saving_dict['cv_results'] = self.gs_clf.cv_results_
         self.saving_dict['best_params'] = self.gs_clf.best_params_
         self.saving_dict['cnf_matrix'] = cnf_matrix
-        patients_train = [el.encode("utf-8") for el in patients_train]
-        patients_train = [el.decode("utf-8") for el in patients_train]
-        patients_test = [el.encode("utf-8") for el in patients_test]
-        patients_test = [el.decode("utf-8") for el in patients_test]
-        self.saving_dict['patients_train'] = patients_train
-        self.saving_dict['patients_test'] = patients_test
+        proteins_ids_train = proteins_ids_train.astype('U13')
+        proteins_ids_test = proteins_ids_test.astype('U13')
+        self.saving_dict['proteins_ids_train'] = proteins_ids_train
+        self.saving_dict['proteins_ids_test'] = proteins_ids_test
         self.saving_dict['importances'] = []
         self.saving_dict['rules_str'] = []
         self.saving_dict['rules'] = []
         self.saving_dict['groups_rules'] = []
         self.save_features_selected(classifier=self.gs_clf, parameters=self.parameters,
                                     features_names=features_names, dictionary=self.saving_dict)
-        self.saving_file = self.saving_file + '_{}_{}.pck'.format(self.return_views, str(self.rs))
+        self.saving_file = self.saving_file + '_{}_{}.pck'.format(self.subsampling, str(self.rs))
         with open(self.saving_file, 'wb') as f:
             pickle.dump(self.saving_dict, f)
-
-
+            
 def f(c, x):
     """Compute an update function"""
     return np.sqrt(c * x)
@@ -106,10 +108,9 @@ def f_1(c, x):
     return np.exp( -c * x) 
 
 def build_priors_rules_vector(c,
-                              activation_function=f_1,
-                              random_weights = False,
-                              dictionnary_for_prior_group=f"{data_repository}/groups2genes_biogrid.pck", 
-                              dictionnary_for_prior_rules=f"{data_repository}/groups2pathwaysTN_biogrid.pck"):
+                              inverse_prior_group = False,
+                              dictionnary_for_prior_group=f"{data_repository}/multiview_pathways_dict.pck", 
+                              dictionnary_for_prior_rules=f"{data_repository}/pathways_multiview_groups.pck"):
     """
     Build the vector of the prior rules integreting the prior on the group/pathways 
     Args:
@@ -124,25 +125,20 @@ def build_priors_rules_vector(c,
     dict_pr_rules = pickle.load(open(dictionnary_for_prior_rules, 'rb'))
     # Build PriorGroups vector, p_g
     prior_values_dict_pr_group = {k: f_1(c, len(v)) for k, v in dict_pr_group.items()} 
+    for k, v in prior_values_dict_pr_group.items():
+        if v == 0.0:
+            prior_values_dict_pr_group[k]= 1e-10
+    
     # Build PriorRules vector, p_ri
-    if random_weights:
-        random.seed(42)
-        np.random.seed(42)
-        values_randomly_generated = np.random.rand(len(dict_pr_group.items()))
-        prior_values_dict_pr_group = {k: activation_function(c, values_randomly_generated[idx]) for idx, k in enumerate(dict_pr_group.keys())}
-        prior_values_dict_pr_rules = {k: activation_function(c, np.sum([prior_values_dict_pr_group[el] for el in v])) for k, v in dict_pr_rules.items()}
+    if inverse_prior_group:
+        prior_values_dict_pr_rules = {k: f_1(c, 1 / prior_values_dict_pr_group[v]) for k, v in dict_pr_rules.items()}
     else:
-        prior_values_dict_pr_rules = {k: activation_function(c, np.sum([prior_values_dict_pr_group[el] for el in v])) for k, v in dict_pr_rules.items()}
+        prior_values_dict_pr_rules = {k: f_1(c, prior_values_dict_pr_group[v]) for k, v in dict_pr_rules.items()}
     return prior_values_dict_pr_group, prior_values_dict_pr_rules
     
     
-def run_experiment(return_views, pathway_file, nb_repetitions, cancer_expe='brca', 
-                   activation_function=f_1, update_method='inner_group', c=0.1, random_weights=False,
-                   data=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna, 
-                   eliminate_feature_not_in_pathways=False,
-                   dictionnary_for_prior_group=f"{data_repository}/groups2genes_biogrid.pck", 
-                   dictionnary_for_prior_rules=f"{data_repository}/groups2pathwaysTN_biogrid.pck",
-                   experiment_name='experiment_group_scm', saving_rep=saving_repository):
+def run_experiment(pathway_file, nb_repetitions, update_method='inner_group', c=0.1, inverse_prior_group=False,
+                   subsampling=False, data=dataset_baptiste, experiment_name='experiment', saving_rep=saving_rep):
     """
     Utility function to run experiment on specific data and with specific wiew. To be called in a loop in a main
     Args:
@@ -161,33 +157,16 @@ def run_experiment(return_views, pathway_file, nb_repetitions, cancer_expe='brca
     """
     assert nb_repetitions >= 1, 'At least one split'
     saving_dict_scm = defaultdict(dict)
-    if cancer_expe == 'brca':
-        x, y, features_names, patients_names = load_data(data=data, return_views=return_views, drop_inexistant_features=True, mad_selection=True)    
-    elif cancer_expe == 'prad':
-        x, y, features_names, patients_names = load_prad_data(data=data, return_views=return_views)
-    else:
-        raise ValueError(f'{cancer_expe} is not supported yet')
+    _,_, _,_, _,_, _,_, _,_, _,_, _,_, _,_, _,_, _,_, _,_, _,_, _,_, _,_, x, groups_ids, y, proteins_ids, features_names = load_baptiste_data(dataset=dataset_baptiste, 
+                                                                                                                                     subsampling=subsampling) 
     features_names = [el.encode("utf-8") for el in features_names]
     features_names = [el.decode("utf-8") for el in features_names]
-    features_names_to_idx =  {feature: idx for idx, feature in enumerate(features_names)}
-    logger.info('eliminate_feature_not_in_pathways is {}'.format(eliminate_feature_not_in_pathways))
-    logger.info('x shape is {}'.format(x.shape))
-    if eliminate_feature_not_in_pathways == 'True':
-        temp = pickle.load(open(f'{data_repository}/featuresNotInAnyPathways.pck', 'rb'))
-        temp_idx_to_del = [features_names_to_idx[feature] for feature in temp if feature in features_names_to_idx.keys()]
-        x = np.delete(x, temp_idx_to_del, axis=1)
-        features_names = np.delete(features_names, temp_idx_to_del, axis=0)
-    logger.info('x shape is {}'.format(x.shape))
     random.seed(42)
     random_seeds_list = [random.randint(1, 2000) for _ in range(nb_repetitions)]
     # Parameters for GROUP_SCM
     dict_biogrid_groups = pickle.load(open(pathway_file, 'rb'))
     features_to_index = {idx: name for idx, name in enumerate(features_names)}
-    _, prior_values_dict_pr_rules = build_priors_rules_vector(c=c,
-                                                              activation_function=activation_function,
-                                                              random_weights=random_weights, 
-                                                              dictionnary_for_prior_group=dictionnary_for_prior_group, 
-                                                              dictionnary_for_prior_rules=dictionnary_for_prior_rules)
+    _, prior_values_dict_pr_rules = build_priors_rules_vector(c=c, inverse_prior_group=inverse_prior_group)
     prior_rules = [prior_values_dict_pr_rules[name] for name in features_names]
     learner_clf = GroupSCM(features_to_index=features_to_index, 
                            prior_rules=prior_rules, 
@@ -206,55 +185,44 @@ def run_experiment(return_views, pathway_file, nb_repetitions, cancer_expe='brca
         seeds_already_done = [int(f.split('_')[-1].split('.')[0]) for f in existing_files_list]
     for state in range(nb_repetitions):
         if seeds_already_done is not None and random_seeds_list[state] in seeds_already_done: continue
-        clf = LearnGroupTN(parameters=parameters_group_scm,
+        clf = LearnGroupMultiViewData(parameters=parameters_group_scm,
                             learner=learner_clf,
                             saving_dict=saving_dict_scm,
                             saving_file=experiment_name,
                             rs=random_seeds_list[state],
                             nb_jobs=nb_jobs,
                             cv=cv_fold,
-                            data_path=data,
-                            return_views=return_views)
-        x_train, x_test, y_train, y_test, patients_train, patients_test = \
-            train_test_split(x, y, patients_names, train_size=0.8, random_state=random_seeds_list[state])
+                            data_path=data)
+        x_train, x_test, y_train, y_test, proteins_ids_train, proteins_ids_test = \
+            train_test_split(x, y, proteins_ids, train_size=0.8, random_state=random_seeds_list[state])
         logger.info('Train set shape {}'.format(x_train.shape))
         logger.info('Test set shape {}'.format(x_test.shape))
         clf.learning(features_names=features_names, x_train=x_train, x_test=x_test,
-                        y_train=y_train, y_test=y_test, patients_train=patients_train,
-                        patients_test=patients_test)
+                        y_train=y_train, y_test=y_test, proteins_ids_train=proteins_ids_train,
+                        proteins_ids_test=proteins_ids_test)
 
-    
+
 def main():
     parser = argparse.ArgumentParser(description="Learn Group TN Experiment")
-    parser.add_argument('-rt', '--return_views', type=str, default="all")
     parser.add_argument('-nb_r', '--nb_repetitions', type=int, default=1)
-    # parser.add_argument('-g_dict', '--groups_dict', type=str, default=f"{data_repository}/groups2pathwaysTN_biogrid.pck")
-    parser.add_argument('-g_dict', '--groups_dict', type=str, default=f"{data_repository}/groups2pathwaysTN_biogrid_msigDB.pck")
-    parser.add_argument('-u_m', '--update_method', type=str, default="inner_group")
-    parser.add_argument('-cancer_expe', '--cancer_expe', type=str, default="brca")
+    parser.add_argument('-subs', '--subsampling', type=bool, default=False)
+    parser.add_argument('-g_dict', '--groups_dict', type=str, default=f"{data_repository}/pathways_multiview_groups.pck")
+    parser.add_argument('-u_m', '--update_method', type=str, default="neg_exp")
     parser.add_argument('-c', '--c', type=float, default=0.1) 
-    parser.add_argument('-random_weights', '--random_weights', type=bool, default=False)
-    parser.add_argument('-data', '--data', type=str, default=data_tn_new_label_unbalanced_cpg_rna_rna_iso_mirna)
-    parser.add_argument('-eliminate_feature_not_in_pathways', '--eliminate_feature_not_in_pathways', type=str, default='False')
-    parser.add_argument('-prior_dict_groups', '--prior_dict_groups', type=str, default=f"{data_repository}/groups2genes_biogrid_msigDB.pck")
-    parser.add_argument('-prior_dict_rules', '--prior_dict_rules', type=str, default=f"{data_repository}/groups2pathwaysTN_biogrid_msigDB.pck")
+    parser.add_argument('-inverse_prior_group', '--inverse_prior_group', type=bool, default=False)
+    parser.add_argument('-data', '--data', type=str, default=dataset_baptiste)
     parser.add_argument('-exp_name', '--experiment_name', type=str, default="experiment_group_scm")
-    parser.add_argument('-o', '--saving_rep', type=str, default=saving_repository)
+    parser.add_argument('-o', '--saving_rep', type=str, default=saving_rep)
     args = parser.parse_args()
-    run_experiment(return_views=args.return_views, 
-                   pathway_file=args.groups_dict, 
+    run_experiment(pathway_file=args.groups_dict, 
+                   subsampling=args.subsampling, 
                    nb_repetitions=args.nb_repetitions,
-                   update_method=args.update_method,
-                   cancer_expe=args.cancer_expe, 
+                   update_method=args.update_method, 
                    c=args.c,
-                   random_weights=args.random_weights,
-                   data=args.data, 
-                   eliminate_feature_not_in_pathways=args.eliminate_feature_not_in_pathways,
-                   dictionnary_for_prior_group=args.prior_dict_groups,
-                   dictionnary_for_prior_rules=args.prior_dict_rules,
+                   inverse_prior_group=args.inverse_prior_group,
+                   data=args.data,  
                    experiment_name=args.experiment_name, 
                    saving_rep=args.saving_rep)    
-
 
 if __name__ == '__main__':
     main()
